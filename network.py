@@ -30,7 +30,8 @@ class Net(torch.nn.Module):
             self.bs_per_res[i, :] = np.arange(start, start + nb_per_res)
 
         nb_windows = self.bs_per_res[-1, -1] + 1
-        alpha = torch.randn((nb_windows, self.N_domains))
+        #alpha = torch.randn((nb_windows, self.N_domains))
+        alpha = torch.ones((nb_windows, self.N_domains))
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
     def multiply_windows_weights(self):
@@ -68,7 +69,7 @@ class Net(torch.nn.Module):
         #features_domain = torch.sum(hidden_representations, dim = 0)
         #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
         #features_and_latent = torch.concat([torch.broadcast_to(features_domain, (1, 50)), torch.broadcast_to(latent_variables, (1,3))], dim=1)
-        features_and_latent = torch.concat([torch.randn((2, 50)), torch.broadcast_to(latent_variables, (2, 6))], dim=1)
+        features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
         #print("Test:", features_and_latent)
@@ -85,7 +86,7 @@ class Net(torch.nn.Module):
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
-        return loss / self.N_residues + rmsd
+        return loss / self.N_residues + 3*rmsd
 
 
 

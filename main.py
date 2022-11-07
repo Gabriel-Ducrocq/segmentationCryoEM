@@ -16,9 +16,9 @@ S = 100
 
 
 def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_features, latent_variables):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     all_losses = []
     latent_vars = 4*torch.randn((10,3*N_domains)) #np.random.normal(scale=4, size=(1, 3), dtype=float)
     std = torch.std(latent_vars, dim= 0)
@@ -32,8 +32,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             print(i/1000)
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features, latent_var_norm)
             true_deformed_structure = torch.empty_like(absolute_positions)
-            true_deformed_structure[:3*cutoff, :] = absolute_positions[:3*cutoff, :] + latent_var_norm[:3]**2
-            true_deformed_structure[3 * cutoff:, :] = absolute_positions[3 * cutoff:, :] + latent_var_norm[3:]**2
+            true_deformed_structure[:3*cutoff, :] = absolute_positions[:3*cutoff, :] + 5#+ latent_var_norm[:3]**2
+            true_deformed_structure[3 * cutoff:, :] = absolute_positions[3 * cutoff:, :] - 5 #+ latent_var_norm[3:]**2
             loss = network.loss(new_structure, true_deformed_structure, mask_weights)
             #loss = network.loss(translations, latent_var ** 2, mask_weights)
             optimizer.zero_grad()
@@ -65,7 +65,7 @@ def experiment(graph_file="data/features.npy"):
     message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(56, 3, 100, num_hidden_layers=2)
+    translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
 
     mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
     net = Net(num_nodes, N_domains, B, S, mpnn, translation_mlp, local_frame, absolute_positions)
