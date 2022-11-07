@@ -8,11 +8,11 @@ import torch.optim.lr_scheduler
 N_domains = 2
 latent_dim = 3*N_domains
 num_nodes = 1510
-cutoff = int(num_nodes/2)
+cutoff = int(num_nodes/4)
 K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
 B = 200
-S = 100
+S = 1
 
 
 def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_features, latent_variables):
@@ -20,16 +20,21 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     all_losses = []
-    latent_vars = 4*torch.randn((10,3*N_domains)) #np.random.normal(scale=4, size=(1, 3), dtype=float)
-    std = torch.std(latent_vars, dim= 0)
-    avg = torch.mean(latent_vars, dim = 0)
+    #latent_vars = 4*torch.randn((10,3*N_domains)) #np.random.normal(scale=4, size=(1, 3), dtype=float)
+    latent_vars = torch.randn((1,3*N_domains)) #np.random.normal(scale=4, size=(1, 3), dtype=float)
+    #std = torch.std(latent_vars, dim= 0)
+    #avg = torch.mean(latent_vars, dim = 0)
     for epoch in range(1000):
         for i in range(1000):
-            k = np.random.randint(0, 10)
+            k = np.random.randint(0, 1)
             latent_var = latent_vars[k, :]
-            latent_var_norm = (latent_var - avg)/std
+            print("Latent var true")
+            #latent_var_norm = (latent_var - avg)/std
+            latent_var_norm = latent_var
+            print(latent_var_norm)
             print("epoch:", epoch)
             print(i/1000)
+            print(network.multiply_windows_weights())
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features, latent_var_norm)
             true_deformed_structure = torch.empty_like(absolute_positions)
             true_deformed_structure[:3*cutoff, :] = absolute_positions[:3*cutoff, :] + 5#+ latent_var_norm[:3]**2
@@ -44,13 +49,15 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #    print(param.grad)
             #print(network.decoder.message_mlp.output_layer.weight.grad)
             #print(list(network.parameters()))
-            print(network.multiply_windows_weights())
             print("Output:", translations)
             print("Latent var squred:", latent_var**2)
             print("Mean:", torch.mean(latent_vars**2, dim=0))
             print(loss)
             print("\n\n")
 
+        mask = network.multiply_windows_weights()
+        mask_python = mask.detach()
+        np.save("data/mask"+str(epoch)+".npy", mask_python)
         scheduler.step()
 
 def experiment(graph_file="data/features.npy"):

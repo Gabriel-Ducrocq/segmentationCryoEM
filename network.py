@@ -7,12 +7,14 @@ from mlp import MLP
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions):
+    def __init__(self, N_residues, N_domains, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
+                 epsilon_mask_loss=1e-10):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
         self.B = B
         self.S = S
+        self.epsilon_mask_loss = 1e-10
         self.decoder = decoder
         self.mlp_translation = mlp_translation
         self.local_frame = torch.transpose(local_frame, 0, 1)
@@ -70,6 +72,8 @@ class Net(torch.nn.Module):
         #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
         #features_and_latent = torch.concat([torch.broadcast_to(features_domain, (1, 50)), torch.broadcast_to(latent_variables, (1,3))], dim=1)
         features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
+        print("Reshaped latent variables:")
+        print(torch.reshape(latent_variables, (2, 3)))
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
         #print("Test:", features_and_latent)
@@ -82,7 +86,8 @@ class Net(torch.nn.Module):
     #def loss(self, new_translation, true_translation, mask_weights):
         rmsd = torch.sqrt(torch.mean(torch.sum((new_structure - true_structure)**2, dim=1)))
         #rmsd = torch.sum((new_translation - true_translation)**2)
-        attention_softmax_log = torch.log(mask_weights)
+        #mask_weights = torch.max(mask_weights, self.epsilon_mask_loss)
+        attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
