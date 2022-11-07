@@ -100,7 +100,7 @@ def get_orthonormal_basis(u1, u2):
     Computes the local orthonormal frame basis based on the Nitrogen, C alpha and C beta atoms.
     :param u1: first non zero vector, unnormalized (here the bond vector between Nitrogen and C alpha carbon)
     :param u2: second non zero vector, unormalized  (here the bond vector between C beta and C alpha carbon)
-    :return: A set of three orthonormal vectors
+    :return: An array of three orthonormal vectors of size 3, in colums
     """
 
     e1, e2 = gram_schmidt(u1, u2)

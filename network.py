@@ -53,22 +53,22 @@ class Net(torch.nn.Module):
 
     def deform_structure(self, weights, translation_scalars):
         ##Modifying to apply translation directly
-        #translation_vectors = torch.matmul(translation_scalars, self.local_frame)
-        #translation_per_residue = torch.matmul(weights, translation_vectors)
-        translation_per_residue = translation_scalars
+        translation_vectors = torch.matmul(translation_scalars, self.local_frame)
+        translation_per_residue = torch.matmul(weights, translation_vectors)
+        #translation_per_residue = translation_vectors
         #new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 0)
-        new_atom_positions = self.atom_absolute_positions + translation_per_residue
+        new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 0)
         return new_atom_positions, translation_per_residue
 
     def forward(self, x, edge_index, edge_attr, latent_variables):
         weights = self.multiply_windows_weights()
-        hidden_representations = self.decoder.forward(x, edge_index, edge_attr, latent_variables)
-        weights_transp = torch.transpose(weights, 0, 1)
+        #hidden_representations = self.decoder.forward(x, edge_index, edge_attr, latent_variables)
+        #weights_transp = torch.transpose(weights, 0, 1)
         #features_domain = torch.matmul(weights_transp, hidden_representations)
         #features_domain = torch.sum(hidden_representations, dim = 0)
         #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
         #features_and_latent = torch.concat([torch.broadcast_to(features_domain, (1, 50)), torch.broadcast_to(latent_variables, (1,3))], dim=1)
-        features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
+        features_and_latent = torch.concat([torch.randn((2, 50)), torch.broadcast_to(latent_variables, (2, 6))], dim=1)
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
         #print("Test:", features_and_latent)
