@@ -71,11 +71,12 @@ class Net(torch.nn.Module):
         #features_domain = torch.sum(hidden_representations, dim = 0)
         #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
         #features_and_latent = torch.concat([torch.broadcast_to(features_domain, (1, 50)), torch.broadcast_to(latent_variables, (1,3))], dim=1)
-        features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
-        print("Reshaped latent variables:")
-        print(torch.reshape(latent_variables, (2, 3)))
+        #features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
+        features_and_latent = torch.reshape(latent_variables, (2, 3))
+        features_and_latent = latent_variables
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
+        scalars_per_domain = torch.reshape(scalars_per_domain, (2,3))
         #print("Test:", features_and_latent)
         ##Tweaking to get only a translation vector
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
@@ -91,7 +92,7 @@ class Net(torch.nn.Module):
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
-        return loss / self.N_residues + 3*rmsd
+        return rmsd + 0.0001*loss / self.N_residues
 
 
 
