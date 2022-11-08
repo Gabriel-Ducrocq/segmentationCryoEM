@@ -45,7 +45,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
 
             k = np.random.randint(0, batch_size)
             print("Net translations:", translations[k, :, :])
-            print("True translations:", true_deformation[k, :, :])
+            print("True translations:", true_deformation[k, :, :]**3)
             print(loss)
             print("\n\n")
 

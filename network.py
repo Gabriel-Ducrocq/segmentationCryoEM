@@ -115,8 +115,8 @@ class Net(torch.nn.Module):
         ## true_deformed_structure is tensor (Batch_size, 3*N_residues, 3) containing absolute positions of every atom
         ## for each structure of the batch.
         true_deformed_structure = torch.empty((self.batch_size, 3*self.N_residues, 3))
-        true_deformed_structure[:, :3*self.cutoff, :] = self.atom_absolute_positions[:3*self.cutoff, :] + true_deformation[:, 0:1, :]
-        true_deformed_structure[:, 3 * self.cutoff:, :] = self.atom_absolute_positions[3 * self.cutoff:, :] + true_deformation[:, 1:2, :]
+        true_deformed_structure[:, :3*self.cutoff, :] = self.atom_absolute_positions[:3*self.cutoff, :] + true_deformation[:, 0:1, :]**3
+        true_deformed_structure[:, 3 * self.cutoff:, :] = self.atom_absolute_positions[3 * self.cutoff:, :] + true_deformation[:, 1:2, :]**3
         rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
 
         attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
