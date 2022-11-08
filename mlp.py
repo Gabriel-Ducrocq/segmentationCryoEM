@@ -6,9 +6,11 @@ class MLP(nn.Module):
     def __init__(self, in_dim, out_dim, intermediate_dim, num_hidden_layers = 1):
         super(MLP, self).__init__()
         self.flatten = nn.Flatten()
-        self.input_layer = nn.Sequential(nn.Linear(in_dim, intermediate_dim), nn.ReLU())
+        self.num_hidden_layers = num_hidden_layers
+        ##Using leaky RELU !
+        self.input_layer = nn.Sequential(nn.Linear(in_dim, intermediate_dim), nn.LeakyReLU())
         self.output_layer = nn.Linear(intermediate_dim, out_dim)
-        list_intermediate = [[nn.Linear(intermediate_dim, intermediate_dim), nn.ReLU()]
+        list_intermediate = [[nn.Linear(intermediate_dim, intermediate_dim), nn.LeakyReLU()]
                              for _ in range(num_hidden_layers)]
         self.linear_relu_stack = nn.Sequential(*[layer for intermediate in list_intermediate for layer in intermediate])
 

@@ -89,6 +89,7 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_residues, 3) leading to the new structure.
         """
+        batch_size = latent_variables.shape[0]
         weights = self.multiply_windows_weights()
         #hidden_representations = self.decoder.forward(x, edge_index, edge_attr, latent_variables)
         #weights_transp = torch.transpose(weights, 0, 1)
@@ -99,12 +100,12 @@ class Net(torch.nn.Module):
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         ## MLP computing the deformation scalars. Outputs 3 scalars per domain (Batch_size, 3*N_domains)
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
-        scalars_per_domain = torch.reshape(scalars_per_domain, (self.batch_size, self.N_domains,3))
+        scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
         return new_structure, weights, translations
 
 
-    def loss(self, new_structure, true_deformation, mask_weights):
+    def loss(self, new_structure, true_deformation, mask_weights, train=True):
         """
 
         :param new_structure: tensor (3*N_residues, 3) of absolute positions of atoms.
@@ -114,7 +115,8 @@ class Net(torch.nn.Module):
         """
         ## true_deformed_structure is tensor (Batch_size, 3*N_residues, 3) containing absolute positions of every atom
         ## for each structure of the batch.
-        true_deformed_structure = torch.empty((self.batch_size, 3*self.N_residues, 3))
+        batch_size = true_deformation.shape[0]
+        true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3))
         true_deformed_structure[:, :3*self.cutoff, :] = self.atom_absolute_positions[:3*self.cutoff, :] + true_deformation[:, 0:1, :]**3
         true_deformed_structure[:, 3 * self.cutoff:, :] = self.atom_absolute_positions[3 * self.cutoff:, :] + true_deformation[:, 1:2, :]**3
         rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
@@ -123,7 +125,13 @@ class Net(torch.nn.Module):
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
-        return rmsd #+ self.alpha_entropy*loss / self.N_residues
+        loss_weights = F.softmax(mask_weights, dim=0)
+        loss = -torch.sum((loss_weights - 1/self.N_residues)**2)
+        print("RMSD:", rmsd)
+        if train:
+            return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
+
+        return rmsd
 
 
 
