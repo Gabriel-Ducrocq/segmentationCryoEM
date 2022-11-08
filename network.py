@@ -60,7 +60,8 @@ class Net(torch.nn.Module):
         translation_per_residue = torch.matmul(weights, translation_vectors)
         #translation_per_residue = translation_vectors
         #new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 0)
-        new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 0)
+        new_atom_positions = torch.broadcast_to(self.atom_absolute_positions, (10, self.atom_absolute_positions.shape[0],
+                        self.atom_absolute_positions.shape[1])) + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
     def forward(self, x, edge_index, edge_attr, latent_variables):
@@ -71,9 +72,10 @@ class Net(torch.nn.Module):
         #features_domain = torch.sum(hidden_representations, dim = 0)
         #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
         #features_and_latent = torch.concat([torch.broadcast_to(features_domain, (1, 50)), torch.broadcast_to(latent_variables, (1,3))], dim=1)
-        features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
-        print("Reshaped latent variables:")
-        print(torch.reshape(latent_variables, (2, 3)))
+
+
+        #features_and_latent = torch.concat([torch.randn((2, 50)), torch.reshape(latent_variables, (2, 3))], dim=1)
+        features_and_latent = torch.concat([torch.randn((10, 2, 50)), torch.reshape(latent_variables, (10, 2, 3))], dim=2)
         #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
         scalars_per_domain = self.mlp_translation.forward(features_and_latent)
         #print("Test:", features_and_latent)
@@ -84,14 +86,16 @@ class Net(torch.nn.Module):
 
     def loss(self, new_structure, true_structure, mask_weights):
     #def loss(self, new_translation, true_translation, mask_weights):
-        rmsd = torch.sqrt(torch.mean(torch.sum((new_structure - true_structure)**2, dim=1)))
-        #rmsd = torch.sum((new_translation - true_translation)**2)
+        #rmsd = torch.sqrt(torch.mean(torch.sum((new_structure - true_structure)**2, dim=1)))
+
+        ## For batch:
+        rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_structure) ** 2, dim=2), dim=1)))
         #mask_weights = torch.max(mask_weights, self.epsilon_mask_loss)
         attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
-        return loss / self.N_residues + 3*rmsd
+        return loss / self.N_residues + rmsd
 
 
 

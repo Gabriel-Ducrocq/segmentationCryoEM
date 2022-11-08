@@ -13,7 +13,7 @@ class MLP(nn.Module):
         self.linear_relu_stack = nn.Sequential(*[layer for intermediate in list_intermediate for layer in intermediate])
 
     def forward(self, x):
-        x = self.flatten(x)
+        #x = self.flatten(x)
         x = self.input_layer(x)
         hidden = self.linear_relu_stack(x)
         logits = self.output_layer(hidden)
