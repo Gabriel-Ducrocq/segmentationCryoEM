@@ -85,7 +85,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         np.save("data/losses_train.npy", np.array(all_losses))
         np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
-        mask_python = mask.detach()
+        mask_python = mask.to("cpu").detach()
         np.save("data/mask"+str(epoch)+".npy", mask_python)
         scheduler.step()
 
