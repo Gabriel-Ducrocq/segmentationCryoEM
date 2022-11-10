@@ -79,7 +79,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
                                                                     test_set_normed)
         true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
         loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
-        losses_test.append(loss_test.detach())
+        losses_test.append(loss_test.to("cpu").detach())
         print("Loss test:", loss_test)
         print("\n\n\n\n")
         np.save("data/losses_train.npy", np.array(all_losses))
