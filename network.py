@@ -129,11 +129,11 @@ class Net(torch.nn.Module):
 
         #loss_weights = F.softmax(mask_weights, dim=0)
         #loss = -torch.sum((loss_weights - 1/self.N_residues)**2)
-        loss = -torch.sum(torch.minimum(torch.sum(mask_weights, dim=0), torch.ones((self.N_domains))))
+        #loss = -torch.sum(torch.minimum(torch.sum(mask_weights, dim=0), torch.ones((self.N_domains))))
         print("RMSD:", rmsd)
         if train:
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
-            return rmsd + loss
+            return rmsd + 0.01*loss
 
         return rmsd
 
