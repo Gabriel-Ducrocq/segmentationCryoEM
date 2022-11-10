@@ -26,17 +26,14 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
     all_losses = []
     losses_test = []
     if generate_dataset:
-        #latent_vars = 4*torch.randn((dataset_size,3*N_domains))
-        latent_vars = torch.zeros((dataset_size,3*N_domains))
+        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
         latent_vars.to(device)
-        latent_vars[:, :3] = 5
-        latent_vars[:, 3:6] = -5
-        latent_vars[:, 6:] = 10
-        
+
         training_set = latent_vars[test_set_size:]
         test_set = latent_vars[:test_set_size]
 
@@ -54,10 +51,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         for i in range(500):
             print("epoch:", epoch)
             print(i/500)
-            #print(network.multiply_windows_weights())
+            print(network.multiply_windows_weights())
             latent_vars = next(iter(trainingDataLoader))
-            #latent_vars_normed = (latent_vars - avg)/std
-            latent_vars_normed = latent_vars
+            latent_vars_normed = (latent_vars - avg)/std
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
             true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
@@ -65,17 +61,16 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            #k = np.random.randint(0, 200)
-            #print(translations[k, :, :])
-            #print(true_deformation[k, :, :]**3)
-            #print(network.multiply_windows_weights())
-            #print(loss)
-            #all_losses.append(loss.detach())
-            #print("\n\n")
+            k = np.random.randint(0, 200)
+            print(translations[k, :, :])
+            print(true_deformation[k, :, :]**3)
+            print(network.multiply_windows_weights())
+            print(loss)
+            all_losses.append(loss.detach())
+            print("\n\n")
 
 
-        #test_set_normed = (test_set - avg)/std
-        test_set_normed = test_set
+        test_set_normed = (test_set - avg)/std
         new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                     test_set_normed)
         true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
@@ -88,7 +83,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()
         np.save("data/mask"+str(epoch)+".npy", mask_python)
-        scheduler.step()
+        scheduler.step(loss_test)
+        torch.save(network.state_dict(), "model")
 
 def experiment(graph_file="data/features.npy"):
     features = np.load(graph_file, allow_pickle=True)
