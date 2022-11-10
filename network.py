@@ -119,7 +119,7 @@ class Net(torch.nn.Module):
         ## true_deformed_structure is tensor (Batch_size, 3*N_residues, 3) containing absolute positions of every atom
         ## for each structure of the batch.
         batch_size = true_deformation.shape[0]
-        true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3))
+        true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3), device=self.device)
         true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :]**3
         true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + true_deformation[:, 1:2, :]**3
         true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + true_deformation[:, 2:3, :]**3
