@@ -34,7 +34,7 @@ class Net(torch.nn.Module):
             if max(i + balance - B, 0) % S != 0:
                 start += 1  ## If there is a rest, means we have to go one more window
 
-            self.bs_per_res[i, :] = np.arange(start, start + nb_per_res)
+            self.bs_per_res[i, :] = torch.arange(start, start + nb_per_res, device=device)
 
         nb_windows = self.bs_per_res[-1, -1] + 1
         #alpha = torch.randn((nb_windows, self.N_domains))
