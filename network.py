@@ -8,7 +8,7 @@ from mlp import MLP
 
 class Net(torch.nn.Module):
     def __init__(self, N_residues, N_domains, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
-                 batch_size, cutoff1, cutoff2, alpha_entropy = 0.0001):
+                 batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
@@ -27,6 +27,7 @@ class Net(torch.nn.Module):
         nb_per_res = int(B / S)
         balance = B - S + 1
         self.bs_per_res = np.empty((self.N_residues, nb_per_res), dtype=int)
+        self.bs_per_res = torch.tensor(self.bs_per_res, device=device)
         for i in range(self.N_residues):
             start = max(i + balance - B, 0) // S  ##Find the smallest window number such that the residue i is inside
 
@@ -37,7 +38,7 @@ class Net(torch.nn.Module):
 
         nb_windows = self.bs_per_res[-1, -1] + 1
         #alpha = torch.randn((nb_windows, self.N_domains))
-        alpha = torch.ones((nb_windows, self.N_domains))
+        alpha = torch.ones((nb_windows, self.N_domains), device=device)
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
     def multiply_windows_weights(self):

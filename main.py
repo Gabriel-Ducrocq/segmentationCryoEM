@@ -107,7 +107,7 @@ def experiment(graph_file="data/features.npy"):
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
-    net = Net(num_nodes, N_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2)
+    net = Net(num_nodes, N_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
     train_loop(net, absolute_positions, nodes_features, edge_indexes, edges_features, torch.ones((10, 3)))
 
