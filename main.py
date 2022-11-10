@@ -36,6 +36,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         latent_vars[:, :3] = 5
         latent_vars[:, 3:6] = -5
         latent_vars[:, 6:] = 10
+        
         training_set = latent_vars[test_set_size:]
         test_set = latent_vars[:test_set_size]
 
