@@ -8,7 +8,7 @@ from mlp import MLP
 
 class Net(torch.nn.Module):
     def __init__(self, N_residues, N_domains, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
-                 batch_size, cutoff, alpha_entropy = 0.0001):
+                 batch_size, cutoff1, cutoff2, alpha_entropy = 0.0001):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
@@ -21,7 +21,8 @@ class Net(torch.nn.Module):
         self.atom_absolute_positions = atom_absolute_positions
         self.batch_size = batch_size
         self.alpha_entropy = alpha_entropy
-        self.cutoff = cutoff
+        self.cutoff1 = cutoff1
+        self.cutoff2 = cutoff2
 
         nb_per_res = int(B / S)
         balance = B - S + 1
@@ -117,19 +118,22 @@ class Net(torch.nn.Module):
         ## for each structure of the batch.
         batch_size = true_deformation.shape[0]
         true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3))
-        true_deformed_structure[:, :3*self.cutoff, :] = self.atom_absolute_positions[:3*self.cutoff, :] + true_deformation[:, 0:1, :]**3
-        true_deformed_structure[:, 3 * self.cutoff:, :] = self.atom_absolute_positions[3 * self.cutoff:, :] + true_deformation[:, 1:2, :]**3
+        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :]**3
+        true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + true_deformation[:, 1:2, :]**3
+        true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + true_deformation[:, 2:3, :]**3
         rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
 
         attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
         prod = attention_softmax_log * mask_weights
         loss = -torch.sum(prod)
 
-        loss_weights = F.softmax(mask_weights, dim=0)
-        loss = -torch.sum((loss_weights - 1/self.N_residues)**2)
+        #loss_weights = F.softmax(mask_weights, dim=0)
+        #loss = -torch.sum((loss_weights - 1/self.N_residues)**2)
+        loss = -torch.sum(torch.minimum(torch.sum(mask_weights, dim=0), torch.ones((self.N_domains))))
         print("RMSD:", rmsd)
         if train:
-            return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
+            #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
+            return rmsd + loss
 
         return rmsd
 

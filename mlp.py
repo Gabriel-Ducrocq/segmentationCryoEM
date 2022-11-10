@@ -9,10 +9,10 @@ class MLP(nn.Module):
         self.num_hidden_layers = num_hidden_layers
         ##Using leaky RELU !
         self.input_layer = nn.Sequential(nn.Linear(in_dim, intermediate_dim), nn.LeakyReLU())
-        self.output_layer = nn.Linear(intermediate_dim, out_dim)
-        list_intermediate = [[nn.Linear(intermediate_dim, intermediate_dim), nn.LeakyReLU()]
+        self.output_layer = nn.Sequential(nn.Linear(intermediate_dim, out_dim))
+        list_intermediate = [nn.Sequential(nn.Linear(intermediate_dim, intermediate_dim), nn.LeakyReLU())
                              for _ in range(num_hidden_layers)]
-        self.linear_relu_stack = nn.Sequential(*[layer for intermediate in list_intermediate for layer in intermediate])
+        self.linear_relu_stack = nn.Sequential(*[layer for layer in list_intermediate])
 
     def forward(self, x):
         #x = self.flatten(x)

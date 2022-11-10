@@ -1,4 +1,4 @@
-from MPNN import MessagePassingNetwork
+#from MPNN import MessagePassingNetwork
 from mlp import MLP
 from network import Net
 import numpy as np
@@ -7,10 +7,11 @@ import torch.optim.lr_scheduler
 from torch.utils.data import DataLoader
 
 batch_size = 200
-N_domains = 2
+N_domains = 3
 latent_dim = 3*N_domains
 num_nodes = 1510
-cutoff = int(num_nodes/4)
+cutoff1 = 300
+cutoff2 = 1000
 K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
 B = 200
@@ -22,7 +23,7 @@ test_set_size = int(dataset_size/10)
 def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_features, latent_variables,
                generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
-    #optimizer = torch.optim.SGD(network.parameters(), lr=0.01)
+    #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     all_losses = []
@@ -56,6 +57,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            k = np.random.randint(0, 200)
+            print(translations[k, :, :])
+            print(true_deformation[k, :, :]**3)
             print(network.multiply_windows_weights())
             print(loss)
             all_losses.append(loss.detach())
@@ -89,10 +93,10 @@ def experiment(graph_file="data/features.npy"):
     message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(6, 6, 250, num_hidden_layers=4)
+    translation_mlp = MLP(9, 9, 350, num_hidden_layers=6)
 
-    mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
-    net = Net(num_nodes, N_domains, B, S, mpnn, translation_mlp, local_frame, absolute_positions, batch_size, cutoff)
+    #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
+    net = Net(num_nodes, N_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2)
     train_loop(net, absolute_positions, nodes_features, edge_indexes, edges_features, torch.ones((10, 3)))
 
 
