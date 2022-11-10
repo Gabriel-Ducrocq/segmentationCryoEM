@@ -42,8 +42,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         torch.save(training_set, dataset_path + "training_set.npy")
         torch.save(test_set, dataset_path + "test_set.npy")
 
-    training_set = torch.load(dataset_path + "training_set.npy")
-    test_set = torch.load(dataset_path + "test_set.npy")
+    training_set = torch.load(dataset_path + "training_set.npy").to(device)
+    test_set = torch.load(dataset_path + "test_set.npy").to(device)
 
     std = torch.std(training_set, dim=0)
     avg = torch.mean(training_set, dim=0)
@@ -64,13 +64,13 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 200)
-            print(translations[k, :, :])
-            print(true_deformation[k, :, :]**3)
-            print(network.multiply_windows_weights())
-            print(loss)
-            all_losses.append(loss.detach())
-            print("\n\n")
+            #k = np.random.randint(0, 200)
+            #print(translations[k, :, :])
+            #print(true_deformation[k, :, :]**3)
+            #print(network.multiply_windows_weights())
+            #print(loss)
+            #all_losses.append(loss.detach())
+            #print("\n\n")
 
 
         #test_set_normed = (test_set - avg)/std
@@ -96,8 +96,9 @@ def experiment(graph_file="data/features.npy"):
     edges_features = torch.tensor(features["edges_features"], dtype=torch.float)
     edge_indexes = torch.tensor(features["edge_indexes"], dtype=torch.long)
     absolute_positions = torch.tensor(features["absolute_positions"])
-    absolute_positions.to(device)
+    absolute_positions = absolute_positions.to(device)
     local_frame = torch.tensor(features["local_frame"])
+    local_frame = local_frame.to(device)
 
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
