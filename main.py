@@ -99,10 +99,11 @@ def experiment(graph_file="data/features.npy"):
     absolute_positions.to(device)
     local_frame = torch.tensor(features["local_frame"])
 
-    message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
-    update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
+    #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
+    #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(9, 9, 350, num_hidden_layers=6)
+    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=6)
+
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
     net = Net(num_nodes, N_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2)
