@@ -23,6 +23,7 @@ class Net(torch.nn.Module):
         self.alpha_entropy = alpha_entropy
         self.cutoff1 = cutoff1
         self.cutoff2 = cutoff2
+        self.device = device
 
         nb_per_res = int(B / S)
         balance = B - S + 1
@@ -42,7 +43,7 @@ class Net(torch.nn.Module):
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
     def multiply_windows_weights(self):
-        weights_per_residues = torch.empty((self.N_residues, self.N_domains))
+        weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
         for i in range(self.N_residues):
             windows_set = self.bs_per_res[i]  # Extracting the indexes of the windows for the given residue
             weights_per_residues[i, :] = torch.prod(self.weights[windows_set, :],
