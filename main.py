@@ -15,7 +15,7 @@ cutoff1 = 300
 cutoff2 = 1000
 K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
-B = 200
+B = 10
 S = 1
 dataset_size = 100000
 test_set_size = int(dataset_size/10)
@@ -30,6 +30,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
     all_losses = []
     losses_test = []
+
     if generate_dataset:
         latent_vars = 4*torch.randn((dataset_size,3*N_domains))
         latent_vars.to(device)
@@ -100,7 +101,7 @@ def experiment(graph_file="data/features.npy"):
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=6)
+    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=3)
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
