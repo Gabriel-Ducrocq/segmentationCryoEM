@@ -39,60 +39,63 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         #latent_vars[:, 6:] = 10
         latent_vars.to(device)
 
-
-        training_set = latent_vars[test_set_size:]
-        test_set = latent_vars[:test_set_size]
+        training_set = latent_vars.to(device)
+        #training_set = latent_vars[test_set_size:]
+        #test_set = latent_vars[:test_set_size]
 
         torch.save(training_set, dataset_path + "training_set.npy")
-        torch.save(test_set, dataset_path + "test_set.npy")
+        #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
-    test_set = torch.load(dataset_path + "test_set.npy").to(device)
+    #test_set = torch.load(dataset_path + "test_set.npy").to(device)
 
-    std = torch.std(training_set, dim=0)
-    avg = torch.mean(training_set, dim=0)
-
+    #std = torch.std(training_set, dim=0)
+    #avg = torch.mean(training_set, dim=0)
+    indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
     for epoch in range(1000):
-        trainingDataLoader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
+        indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
         for i in range(500):
             print("epoch:", epoch)
             print(i/500)
             print(network.multiply_windows_weights())
-            latent_vars = next(iter(trainingDataLoader))
+            ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
-            latent_vars_normed = latent_vars
+            latent_vars_normed = network.sample_q(ind)
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
-            true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
-            loss = network.loss(new_structure, true_deformation, mask_weights)
+            #true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
+            loss = network.loss(new_structure, training_set[ind, :], mask_weights, ind)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             k = np.random.randint(0, 200)
             print(translations[k, :, :])
-            print(true_deformation[k, :, :]**3)
+            #print(true_deformation[k, :, :]**3)
             print(network.multiply_windows_weights())
+            print(network.latent_mean)
             print(loss)
             all_losses.append(loss.detach())
             print("\n\n")
 
 
         #test_set_normed = (test_set - avg)/std
-        test_set_normed = test_set
-        new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
-                                                                    test_set_normed)
-        true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
-        loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
-        losses_test.append(loss_test.to("cpu").detach())
-        print("Loss test:", loss_test)
+
+        #test_set_normed = test_set
+        #new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
+        #                                                            test_set_normed)
+        #true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
+        #loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
+        #losses_test.append(loss_test.to("cpu").detach())
+        #print("Loss test:", loss_test)
         print("\n\n\n\n")
         np.save("data/losses_train.npy", np.array(all_losses))
-        np.save("data/losses_test.npy", np.array(losses_test))
+        #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()
         np.save("data/mask"+str(epoch)+".npy", mask_python)
-        scheduler.step(loss_test)
+        #scheduler.step(loss_test)
         torch.save(network.state_dict(), "model")
+        #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
     features = np.load(graph_file, allow_pickle=True)
