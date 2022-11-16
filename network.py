@@ -144,7 +144,7 @@ class Net(torch.nn.Module):
             print("Loss:", loss)
             print("Loss2:", loss2)
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
-            return rmsd #+ 0.01*loss
+            return rmsd + 0.01*loss
             #return rmsd #+ 0.01*loss + 0.001*loss2
 
         return rmsd

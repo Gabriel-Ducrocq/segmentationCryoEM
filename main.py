@@ -32,8 +32,13 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     losses_test = []
 
     if generate_dataset:
-        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
+        #latent_vars = 4*torch.randn((dataset_size,3*N_domains))
+        latent_vars = torch.empty((dataset_size,3*N_domains))
+        latent_vars[:, :3] = 5
+        latent_vars[:, 3:6] = -5
+        latent_vars[:, 6:] = 10
         latent_vars.to(device)
+
 
         training_set = latent_vars[test_set_size:]
         test_set = latent_vars[:test_set_size]
@@ -54,7 +59,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             print(i/500)
             print(network.multiply_windows_weights())
             latent_vars = next(iter(trainingDataLoader))
-            latent_vars_normed = (latent_vars - avg)/std
+            #latent_vars_normed = (latent_vars - avg)/std
+            latent_vars_normed = latent_vars
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
             true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
@@ -71,7 +77,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             print("\n\n")
 
 
-        test_set_normed = (test_set - avg)/std
+        #test_set_normed = (test_set - avg)/std
+        test_set_normed = test_set
         new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                     test_set_normed)
         true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
@@ -101,7 +108,7 @@ def experiment(graph_file="data/features.npy"):
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=3)
+    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=1)
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
