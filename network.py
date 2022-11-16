@@ -125,9 +125,9 @@ class Net(torch.nn.Module):
         ## for each structure of the batch.
         batch_size = true_deformation.shape[0]
         true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3), device=self.device)
-        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :]**3
-        true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + true_deformation[:, 1:2, :]**3
-        true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + true_deformation[:, 2:3, :]**3
+        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + 5**3##true_deformation[:, 0:1, :]**3
+        true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + -5**3 #true_deformation[:, 1:2, :]**3
+        true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + 10**3 #true_deformation[:, 2:3, :]**3
         rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
 
         attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
