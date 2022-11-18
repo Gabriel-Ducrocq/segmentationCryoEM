@@ -27,16 +27,16 @@ test_set_size = int(dataset_size/10)
 
 def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_features, latent_variables,
                generate_dataset=True, dataset_path="data/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
+    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
     all_losses = []
     losses_test = []
 
     if generate_dataset:
-        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
+        latent_vars = 16*torch.randn((dataset_size,3*N_domains))
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
@@ -58,6 +58,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
     indexes = torch.tensor(np.array(range(90000)))
     for epoch in range(1000):
+        epoch_loss = torch.empty(180)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
         for i in range(180):
             print("epoch:", epoch)
@@ -74,12 +75,16 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             loss.backward()
             optimizer.step()
             k = np.random.randint(0, 500)
+            epoch_loss[i] = loss
             print(translations[k, :, :])
             #print(true_deformation[k, :, :]**3)
             print(network.multiply_windows_weights())
             print(network.latent_mean)
             print(loss)
             all_losses.append(loss.detach())
+            print(network.latent_std.shape)
+            print("Lat mean:", network.latent_mean)
+            print("Lat std:", network.latent_std)
             print("\n\n")
 
             writer.add_scalar('Loss/train', loss, i)
@@ -87,7 +92,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        scheduler.step()
+        scheduler.step(torch.mean(epoch_loss))
         #test_set_normed = (test_set - avg)/std
 
         #test_set_normed = test_set
