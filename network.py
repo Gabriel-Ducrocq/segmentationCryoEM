@@ -46,6 +46,8 @@ class Net(torch.nn.Module):
         self.latent_mean = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
         self.latent_std = torch.nn.Parameter(data=torch.ones((90000, 3*self.N_domains)), requires_grad=True) #+ 0.1*torch.randn((90000, 3*self.N_domains)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
+        self.latent_mean = self.latent_mean.to(device)
+        self.latent_std = self.latent_std.to(device)
 
     def multiply_windows_weights(self):
         weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
