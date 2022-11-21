@@ -6,6 +6,7 @@ import torch
 import torch.optim.lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+import time
 import torchvision
 
 
@@ -63,10 +64,12 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     for epoch in range(1000):
         epoch_loss = torch.empty(180)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
+        print("epoch:", epoch)
         for i in range(180):
-            print("epoch:", epoch)
-            print(i/180)
-            print(network.multiply_windows_weights())
+            start = time.time()
+            #print("epoch:", epoch)
+            #print(i/180)
+            #print(network.multiply_windows_weights())
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
             latent_vars_normed = network.sample_q(ind)
@@ -77,23 +80,25 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 500)
+            #k = np.random.randint(0, 500)
             epoch_loss[i] = loss
-            print(translations[k, :, :])
+            #print(translations[k, :, :])
             #print(true_deformation[k, :, :]**3)
-            print(network.multiply_windows_weights())
-            print(network.latent_mean)
-            print(loss)
+            #print(network.multiply_windows_weights())
+            #print(network.latent_mean)
+            #print(loss)
             all_losses.append(loss.detach())
             all_dkl_losses.append(dkl_loss.detach())
             all_rmsd_losses.append(rmsd_loss.detach())
             all_mask_losses.append(mask_loss.detach())
-            print(network.latent_std.shape)
-            print("Lat mean:", network.latent_mean)
-            print("Lat std:", network.latent_std)
-            print("\n\n")
+            #print(network.latent_std.shape)
+            #print("Lat mean:", network.latent_mean)
+            #print("Lat std:", network.latent_std)
+            #print("\n\n")
+            end = time.time()
+            print(end-start)
 
-            writer.add_scalar('Loss/train', loss, i)
+            #writer.add_scalar('Loss/train', loss, i)
             #writer.add_scalar('Loss/test', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)

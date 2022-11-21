@@ -161,9 +161,9 @@ class Net(torch.nn.Module):
         #loss = -torch.sum(torch.minimum(torch.sum(mask_weights, dim=0), torch.ones((self.N_domains))))
         #print("RMSD:", rmsd)
         if train:
-            print("RMSD:", rmsd)
-            print("Loss:", loss)
-            print("Dkl:", Dkl_loss)
+            #print("RMSD:", rmsd)
+            #print("Loss:", loss)
+            #print("Dkl:", Dkl_loss)
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
             return rmsd + Dkl_loss + 0.0000001*loss, rmsd, Dkl_loss, loss
             #return Dkl_loss
