@@ -12,7 +12,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 500
+batch_size = 2000
 N_domains = 3
 latent_dim = 3*N_domains
 num_nodes = 1510
@@ -40,7 +40,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     losses_test = []
 
     if generate_dataset:
-        latent_vars = 16*torch.randn((dataset_size,3*N_domains))
+        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
@@ -62,13 +62,13 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
     indexes = torch.tensor(np.array(range(90000)), device=device)
     for epoch in range(1000):
-        epoch_loss = torch.empty(180)
+        epoch_loss = torch.empty(45)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True, pin_memory=True)
         #print("epoch:", epoch)
-        for i in range(180):
+        for i in range(45):
             start = time.time()
             print("epoch:", epoch)
-            print(i/180)
+            print(i/45)
             #print(network.multiply_windows_weights())
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
@@ -80,10 +80,10 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 500)
+            k = np.random.randint(0, 2000)
             epoch_loss[i] = loss
             print(translations[k, :, :])
-            #print(true_deformation[k, :, :]**3)
+            print(training_set[ind][k, :])
             print(network.multiply_windows_weights())
             print(loss)
             all_losses.append(loss.detach())
