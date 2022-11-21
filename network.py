@@ -44,7 +44,7 @@ class Net(torch.nn.Module):
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
         self.latent_mean = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.ones((90000, 3*self.N_domains)), requires_grad=True) #+ 0.1*torch.randn((90000, 3*self.N_domains)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
     def multiply_windows_weights(self):
@@ -163,7 +163,7 @@ class Net(torch.nn.Module):
             print("Loss:", loss)
             print("Dkl:", Dkl_loss)
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
-            return rmsd #+ 0.001*Dkl_loss #+0.001*loss
+            return rmsd + Dkl_loss + 0.0000001*loss, rmsd, Dkl_loss, loss
             #return Dkl_loss
             #return rmsd #+ 0.01*loss + 0.001*loss2
 
