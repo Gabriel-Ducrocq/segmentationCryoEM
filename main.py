@@ -63,7 +63,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     indexes = torch.tensor(np.array(range(90000)), device=device)
     for epoch in range(1000):
         epoch_loss = torch.empty(45)
-        indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True, pin_memory=True)
+        indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
         #print("epoch:", epoch)
         for i in range(45):
             start = time.time()
