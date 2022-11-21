@@ -12,7 +12,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 2000
+batch_size = 6000
 N_domains = 3
 latent_dim = 3*N_domains
 num_nodes = 1510
@@ -62,13 +62,13 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
     indexes = torch.tensor(np.array(range(90000)), device=device)
     for epoch in range(1000):
-        epoch_loss = torch.empty(45)
+        epoch_loss = torch.empty(15)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
         #print("epoch:", epoch)
-        for i in range(45):
+        for i in range(15):
             start = time.time()
             print("epoch:", epoch)
-            print(i/45)
+            print(i/15)
             #print(network.multiply_windows_weights())
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
