@@ -32,15 +32,16 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
     all_losses = []
     all_dkl_losses = []
     all_rmsd_losses = []
     all_mask_losses = []
     losses_test = []
 
+
     if generate_dataset:
-        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
+        latent_vars = 16*torch.randn((dataset_size,3*N_domains))
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
@@ -73,23 +74,26 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
             latent_vars_normed = network.sample_q(ind)
-            new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
+            new_structure, mask_weights, translations, hard_mask = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
+
             #true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
-            loss, rmsd_loss, dkl_loss, mask_loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, 3, 3) ), mask_weights, ind)
+            loss, rmsd_loss, dkl_loss, loss_without_dkl = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, 3, 3) ), hard_mask, mask_weights, ind)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 2000)
+            k = np.random.randint(0, 6000)
             epoch_loss[i] = loss
             print(translations[k, :, :])
             print(training_set[ind][k, :])
-            print(network.multiply_windows_weights())
+            mask_proba, hard_mask = network.multiply_windows_weights()
+            print("Mask proba:", mask_proba)
+            print("Mask hard:", hard_mask)
             print(loss)
+
             all_losses.append(loss.cpu().detach())
             all_dkl_losses.append(dkl_loss.cpu().detach())
             all_rmsd_losses.append(rmsd_loss.cpu().detach())
-            all_mask_losses.append(mask_loss.cpu().detach())
             #print(network.latent_std.shape)
             print("Lat mean:", network.latent_mean)
             print("Lat std:", network.latent_std)
@@ -118,9 +122,11 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         np.save("data/losses_rmsd_train.npy", np.array(all_rmsd_losses))
         np.save("data/losses_mask_train.npy", np.array(all_mask_losses))
         #np.save("data/losses_test.npy", np.array(losses_test))
-        mask = network.multiply_windows_weights()
-        mask_python = mask.to("cpu").detach()
-        np.save("data/mask"+str(epoch)+".npy", mask_python)
+        proba_mask, hard_mask = network.multiply_windows_weights()
+        proba_mask_python = proba_mask.to("cpu").detach()
+        hard_mask_python = hard_mask.to("cpu").detach()
+        np.save("data/proba_mask"+str(epoch)+".npy", proba_mask_python)
+        np.save("data/hard_mask"+str(epoch)+".npy", hard_mask_python)
         #scheduler.step(loss_test)
         torch.save(network.state_dict(), "model")
         torch.save(network, "entire_model")
