@@ -36,7 +36,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     losses_test = []
 
     if generate_dataset:
-        latent_vars = 16*torch.randn((dataset_size,3*N_domains))
+        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
