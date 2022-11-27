@@ -33,7 +33,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=2)
     all_losses = []
-    losses_test = []
+    all_rmsd = []
+    all_dkl_losses = []
+    all_mask_loss = []
 
     if generate_dataset:
         latent_vars = 4*torch.randn((dataset_size,3*N_domains))
@@ -70,7 +72,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
             #true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
-            loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, 3, 3) ), mask_weights, ind)
+            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, 3, 3) ), mask_weights, ind)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -82,6 +84,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             print(network.latent_mean)
             print(loss)
             all_losses.append(loss.detach())
+            all_dkl_losses.append(Dkl_loss.detach())
+            all_rmsd.append(rmsd.detach())
+            all_mask_loss.append(mask_loss.detach())
             print(network.latent_std.shape)
             print("Lat mean:", network.latent_mean)
             print("Lat std:", network.latent_std)
@@ -104,12 +109,16 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         #print("Loss test:", loss_test)
         print("\n\n\n\n")
         np.save("data/losses_train.npy", np.array(all_losses))
+        np.save("data/losses_dkl.npy", np.array(all_dkl_losses))
+        np.save("data/losses_rmsd.npy", np.array(all_rmsd))
+        np.save("data/losses_mask.npy", np.array(all_mask_loss))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()
         np.save("data/mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
         torch.save(network.state_dict(), "model")
+        torch.save(network, "full_model")
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):

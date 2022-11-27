@@ -2,3 +2,4 @@
 *.json
 *.pdb
 *.pyc
+*model
