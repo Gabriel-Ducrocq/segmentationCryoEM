@@ -65,7 +65,6 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         for i in range(45):
             print("epoch:", epoch)
             print(i/45)
-            print(network.multiply_windows_weights())
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
             latent_vars_normed = network.sample_q(ind)
@@ -78,11 +77,10 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.step()
             k = np.random.randint(0, 2000)
             epoch_loss[i] = loss
-            print(translations[k, :, :])
-            #print(true_deformation[k, :, :]**3)
-            print(network.multiply_windows_weights())
-            print(network.latent_mean)
-            print(loss)
+            print("Translation network:", translations[k, :, :])
+            print("True translations:", torch.reshape(training_set[ind, :],(batch_size, 3, 3) )[k,:,:])
+            print("Mask weights:",network.multiply_windows_weights())
+            print("Total loss:",loss)
             all_losses.append(loss.detach())
             all_dkl_losses.append(Dkl_loss.detach())
             all_rmsd.append(rmsd.detach())

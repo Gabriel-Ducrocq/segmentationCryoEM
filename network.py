@@ -160,7 +160,7 @@ class Net(torch.nn.Module):
         #print("RMSD:", rmsd)
         if train:
             print("RMSD:", rmsd)
-            print("Loss:", loss)
+            print("weight Loss:", loss)
             print("Dkl:", Dkl_loss)
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
             return rmsd + 0.001*Dkl_loss +0.001*loss, rmsd, Dkl_loss, loss
