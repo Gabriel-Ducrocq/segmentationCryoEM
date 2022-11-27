@@ -3,3 +3,4 @@
 *.pdb
 *.pyc
 *model
+*.sh
