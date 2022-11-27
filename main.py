@@ -10,7 +10,7 @@ import torchvision
 
 
 writer = SummaryWriter()
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 2000
 N_domains = 3
 latent_dim = 3*N_domains
