@@ -6,6 +6,7 @@ import torch
 import torch.optim.lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+import time
 import torchvision
 
 
@@ -63,6 +64,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         epoch_loss = torch.empty(45)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
         for i in range(45):
+            start = time.time()
             print("epoch:", epoch)
             print(i/45)
             ind = next(iter(indexesDataLoader))
@@ -88,9 +90,11 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             print(network.latent_std.shape)
             print("Lat mean:", network.latent_mean)
             print("Lat std:", network.latent_std)
+            end = time.time()
+            print("Running time one iteration:", end -start)
             print("\n\n")
 
-            writer.add_scalar('Loss/train', loss, i)
+            #writer.add_scalar('Loss/train', loss, i)
             #writer.add_scalar('Loss/test', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
