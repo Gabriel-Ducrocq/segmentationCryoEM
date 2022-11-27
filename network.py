@@ -64,7 +64,7 @@ class Net(torch.nn.Module):
 
 
     def sample_q(self, indexes):
-        latent_var = self.latent_std[indexes, :]*torch.randn((self.batch_size, 3*self.N_domains)) + self.latent_mean[indexes, :]
+        latent_var = self.latent_std[indexes, :]*torch.randn((self.batch_size, 3*self.N_domains), device=self.device) + self.latent_mean[indexes, :]
         #latent_var = self.latent_std*torch.randn((self.batch_size, 3*self.N_domains)) + self.latent_mean
         return latent_var
 
