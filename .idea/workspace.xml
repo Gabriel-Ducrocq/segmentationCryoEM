@@ -3,8 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="623e62ad-3fe9-43a4-8eed-6061e25ab45f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model" beforeDir="false" afterPath="$PROJECT_DIR$/model" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Untitled.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Untitled.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/runs/Nov27_15-01-31_mac00987/events.out.tfevents.1669557691.mac00987.94242.0" beforeDir="false" afterPath="$PROJECT_DIR$/runs/Nov27_15-01-31_mac00987/events.out.tfevents.1669557691.mac00987.94242.0" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
