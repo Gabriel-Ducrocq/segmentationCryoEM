@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="623e62ad-3fe9-43a4-8eed-6061e25ab45f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_11-57-33_mac00987/events.out.tfevents.1669719453.mac00987.28655.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_12-01-44_mac00987/events.out.tfevents.1669719704.mac00987.28753.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_13-33-48_mac00987/events.out.tfevents.1669725228.mac00987.29985.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_13-34-28_mac00987/events.out.tfevents.1669725268.mac00987.30010.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_13-37-16_mac00987/events.out.tfevents.1669725436.mac00987.30066.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_13-44-53_mac00987/events.out.tfevents.1669725893.mac00987.30130.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_13-48-58_mac00987/events.out.tfevents.1669726138.mac00987.30186.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_15-08-25_mac00987/events.out.tfevents.1669730905.mac00987.31601.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_20-08-07_mac00987/events.out.tfevents.1669748887.mac00987.33639.0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/runs/Nov29_23-42-11_mac00987/events.out.tfevents.1669761731.mac00987.36725.0" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Untitled.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Untitled.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

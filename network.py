@@ -43,8 +43,8 @@ class Net(torch.nn.Module):
         alpha = torch.ones((nb_windows, self.N_domains), device=device)
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, 3*self.N_domains)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((100000, 3*self.N_domains)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 1
