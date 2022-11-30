@@ -12,7 +12,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 2000
+batch_size = 6000
 N_domains = 3
 latent_dim = 3*N_domains
 num_nodes = 1510
@@ -37,6 +37,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     all_rmsd = []
     all_dkl_losses = []
     all_mask_loss = []
+    all_tau = []
 
     if generate_dataset:
         latent_vars = 4*torch.randn((dataset_size,3*N_domains))
@@ -59,14 +60,14 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #std = torch.std(training_set, dim=0)
     #avg = torch.mean(training_set, dim=0)
     #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
-    indexes = torch.tensor(np.array(range(90000)))
-    for epoch in range(1000):
-        epoch_loss = torch.empty(45)
+    indexes = torch.tensor(np.array(range(100000)))
+    for epoch in range(0,1000):
+        epoch_loss = torch.empty(15)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
-        for i in range(45):
+        for i in range(15):
             start = time.time()
             print("epoch:", epoch)
-            print(i/45)
+            print(i/15)
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
             latent_vars_normed = network.sample_q(ind)
@@ -77,7 +78,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 2000)
+            k = np.random.randint(0, 6000)
             epoch_loss[i] = loss
             print("Translation network:", translations[k, :, :])
             print("True translations:", torch.reshape(training_set[ind, :],(batch_size, 3, 3) )[k,:,:])
@@ -87,6 +88,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             all_dkl_losses.append(Dkl_loss.cpu().detach())
             all_rmsd.append(rmsd.cpu().detach())
             all_mask_loss.append(mask_loss.cpu().detach())
+            all_tau.append(network.tau)
             print(network.latent_std.shape)
             print("Lat mean:", network.latent_mean)
             print("Lat std:", network.latent_std)
@@ -100,6 +102,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
         scheduler.step(torch.mean(epoch_loss))
+        if (epoch+1)%10 == 0:
+            network.tau = network.annealing_tau * network.tau
+
         #test_set_normed = (test_set - avg)/std
 
         #test_set_normed = test_set
@@ -114,6 +119,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         np.save("data/losses_dkl.npy", np.array(all_dkl_losses))
         np.save("data/losses_rmsd.npy", np.array(all_rmsd))
         np.save("data/losses_mask.npy", np.array(all_mask_loss))
+        np.save("data/all_tau.npy", np.array(all_tau))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()

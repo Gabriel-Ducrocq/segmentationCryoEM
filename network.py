@@ -47,6 +47,9 @@ class Net(torch.nn.Module):
         self.latent_std = torch.nn.Parameter(data=torch.randn((90000, 3*self.N_domains)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
+        self.tau = 1
+        self.annealing_tau = 0.5
+
     def multiply_windows_weights(self):
         weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
         for i in range(self.N_residues):
@@ -56,7 +59,7 @@ class Net(torch.nn.Module):
 
         #weights_per_residues = weights_per_residues**2
         #weights_per_residues = weights_per_residues/torch.sum(weights_per_residues, dim=0, keepdim=True)
-        attention_softmax = F.softmax(weights_per_residues, dim=1)
+        attention_softmax = F.softmax(weights_per_residues/self.tau, dim=1)
         #div = torch.transpose(attention_softmax, 0, 1)/(torch.sum(attention_softmax, dim=1) + 1e-10)
         #attention_softmax = torch.transpose(div, 0, 1)
         #attention_softmax = F.softmax(weights_per_residues, dim=1)
@@ -163,7 +166,8 @@ class Net(torch.nn.Module):
             print("weight Loss:", loss)
             print("Dkl:", Dkl_loss)
             #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
-            return rmsd + 0.001*Dkl_loss +0.001*loss, rmsd, Dkl_loss, loss
+            return rmsd + 0.1 * Dkl_loss, rmsd, Dkl_loss, loss
+            #return rmsd + 0.001*Dkl_loss +0.001*loss, rmsd, Dkl_loss, loss
             #return Dkl_loss
             #return rmsd #+ 0.01*loss + 0.001*loss2
 
