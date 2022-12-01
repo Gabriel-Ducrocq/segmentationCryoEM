@@ -13,8 +13,11 @@ import torchvision
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 6000
+#This represent the number of true domains
 N_domains = 3
-latent_dim = 3*N_domains
+#This represents the number of domain we think there are
+N_input_domains = 4
+latent_dim = 3*N_input_domains
 num_nodes = 1510
 cutoff1 = 300
 cutoff2 = 1000
@@ -40,7 +43,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     all_tau = []
 
     if generate_dataset:
-        latent_vars = 4*torch.randn((dataset_size,3*N_domains))
+        latent_vars = 4*torch.randn((dataset_size,3*N_input_domains))
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
@@ -74,14 +77,14 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
                                                                         latent_vars_normed)
             #true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
-            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, 3, 3) ), mask_weights, ind)
+            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) ), mask_weights, ind)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             k = np.random.randint(0, 6000)
             epoch_loss[i] = loss
             print("Translation network:", translations[k, :, :])
-            print("True translations:", torch.reshape(training_set[ind, :],(batch_size, 3, 3) )[k,:,:])
+            print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
             print("Mask weights:",network.multiply_windows_weights())
             print("Total loss:",loss)
             all_losses.append(loss.cpu().detach())
@@ -143,11 +146,11 @@ def experiment(graph_file="data/features.npy"):
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(9, 9, 350, device, num_hidden_layers=2)
+    translation_mlp = MLP(3*N_input_domains, 3*N_input_domains, 350, device, num_hidden_layers=2)
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
-    net = Net(num_nodes, N_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
+    net = Net(num_nodes, N_input_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
     train_loop(net, absolute_positions, nodes_features, edge_indexes, edges_features, torch.ones((10, 3)))
 
