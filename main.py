@@ -12,7 +12,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 6000
+batch_size = 2000
 #This represent the number of true domains
 N_domains = 3
 #This represents the number of domain we think there are
@@ -35,7 +35,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
@@ -65,12 +65,12 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
     indexes = torch.tensor(np.array(range(100000)))
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(15)
+        epoch_loss = torch.empty(45)
         indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
-        for i in range(15):
+        for i in range(45):
             start = time.time()
             print("epoch:", epoch)
-            print(i/15)
+            print(i/45)
             ind = next(iter(indexesDataLoader))
             #latent_vars_normed = (latent_vars - avg)/std
             latent_vars_normed = network.sample_q(ind)
@@ -81,7 +81,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            k = np.random.randint(0, 6000)
+            k = np.random.randint(0, 2000)
             epoch_loss[i] = loss
             print("Translation network:", translations[k, :, :])
             print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
