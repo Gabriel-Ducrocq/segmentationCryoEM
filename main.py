@@ -35,7 +35,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=30)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
@@ -106,7 +106,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
         scheduler.step(torch.mean(epoch_loss))
-        if (epoch+1)%50 == 0:
+        if (epoch+1)%100 == 0:
             network.tau = network.annealing_tau * network.tau
 
         for param_group in optimizer.param_groups:
