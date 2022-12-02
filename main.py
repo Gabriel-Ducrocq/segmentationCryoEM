@@ -35,13 +35,12 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     #optimizer = torch.optim.SGD(network.parameters(), lr=5)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
     #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=20)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
     all_mask_loss = []
     all_tau = []
-    all_lr = []
 
     if generate_dataset:
         latent_vars = 1*torch.randn((dataset_size,3*N_input_domains))
@@ -106,12 +105,8 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
         scheduler.step(torch.mean(epoch_loss))
-        if (epoch+1)%100 == 0:
+        if (epoch+1)%50 == 0:
             network.tau = network.annealing_tau * network.tau
-
-        for param_group in optimizer.param_groups:
-            lr = param_group['lr']
-            all_lr.append(lr)
 
         #test_set_normed = (test_set - avg)/std
 
@@ -128,7 +123,6 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         np.save("data/losses_rmsd.npy", np.array(all_rmsd))
         np.save("data/losses_mask.npy", np.array(all_mask_loss))
         np.save("data/all_tau.npy", np.array(all_tau))
-        np.save("data/all_lr.npy", np.array(all_lr))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()
@@ -152,7 +146,7 @@ def experiment(graph_file="data/features.npy"):
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(3*N_input_domains, 3*N_input_domains, 350, device, num_hidden_layers=3)
+    translation_mlp = MLP(3*N_input_domains, 3*N_input_domains, 350, device, num_hidden_layers=2)
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
