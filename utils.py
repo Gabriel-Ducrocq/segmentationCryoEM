@@ -1,4 +1,5 @@
 import numpy as np
+import Bio.PDB as bpdb
 
 restype_1to3 = {
     'A': 'ALA',
@@ -160,3 +161,4 @@ def get_positions(residue, name):
 
     z = residue["C"].get_coord()
     return x,y,z
+
