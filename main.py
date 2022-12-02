@@ -41,6 +41,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     all_dkl_losses = []
     all_mask_loss = []
     all_tau = []
+    all_lr = []
 
     if generate_dataset:
         latent_vars = 1*torch.randn((dataset_size,3*N_input_domains))
@@ -108,6 +109,10 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         if (epoch+1)%50 == 0:
             network.tau = network.annealing_tau * network.tau
 
+        for param_group in optimizer.param_groups:
+            lr = param_group['lr']
+            all_lr.append(lr)
+
         #test_set_normed = (test_set - avg)/std
 
         #test_set_normed = test_set
@@ -123,6 +128,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
         np.save("data/losses_rmsd.npy", np.array(all_rmsd))
         np.save("data/losses_mask.npy", np.array(all_mask_loss))
         np.save("data/all_tau.npy", np.array(all_tau))
+        np.save("data/all_lr.npy", np.array(all_lr))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.multiply_windows_weights()
         mask_python = mask.to("cpu").detach()
