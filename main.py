@@ -17,7 +17,7 @@ batch_size = 6000
 N_domains = 3
 #This represents the number of domain we think there are
 N_input_domains = 4
-latent_dim = 3*N_input_domains
+latent_dim = 9
 num_nodes = 1510
 cutoff1 = 300
 cutoff2 = 1000
@@ -146,11 +146,11 @@ def experiment(graph_file="data/features.npy"):
     #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
     #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
     #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
-    translation_mlp = MLP(3*N_input_domains, 3*N_input_domains, 350, device, num_hidden_layers=2)
+    translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=1)
 
 
     #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
-    net = Net(num_nodes, N_input_domains, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
+    net = Net(num_nodes, N_input_domains, latent_dim, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
     train_loop(net, absolute_positions, nodes_features, edge_indexes, edges_features, torch.ones((10, 3)))
 

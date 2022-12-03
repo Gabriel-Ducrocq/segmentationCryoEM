@@ -8,13 +8,14 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
+    def __init__(self, N_residues, N_domains, latent_dim, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
                  batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
         self.B = B
         self.S = S
+        self.latent_dim = latent_dim
         self.epsilon_mask_loss = 1e-10
         self.decoder = decoder
         self.mlp_translation = mlp_translation
@@ -43,8 +44,8 @@ class Net(torch.nn.Module):
         alpha = torch.ones((nb_windows, self.N_domains), device=device)
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, 3*self.N_domains)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((100000, 3*self.N_domains)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 1
@@ -67,7 +68,7 @@ class Net(torch.nn.Module):
 
 
     def sample_q(self, indexes):
-        latent_var = self.latent_std[indexes, :]*torch.randn((self.batch_size, 3*self.N_domains), device=self.device) + self.latent_mean[indexes, :]
+        latent_var = self.latent_std[indexes, :]*torch.randn((self.batch_size, self.latent_dim), device=self.device) + self.latent_mean[indexes, :]
         #latent_var = self.latent_std*torch.randn((self.batch_size, 3*self.N_domains)) + self.latent_mean
         return latent_var
 
@@ -140,7 +141,7 @@ class Net(torch.nn.Module):
         #batch_size = true_deformation.shape[0]
         batch_size = self.batch_size
         true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3), device=self.device)
-        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :] + true_deformation[:, 1:2, :]#**3
+        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :] + 3*true_deformation[:, 1:2, :]#**3
         true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + true_deformation[:, 1:2, :]#**3
         true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + true_deformation[:, 2:3, :]#**3
         rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
