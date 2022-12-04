@@ -105,7 +105,7 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
         scheduler.step(torch.mean(epoch_loss))
-        if (epoch+1)%50 == 0:
+        if (epoch+1)%20 == 0:
             network.tau = network.annealing_tau * network.tau
 
         #test_set_normed = (test_set - avg)/std
