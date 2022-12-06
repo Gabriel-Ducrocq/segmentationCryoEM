@@ -44,6 +44,9 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
 
     if generate_dataset:
         latent_vars = 1*torch.randn((dataset_size,3*N_input_domains))
+        latent_vars[:33000] += 2
+        latent_vars[33000:66000] -= 2
+        latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
