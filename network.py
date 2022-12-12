@@ -87,7 +87,7 @@ class Net(torch.nn.Module):
         """
         batch_size = distrib_parameters.shape[0]
         print(distrib_parameters.shape)
-        latent_vars = torch.randn(size=(batch_size, self.latent_dim))*distrib_parameters[:, self.SLICE_SIGMA]\
+        latent_vars = torch.randn(size=(batch_size, self.latent_dim), device=self.device)*distrib_parameters[:, self.SLICE_SIGMA]\
                       + distrib_parameters[:, self.SLICE_MU]
         return latent_vars
 
