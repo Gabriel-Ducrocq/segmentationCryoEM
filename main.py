@@ -14,7 +14,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 200
+batch_size = 150
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
