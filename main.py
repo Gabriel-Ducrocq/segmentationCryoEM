@@ -1,4 +1,5 @@
 #from MPNN import MessagePassingNetwork
+import utils
 from mlp import MLP
 from network import Net
 import numpy as np
@@ -7,14 +8,16 @@ import torch.optim.lr_scheduler
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import time
+from imageRenderer import Renderer
 import torchvision
 
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 6000
+batch_size = 200
 #This represent the number of true domains
 N_domains = 3
+N_pixels = 64*64
 #This represents the number of domain we think there are
 N_input_domains = 4
 latent_dim = 9
@@ -29,12 +32,8 @@ dataset_size = 100000
 test_set_size = int(dataset_size/10)
 
 
-def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_features, latent_variables,
-               generate_dataset=True, dataset_path="data/"):
+def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
-    #optimizer = torch.optim.SGD(network.parameters(), lr=5)
-    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3, threshold=0.0001, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08, verbose=False)
-    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
     all_losses = []
     all_rmsd = []
@@ -43,57 +42,52 @@ def train_loop(network, absolute_positions, nodes_features, edge_indexes, edges_
     all_tau = []
 
     if generate_dataset:
-        latent_vars = 1*torch.randn((dataset_size,3*N_input_domains))
-        latent_vars[:33000] += 2
-        latent_vars[33000:66000] -= 2
-        latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
+        true_deformations = 1*torch.randn((dataset_size,3*N_input_domains))
+        #latent_vars[:33000] += 2
+        #latent_vars[33000:66000] -= 2
+        #latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
         #latent_vars = torch.empty((dataset_size,3*N_domains))
         #latent_vars[:, :3] = 5
         #latent_vars[:, 3:6] = -5
         #latent_vars[:, 6:] = 10
-        latent_vars.to(device)
 
-        training_set = latent_vars.to(device)
-        #training_set = latent_vars[test_set_size:]
-        #test_set = latent_vars[:test_set_size]
+        training_set = true_deformations.to(device)
+
 
         torch.save(training_set, dataset_path + "training_set.npy")
         #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
-    #test_set = torch.load(dataset_path + "test_set.npy").to(device)
 
-    #std = torch.std(training_set, dim=0)
-    #avg = torch.mean(training_set, dim=0)
-    #indexes = torch.linspace(0, 90000, steps=1, dtype=torch.long)
-    indexes = torch.tensor(np.array(range(100000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(15)
-        indexesDataLoader = DataLoader(indexes, batch_size=batch_size, shuffle=True)
+        data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         for i in range(15):
             start = time.time()
             print("epoch:", epoch)
             print(i/15)
-            ind = next(iter(indexesDataLoader))
-            #latent_vars_normed = (latent_vars - avg)/std
-            latent_vars_normed = network.sample_q(ind)
-            new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
-                                                                        latent_vars_normed)
-            #true_deformation = torch.reshape(latent_vars, (batch_size, N_domains, 3))
-            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) ), mask_weights, ind)
+            batch_data = next(iter(data_loader))
+            batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
+            deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
+                                                         1510, "cpu")
+
+            print("Deformed")
+            deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures)
+            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
+            loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             k = np.random.randint(0, 6000)
             epoch_loss[i] = loss
-            print("Translation network:", translations[k, :, :])
-            print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
-            print("Mask weights:",network.multiply_windows_weights())
-            print("Total loss:",loss)
+            #print("Translation network:", translations[k, :, :])
+            #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
+            #print("Mask weights:",network.multiply_windows_weights())
+            #print("Total loss:",loss)
             all_losses.append(loss.cpu().detach())
             all_dkl_losses.append(Dkl_loss.cpu().detach())
             all_rmsd.append(rmsd.cpu().detach())
-            all_mask_loss.append(mask_loss.cpu().detach())
+            #all_mask_loss.append(mask_loss.cpu().detach())
             all_tau.append(network.tau)
             print(network.latent_std.shape)
             print("Lat mean:", network.latent_mean)
@@ -141,21 +135,22 @@ def experiment(graph_file="data/features.npy"):
     nodes_features = torch.tensor(features["nodes_features"], dtype=torch.float)
     edges_features = torch.tensor(features["edges_features"], dtype=torch.float)
     edge_indexes = torch.tensor(features["edge_indexes"], dtype=torch.long)
-    absolute_positions = torch.tensor(features["absolute_positions"])
+    absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
     absolute_positions = absolute_positions.to(device)
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    #message_mlp = MLP(30, 50, 100, num_hidden_layers=2)
-    #update_mlp = MLP(62, 50, 200, num_hidden_layers=2)
-    #translation_mlp = MLP(53, 3, 100, num_hidden_layers=2)
     translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=1)
+    encoder_mlp = MLP(N_pixels, 9, 1024, device, num_hidden_layers=3)
 
+    pixels_x = np.linspace(-70, 70, num=256).reshape(1, -1)
+    pixels_y = np.linspace(-150, 150, num=256).reshape(1, -1)
+    renderer = Renderer(pixels_x, pixels_y, std=1)
 
-    #mpnn = MessagePassingNetwork(message_mlp, update_mlp, num_nodes, num_edges, latent_dim = 3)
-    net = Net(num_nodes, N_input_domains, latent_dim, B, S, None, translation_mlp, local_frame, absolute_positions, batch_size, cutoff1, cutoff2, device)
+    net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
+              absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
-    train_loop(net, absolute_positions, nodes_features, edge_indexes, edges_features, torch.ones((10, 3)))
+    train_loop(net, absolute_positions, renderer)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, latent_dim, B, S, decoder, mlp_translation, local_frame, atom_absolute_positions,
+    def __init__(self, N_residues, N_domains, latent_dim, B, S, encoder, decoder, renderer, local_frame, atom_absolute_positions,
                  batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001):
         super(Net, self).__init__()
         self.N_residues = N_residues
@@ -17,8 +17,9 @@ class Net(torch.nn.Module):
         self.S = S
         self.latent_dim = latent_dim
         self.epsilon_mask_loss = 1e-10
+        self.encoder = encoder
         self.decoder = decoder
-        self.mlp_translation = mlp_translation
+        self.renderer = renderer
         self.local_frame = torch.transpose(local_frame, 0, 1)
         self.atom_absolute_positions = atom_absolute_positions
         self.batch_size = batch_size
@@ -26,6 +27,8 @@ class Net(torch.nn.Module):
         self.cutoff1 = cutoff1
         self.cutoff2 = cutoff2
         self.device = device
+        self.SLICE_MU = slice(0,self.latent_dim)
+        self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
 
         nb_per_res = int(B / S)
         balance = B - S + 1
@@ -67,10 +70,25 @@ class Net(torch.nn.Module):
         return attention_softmax
 
 
-    def sample_q(self, indexes):
-        latent_var = self.latent_std[indexes, :]*torch.randn((self.batch_size, self.latent_dim), device=self.device) + self.latent_mean[indexes, :]
-        #latent_var = self.latent_std*torch.randn((self.batch_size, 3*self.N_domains)) + self.latent_mean
-        return latent_var
+    def encode(self, images):
+        """
+        Encode images into latent varaibles
+        :param images: (N_batch, N_pix_x, N_pix_y) containing the cryoEM images
+        :return: (N_batch, 2*N_domains) predicted gaussian distribution over the latent variables
+        """
+        flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
+        distrib_parameters = self.decoder.forward(flattened_images)
+        return distrib_parameters
+    def sample_latent(self, distrib_parameters):
+        """
+        Sample from the approximate posterior over the latent space
+        :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
+        :return: (N_batch, latent_dim) actual samples.
+        """
+        batch_size = distrib_parameters.shape[0]
+        latent_vars = torch.randn(size=(batch_size, self.latent_dim))*distrib_parameters[:, self.SLICE_SIGMA]\
+                      + distrib_parameters[:, self.SLICE_MU]
+        return latent_vars
 
     def func(self):
         attention_softmax = self.multiply_windows_weights()
@@ -102,77 +120,48 @@ class Net(torch.nn.Module):
         new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
-    def forward(self, x, edge_index, edge_attr, latent_variables):
+    def forward(self, images):
         """
-
-        :param x:
-        :param edge_index:
-        :param edge_attr:
-        :param latent_variables: tensor of size (Batch_size, dim_latent)
-        :return: tensors: a new structure (N_residues, 3), the attention mask (N_residues, N_domains),
-                translation vectors for each residue (N_residues, 3) leading to the new structure.
+        Encode then decode image
+        :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
+        :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
+                translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = latent_variables.shape[0]
+        batch_size = images.shape[0]
         weights = self.multiply_windows_weights()
-        #hidden_representations = self.decoder.forward(x, edge_index, edge_attr, latent_variables)
-        #weights_transp = torch.transpose(weights, 0, 1)
-        #features_domain = torch.matmul(weights_transp, hidden_representations)
-        #features_and_latent = torch.concat([features_domain, torch.broadcast_to(latent_variables,(1, 3))], dim=1)
-
-        features_and_latent = latent_variables
-        #features_and_latent = torch.broadcast_to(latent_variables, (1, 3))
-        ## MLP computing the deformation scalars. Outputs 3 scalars per domain (Batch_size, 3*N_domains)
-        scalars_per_domain = self.mlp_translation.forward(features_and_latent)
+        distrib_parameters = self.encode(images)
+        latent_variables = self.sample_latent(distrib_parameters)
+        scalars_per_domain = self.decoder.forward(latent_variables)
         scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
-        return new_structure, weights, translations
+        return new_structure, weights, translations, distrib_parameters
 
 
-    def loss(self, new_structure, true_deformation, mask_weights, indexes, train=True):
+    def loss(self, new_structures, images, distrib_parameters, train=True):
         """
 
-        :param new_structure: tensor (3*N_residues, 3) of absolute positions of atoms.
-        :param true_deformation: tensor (Batch_size, N_domains, 3) of true deformation vectors, one per domain.
-        :param mask_weights: tensor (N_residues, N_domains), attention mask.
+        :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
+        :images: tensor (N_batch, N_pix_x, N_pix_y) of cryoEM images
+        :distrib_parameters: tensor (N_batch, 2*latent_dim) containing the mean and std of the distrib that
+                            the encoder outputs.
         :return: the RMSD loss and the entropy loss
         """
-        ## true_deformed_structure is tensor (Batch_size, 3*N_residues, 3) containing absolute positions of every atom
-        ## for each structure of the batch.
-        #batch_size = true_deformation.shape[0]
-        batch_size = self.batch_size
-        true_deformed_structure = torch.empty((batch_size, 3*self.N_residues, 3), device=self.device)
-        true_deformed_structure[:, :3*self.cutoff1, :] = self.atom_absolute_positions[:3*self.cutoff1, :] + true_deformation[:, 0:1, :]#**3
-        true_deformed_structure[:, 3 * self.cutoff1:3*self.cutoff2, :] = self.atom_absolute_positions[3 * self.cutoff1:3*self.cutoff2, :] + true_deformation[:, 1:2, :]#**3
-        true_deformed_structure[:, 3 * self.cutoff2:, :] = self.atom_absolute_positions[3 * self.cutoff2:, :] + true_deformation[:, 2:3, :]#**3
-        rmsd = torch.mean(torch.sqrt(torch.mean(torch.sum((new_structure - true_deformed_structure)**2, dim=2), dim=1)))
+        new_images = self.renderer.compute_x_y_values_all_atoms(new_structures)
+        batch_ll = 0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
+        nll = -torch.mean(batch_ll)
 
-        attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
-        prod = attention_softmax_log * mask_weights
-        loss = -torch.sum(prod)
-
-        Dkl_loss = - 0.5* torch.mean(torch.sum(1+torch.log(self.latent_std[indexes, :]**2) - self.latent_mean[indexes, :]**2
-                                    - self.latent_std[indexes, :]**2, axis=1))
-
-        #Dkl_loss = -0.5*torch.sum(1 + torch.log(self.latent_std[indexes, :]**2) - torch.log(torch.tensor(16**2)) - (self.latent_mean[indexes, :]**2
-        #                            - self.latent_std[indexes, :]**2)/torch.tensor(16**2))
-
-        #Dkl_loss = -0.5*torch.sum(1 + torch.log(self.latent_std**2) - torch.log(torch.tensor(16**2)) - (self.latent_mean**2
-        #                            - self.latent_std**2)/torch.tensor(16**2))
-        #loss_weights = F.softmax(mask_weights, dim=0)
-        #loss = -torch.sum((loss_weights - 1/self.N_residues)**2)
-        #loss = -torch.sum(torch.minimum(torch.sum(mask_weights, dim=0), torch.ones((self.N_domains))))
-        #print("RMSD:", rmsd)
+        means = distrib_parameters[:, self.SLICE_MU]
+        std = distrib_parameters[:, self.SLICE_SIGMA]
+        batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
+        Dkl_loss = -torch.mean(batch_Dkl_loss)
+        total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
+        loss = torch.mean(total_loss_per_batch)
         if train:
-            print("RMSD:", rmsd)
-            print("weight Loss:", loss)
+            print("RMSD:", nll)
             print("Dkl:", Dkl_loss)
-            #return 0.001*rmsd + loss #+ self.alpha_entropy*loss / self.N_residues
-            return rmsd + 0.001 * Dkl_loss, rmsd, Dkl_loss, loss
-            #return rmsd + 0.001*Dkl_loss +0.001*loss, rmsd, Dkl_loss, loss
-            #return Dkl_loss
-            #return rmsd #+ 0.01*loss + 0.001*loss2
+            return loss, nll, Dkl_loss
 
-        return rmsd
+        return nll
 
 
 

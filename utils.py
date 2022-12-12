@@ -1,5 +1,6 @@
 import numpy as np
 import Bio.PDB as bpdb
+import torch
 
 restype_1to3 = {
     'A': 'ALA',
@@ -162,3 +163,18 @@ def get_positions(residue, name):
     z = residue["C"].get_coord()
     return x,y,z
 
+def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, N_residues, device):
+    print(base_structure.shape)
+    print(true_deformation.shape)
+    batch_size = true_deformation.shape[0]
+    true_deformed_structure = torch.empty((batch_size, 3 * N_residues, 3), device=device)
+    print(true_deformed_structure.shape)
+    true_deformed_structure[:, :3 * cutoff1, :] = base_structure[:3 * cutoff1,
+                                                       :] + true_deformation[:, 0:1, :]
+    true_deformed_structure[:, 3 * cutoff1:3 * cutoff2, :] = base_structure[
+                                                                       3 * cutoff1:3 * cutoff2,
+                                                                       :] + true_deformation[:, 1:2, :]
+    true_deformed_structure[:, 3 * cutoff2:, :] = base_structure[3 * cutoff2:,
+                                                       :] + true_deformation[:, 2:3, :]
+
+    return true_deformed_structure
