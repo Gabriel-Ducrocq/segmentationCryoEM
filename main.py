@@ -145,7 +145,7 @@ def experiment(graph_file="data/features.npy"):
 
     pixels_x = np.linspace(-70, 70, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-    renderer = Renderer(pixels_x, pixels_y, std=1)
+    renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
     net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
               absolute_positions, batch_size, cutoff1, cutoff2, device)

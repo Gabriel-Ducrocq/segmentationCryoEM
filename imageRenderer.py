@@ -8,12 +8,12 @@ import numpy as np
 
 
 class Renderer():
-    def __init__(self, pixels_x, pixels_y, N_heavy=4530, std = 1):
+    def __init__(self, pixels_x, pixels_y, N_heavy=4530, std = 1, device="cpu"):
         self.std_blob = std
-        self.pixels_x = torch.tensor(pixels_x, dtype=torch.float32)
-        self.pixels_y = torch.tensor(pixels_y, dtype=torch.float32)
+        self.pixels_x = torch.tensor(pixels_x, dtype=torch.float32, device=device)
+        self.pixels_y = torch.tensor(pixels_y, dtype=torch.float32, device=device)
         self.N_heavy_atoms = N_heavy
-        self.torch_sqrt_2pi= torch.sqrt(torch.tensor(2*np.pi))
+        self.torch_sqrt_2pi= torch.sqrt(torch.tensor(2*np.pi, device=device))
 
     def compute_gaussian_kernel(self, x, pixels_pos):
         """
