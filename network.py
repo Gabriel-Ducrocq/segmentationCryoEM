@@ -77,7 +77,7 @@ class Net(torch.nn.Module):
         :return: (N_batch, 2*N_domains) predicted gaussian distribution over the latent variables
         """
         flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
-        distrib_parameters = self.decoder.forward(flattened_images)
+        distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
     def sample_latent(self, distrib_parameters):
         """
@@ -86,6 +86,7 @@ class Net(torch.nn.Module):
         :return: (N_batch, latent_dim) actual samples.
         """
         batch_size = distrib_parameters.shape[0]
+        print(distrib_parameters.shape)
         latent_vars = torch.randn(size=(batch_size, self.latent_dim))*distrib_parameters[:, self.SLICE_SIGMA]\
                       + distrib_parameters[:, self.SLICE_MU]
         return latent_vars
@@ -147,7 +148,7 @@ class Net(torch.nn.Module):
         :return: the RMSD loss and the entropy loss
         """
         new_images = self.renderer.compute_x_y_values_all_atoms(new_structures)
-        batch_ll = 0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
+        batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
         means = distrib_parameters[:, self.SLICE_MU]

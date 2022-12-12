@@ -28,12 +28,12 @@ K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
 B = 10
 S = 1
-dataset_size = 100000
+dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
 
 def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
     all_losses = []
     all_rmsd = []
@@ -42,7 +42,10 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     all_tau = []
 
     if generate_dataset:
-        true_deformations = 1*torch.randn((dataset_size,3*N_input_domains))
+        true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
+        true_deformations[:, 2] = 0
+        true_deformations[:, 5] = 0
+        true_deformations[:, 8] = 0
         #latent_vars[:33000] += 2
         #latent_vars[33000:66000] -= 2
         #latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
@@ -60,19 +63,20 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
 
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(15)
+        epoch_loss = torch.empty(50)
         data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
-        for i in range(15):
+        for i in range(50):
             start = time.time()
             print("epoch:", epoch)
-            print(i/15)
+            print(i/50)
             batch_data = next(iter(data_loader))
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
             deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
-                                                         1510, "cpu")
+                                                         1510, device)
 
             print("Deformed")
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures)
+            print("images")
             new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
             optimizer.zero_grad()
@@ -89,9 +93,8 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             all_rmsd.append(rmsd.cpu().detach())
             #all_mask_loss.append(mask_loss.cpu().detach())
             all_tau.append(network.tau)
-            print(network.latent_std.shape)
-            print("Lat mean:", network.latent_mean)
-            print("Lat std:", network.latent_std)
+            #print("Lat mean:", network.latent_mean)
+            #print("Lat std:", network.latent_std)
             end = time.time()
             print("Running time one iteration:", end -start)
             print("\n\n")
@@ -132,19 +135,16 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 def experiment(graph_file="data/features.npy"):
     features = np.load(graph_file, allow_pickle=True)
     features = features.item()
-    nodes_features = torch.tensor(features["nodes_features"], dtype=torch.float)
-    edges_features = torch.tensor(features["edges_features"], dtype=torch.float)
-    edge_indexes = torch.tensor(features["edge_indexes"], dtype=torch.long)
     absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
     absolute_positions = absolute_positions.to(device)
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
     translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=1)
-    encoder_mlp = MLP(N_pixels, 9, 1024, device, num_hidden_layers=3)
+    encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=3)
 
-    pixels_x = np.linspace(-70, 70, num=256).reshape(1, -1)
-    pixels_y = np.linspace(-150, 150, num=256).reshape(1, -1)
+    pixels_x = np.linspace(-70, 70, num=64).reshape(1, -1)
+    pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1)
 
     net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
