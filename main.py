@@ -34,7 +34,7 @@ test_set_size = int(dataset_size/10)
 
 def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=10)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
