@@ -66,12 +66,12 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
 
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(50)
+        epoch_loss = torch.empty(100)
         data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
-        for i in range(50):
+        for i in range(100):
             start = time.time()
             print("epoch:", epoch)
-            print(i/50)
+            print(i/100)
             batch_data = next(iter(data_loader))
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
             deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
