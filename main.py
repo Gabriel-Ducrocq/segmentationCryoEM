@@ -14,7 +14,7 @@ import torchvision
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 150
+batch_size = 100
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -44,8 +44,11 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     if generate_dataset:
         true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
         true_deformations[:, 2] = 0
+        #true_deformations[:, 0:2] = 5
         true_deformations[:, 5] = 0
+        #true_deformations[:, 3:5] = -5
         true_deformations[:, 8] = 0
+        #true_deformations[:, 6:8] = 0
         #latent_vars[:33000] += 2
         #latent_vars[33000:66000] -= 2
         #latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
@@ -140,8 +143,8 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=1)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=3)
+    translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=2)
+    encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=4)
 
     pixels_x = np.linspace(-70, 70, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)

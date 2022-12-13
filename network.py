@@ -67,6 +67,10 @@ class Net(torch.nn.Module):
         #div = torch.transpose(attention_softmax, 0, 1)/(torch.sum(attention_softmax, dim=1) + 1e-10)
         #attention_softmax = torch.transpose(div, 0, 1)
         #attention_softmax = F.softmax(weights_per_residues, dim=1)
+        attention_softmax = torch.zeros_like(attention_softmax)
+        attention_softmax[:300, 0] = 1
+        attention_softmax[300:1000, 1] = 1
+        attention_softmax[1000:, 2] = 1
         return attention_softmax
 
 
@@ -86,7 +90,6 @@ class Net(torch.nn.Module):
         :return: (N_batch, latent_dim) actual samples.
         """
         batch_size = distrib_parameters.shape[0]
-        print(distrib_parameters.shape)
         latent_vars = torch.randn(size=(batch_size, self.latent_dim), device=self.device)*distrib_parameters[:, self.SLICE_SIGMA]\
                       + distrib_parameters[:, self.SLICE_MU]
         return latent_vars
