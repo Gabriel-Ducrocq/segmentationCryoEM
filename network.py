@@ -47,8 +47,8 @@ class Net(torch.nn.Module):
         alpha = torch.ones((nb_windows, self.N_domains), device=device)
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 1
@@ -90,8 +90,11 @@ class Net(torch.nn.Module):
         :return: (N_batch, latent_dim) actual samples.
         """
         batch_size = distrib_parameters.shape[0]
-        latent_vars = torch.randn(size=(batch_size, self.latent_dim), device=self.device)*distrib_parameters[:, self.SLICE_SIGMA]\
-                      + distrib_parameters[:, self.SLICE_MU]
+        #latent_vars = torch.randn(size=(batch_size, self.latent_dim), device=self.device)*distrib_parameters[:, self.SLICE_SIGMA]\
+        #              + distrib_parameters[:, self.SLICE_MU]
+
+        latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
+                      + self.latent_mean[distrib_parameters]
         return latent_vars
 
     def func(self):
@@ -124,21 +127,25 @@ class Net(torch.nn.Module):
         new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
-    def forward(self, images):
+    #def forward(self, images):
+    def forward(self, indexes):
         """
         Encode then decode image
         :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = images.shape[0]
+        #batch_size = images.shape[0]
+        batch_size = indexes.shape[0]
         weights = self.multiply_windows_weights()
-        distrib_parameters = self.encode(images)
-        latent_variables = self.sample_latent(distrib_parameters)
+        #distrib_parameters = self.encode(images)
+        #latent_variables = self.sample_latent(distrib_parameters)
+        latent_variables = self.sample_latent(indexes)
         scalars_per_domain = self.decoder.forward(latent_variables)
         scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
-        return new_structure, weights, translations, distrib_parameters
+        #return new_structure, weights, translations, distrib_parameters
+        return new_structure, weights, translations, latent_variables
 
 
     def loss(self, new_structures, images, distrib_parameters, train=True):
@@ -154,9 +161,12 @@ class Net(torch.nn.Module):
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
-        means = distrib_parameters[:, self.SLICE_MU]
-        std = distrib_parameters[:, self.SLICE_SIGMA]
-        batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
+        #means = distrib_parameters[:, self.SLICE_MU]
+        #std = distrib_parameters[:, self.SLICE_SIGMA]
+        #batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
+        batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
+                                         - self.latent_mean[distrib_parameters] ** 2 \
+                                         - self.latent_std[distrib_parameters] ** 2, dim=1)
         Dkl_loss = -torch.mean(batch_Dkl_loss)
         total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
         loss = torch.mean(total_loss_per_batch)

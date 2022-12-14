@@ -64,15 +64,18 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
-
+    training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(100)
-        data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
+        #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
+        data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
         for i in range(100):
             start = time.time()
             print("epoch:", epoch)
             print(i/100)
-            batch_data = next(iter(data_loader))
+            #batch_data = next(iter(data_loader))
+            batch_indexes = next(iter(data_loader))
+            batch_data = training_set[batch_indexes]
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
             deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
                                                          1510, device)
@@ -80,8 +83,10 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             print("Deformed")
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures)
             print("images")
-            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
+            #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
+            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes)
+            #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
+            loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, batch_indexes)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
