@@ -52,7 +52,8 @@ class Net(torch.nn.Module):
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 1
-        self.annealing_tau = 0.5
+        #self.annealing_tau = 0.5
+        self.annealing_tau = 1
 
     def multiply_windows_weights(self):
         weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
@@ -149,7 +150,7 @@ class Net(torch.nn.Module):
         return new_structure, weights, translations, latent_variables
 
 
-    def loss(self, new_structures, images, distrib_parameters, train=True):
+    def loss(self, new_structures, mask_weights, images, distrib_parameters, train=True):
         """
 
         :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
@@ -162,6 +163,11 @@ class Net(torch.nn.Module):
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
+
+        attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
+        prod = attention_softmax_log * mask_weights
+        loss_mask = -torch.sum(prod)
+
         #means = distrib_parameters[:, self.SLICE_MU]
         #std = distrib_parameters[:, self.SLICE_SIGMA]
         #batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
@@ -170,11 +176,12 @@ class Net(torch.nn.Module):
                                          - self.latent_std[distrib_parameters] ** 2, dim=1)
         Dkl_loss = -torch.mean(batch_Dkl_loss)
         total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
-        loss = torch.mean(total_loss_per_batch)
+        loss = torch.mean(total_loss_per_batch) + 0.001*loss_mask
         if train:
             print("RMSD:", nll)
             print("Dkl:", Dkl_loss)
-            return loss, nll, Dkl_loss
+            print("loss mask:", loss_mask)
+            return loss, nll, Dkl_loss, loss_mask
 
         return nll
 
