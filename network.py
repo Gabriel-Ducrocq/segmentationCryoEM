@@ -176,7 +176,7 @@ class Net(torch.nn.Module):
                                          - self.latent_std[distrib_parameters] ** 2, dim=1)
         Dkl_loss = -torch.mean(batch_Dkl_loss)
         total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
-        loss = torch.mean(total_loss_per_batch) + 0.001*loss_mask
+        loss = torch.mean(total_loss_per_batch) + 0.0001*loss_mask
         if train:
             print("RMSD:", nll)
             print("Dkl:", Dkl_loss)
