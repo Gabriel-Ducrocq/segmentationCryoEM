@@ -45,7 +45,8 @@ class Net(torch.nn.Module):
         nb_windows = self.bs_per_res[-1, -1] + 1
         #alpha = torch.randn((nb_windows, self.N_domains))
         alpha = torch.ones((nb_windows, self.N_domains), device=device)
-        self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
+        ##No grad at first on the mask weights !!
+        self.weights = torch.nn.Parameter(data=alpha, requires_grad=False)
 
         self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
@@ -176,7 +177,7 @@ class Net(torch.nn.Module):
                                          - self.latent_std[distrib_parameters] ** 2, dim=1)
         Dkl_loss = -torch.mean(batch_Dkl_loss)
         total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
-        loss = torch.mean(total_loss_per_batch) + 0.01*loss_mask
+        loss = torch.mean(total_loss_per_batch)
         if train:
             print("RMSD:", nll)
             print("Dkl:", Dkl_loss)

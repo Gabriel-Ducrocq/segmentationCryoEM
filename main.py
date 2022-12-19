@@ -105,6 +105,8 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             #print("Lat std:", network.latent_std)
             end = time.time()
             print("Running time one iteration:", end -start)
+            print(network.weights.requires_grad)
+            network.weights.requires_grad = False
             print("\n\n")
 
             #writer.add_scalar('Loss/train', loss, i)
@@ -113,7 +115,13 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
         scheduler.step(torch.mean(epoch_loss))
-        if (epoch+1)%15 == 0:
+
+        if (epoch+1)%50 == 0:
+            network.weights.requires_grad = not network.weights.requires_grad
+            network.latent_std.requires_grad = not network.latent_std.requires_grad
+            network.latent_mean.requires_grad = not network.latent_mean.requires_grad
+
+        if (epoch+1)%100 == 0:
             network.tau = network.annealing_tau * network.tau
 
         #test_set_normed = (test_set - avg)/std
