@@ -1,5 +1,6 @@
 #from MPNN import MessagePassingNetwork
 import Bio.PDB.vectors
+import matplotlib.pyplot as plt
 
 import utils
 from mlp import MLP
@@ -99,6 +100,10 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
+            #print(batch_rotations[0])
+            #print(batch_data)
+            #plt.imshow(deformed_images[0], cmap="gray")
+            #plt.show()
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
@@ -124,8 +129,8 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             #print("Lat std:", network.latent_std)
             end = time.time()
             print("Running time one iteration:", end -start)
-            print(network.weights.requires_grad)
-            network.weights.requires_grad = False
+            #print(network.weights.requires_grad)
+            #network.weights.requires_grad = False
             print("\n\n")
 
             #writer.add_scalar('Loss/train', loss, i)
