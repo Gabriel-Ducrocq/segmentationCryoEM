@@ -2,7 +2,36 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="623e62ad-3fe9-43a4-8eed-6061e25ab45f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_15-57-37_mac00987/events.out.tfevents.1671548257.mac00987.88916.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_15-58-23_mac00987/events.out.tfevents.1671548303.mac00987.88932.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_15-59-36_mac00987/events.out.tfevents.1671548376.mac00987.88950.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_15-59-54_mac00987/events.out.tfevents.1671548394.mac00987.88960.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-00-40_mac00987/events.out.tfevents.1671548440.mac00987.89060.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-01-50_mac00987/events.out.tfevents.1671548510.mac00987.89307.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-02-07_mac00987/events.out.tfevents.1671548527.mac00987.89322.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-03-06_mac00987/events.out.tfevents.1671548586.mac00987.89343.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-03-29_mac00987/events.out.tfevents.1671548609.mac00987.89357.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-06-54_mac00987/events.out.tfevents.1671548814.mac00987.89422.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-07-24_mac00987/events.out.tfevents.1671548844.mac00987.89434.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-07-44_mac00987/events.out.tfevents.1671548864.mac00987.89447.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-17-28_mac00987/events.out.tfevents.1671549448.mac00987.89586.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-17-48_mac00987/events.out.tfevents.1671549468.mac00987.89617.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-18-09_mac00987/events.out.tfevents.1671549489.mac00987.89686.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-18-35_mac00987/events.out.tfevents.1671549515.mac00987.89697.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-18-49_mac00987/events.out.tfevents.1671549529.mac00987.89708.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-19-30_mac00987/events.out.tfevents.1671549570.mac00987.89726.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-23-02_mac00987/events.out.tfevents.1671549782.mac00987.89796.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-23-17_mac00987/events.out.tfevents.1671549797.mac00987.89809.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-23-38_mac00987/events.out.tfevents.1671549818.mac00987.89817.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-31-56_mac00987/events.out.tfevents.1671550316.mac00987.89964.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-32-22_mac00987/events.out.tfevents.1671550342.mac00987.89980.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-33-35_mac00987/events.out.tfevents.1671550415.mac00987.89997.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-34-31_mac00987/events.out.tfevents.1671550471.mac00987.90017.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-35-29_mac00987/events.out.tfevents.1671550529.mac00987.90033.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-35-42_mac00987/events.out.tfevents.1671550542.mac00987.90116.0" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/runs/Dec20_16-42-07_mac00987/events.out.tfevents.1671550927.mac00987.90976.0" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imageRenderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/imageRenderer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
@@ -196,5 +225,16 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/network.py</url>
+          <line>98</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

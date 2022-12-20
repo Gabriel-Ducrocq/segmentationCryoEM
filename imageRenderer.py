@@ -3,7 +3,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 
@@ -27,14 +27,18 @@ class Renderer():
         axis_val = torch.exp(scaled_distances)/self.torch_sqrt_2pi
         return axis_val
 
-    def compute_x_y_values_all_atoms(self, atom_positions):
+    def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices):
         """
 
         :param atom_position: (N_batch, N_atoms, 3)
+        :rotation_matrices: (N_batch, 3, 3)
         :return:
         """
-        all_x = self.compute_gaussian_kernel(atom_positions[:, :, 0], self.pixels_x)
-        all_y = self.compute_gaussian_kernel(atom_positions[:, :, 1], self.pixels_y)
+        transposed_atom_positions = torch.transpose(atom_positions, 1, 2)
+        rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
+        rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, 1, 2)
+        all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
+        all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
 
         prod= torch.einsum("bki,bkj->bkij", (all_x, all_y))
         #prod = torch.bmm(all_x, all_y)
@@ -50,7 +54,7 @@ class Renderer():
         #fft_densities = CTF*fft_densities
         #projected_densities = torch.fft.irfft2(fft_densities)
         ### ADD THE CTF !!!
-        return projected_densities #+ torch.randn(size=(1, 256, 256))*0.5
+        return projected_densities#+ torch.randn(size=(1, 256, 256))*0.5
 
 
 
@@ -65,8 +69,8 @@ absolute_positions = absolute_positions.reshape(1, -1, 3)
 absolute_positions = torch.tensor(absolute_positions).to(device)
 print(absolute_positions.shape)
 
-pixels_x = np.linspace(-70, 70, num = 256).reshape(1, -1)
-pixels_y = np.linspace(-150, 150, num = 256).reshape(1, -1)
+pixels_x = np.linspace(-70, 70, num = 1024).reshape(1, -1)
+pixels_y = np.linspace(-150, 150, num = 1024).reshape(1, -1)
 rend = Renderer(pixels_x, pixels_y, std=1)
 print(torch.min(absolute_positions[0, :, 0]))
 print(torch.max(absolute_positions[0, :, 0]))
@@ -80,7 +84,7 @@ res = res[0].detach().numpy()
 print(np.unique(res))
 print(res.shape)
 
-plt.imshow(res, cmap="gray")
+plt.imshow(res.T, cmap="gray")
 plt.show()
 """
 

@@ -1,4 +1,6 @@
 #from MPNN import MessagePassingNetwork
+import Bio.PDB.vectors
+
 import utils
 from mlp import MLP
 from network import Net
@@ -42,28 +44,38 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     all_tau = []
 
     if generate_dataset:
-        true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
-        true_deformations[:, 2] = 0
-        #true_deformations[:, 0:2] = 5
-        true_deformations[:, 5] = 0
-        #true_deformations[:, 3:5] = -5
-        true_deformations[:, 8] = 0
-        #true_deformations[:, 6:8] = 0
-        #latent_vars[:33000] += 2
-        #latent_vars[33000:66000] -= 2
-        #latent_vars[66000:] += np.array([1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0])
-        #latent_vars = torch.empty((dataset_size,3*N_domains))
-        #latent_vars[:, :3] = 5
-        #latent_vars[:, 3:6] = -5
-        #latent_vars[:, 6:] = 10
+        #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
+        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
+        conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
+        conformation1 = torch.broadcast_to(conformation1, (5000, 12))
+        conformation2 = torch.broadcast_to(conformation2, (5000, 12))
+        true_deformations = torch.cat([conformation1, conformation2], dim=0)
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=10000), dtype=torch.float32)
+        rotation_matrices = torch.zeros((10000, 3, 3))
+        rotation_matrices[:, 0, 0] = torch.cos(rotation_angles)
+        rotation_matrices[:, 1, 1] = torch.cos(rotation_angles)
+        rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
+        rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
+        rotation_matrices[:, 2, 2] = 1
+
+        #true_deformations[:, 2] = 0
+        #true_deformations[:, 5] = 0
+        #true_deformations[:, 8] = 0
 
         training_set = true_deformations.to(device)
+        training_rotations_matrices = rotation_matrices.to(device)
+        training_rotations = rotation_angles.to(device)
 
 
         torch.save(training_set, dataset_path + "training_set.npy")
+        torch.save(training_rotations, dataset_path + "training_rotations.npy")
+        torch.save(training_rotations_matrices, dataset_path + "training_rotations_matrices.npy")
         #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
+    training_rotations = torch.load(dataset_path + "training_rotations.npy").to(device)
+    training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
+
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(100)
@@ -75,18 +87,25 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             print(i/100)
             #batch_data = next(iter(data_loader))
             batch_indexes = next(iter(data_loader))
+            ##Getting the batch translations, rotations and corresponding rotation matrices
             batch_data = training_set[batch_indexes]
+            batch_rotations = training_rotations[batch_indexes]
+            batch_rotation_matrices = training_rotations_matrices[batch_indexes]
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
+            ## Deforming the structure for each batch data point
             deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
                                                          1510, device)
 
             print("Deformed")
-            deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures)
+            ## We then rotate the structure and project them on the x-y plane.
+            deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes)
+            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
+                                                                                                   batch_rotations)
             #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
-            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, mask_weights,deformed_images, batch_indexes)
+            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, mask_weights,deformed_images, batch_indexes,
+                                                           batch_rotation_matrices)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -116,10 +135,10 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 
         scheduler.step(torch.mean(epoch_loss))
 
-        if (epoch+1)%50 == 0:
-            network.weights.requires_grad = not network.weights.requires_grad
-            network.latent_std.requires_grad = not network.latent_std.requires_grad
-            network.latent_mean.requires_grad = not network.latent_mean.requires_grad
+        #if (epoch+1)%50 == 0:
+        #    network.weights.requires_grad = not network.weights.requires_grad
+        #    network.latent_std.requires_grad = not network.latent_std.requires_grad
+        #    network.latent_mean.requires_grad = not network.latent_mean.requires_grad
 
         if (epoch+1)%100 == 0:
             network.tau = network.annealing_tau * network.tau
@@ -156,7 +175,7 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    translation_mlp = MLP(latent_dim, 3*N_input_domains, 350, device, num_hidden_layers=2)
+    translation_mlp = MLP(latent_dim + 1, 3*N_input_domains, 350, device, num_hidden_layers=2)
     encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=4)
 
     pixels_x = np.linspace(-70, 70, num=64).reshape(1, -1)

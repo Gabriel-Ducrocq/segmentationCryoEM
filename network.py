@@ -46,7 +46,7 @@ class Net(torch.nn.Module):
         #alpha = torch.randn((nb_windows, self.N_domains))
         alpha = torch.ones((nb_windows, self.N_domains), device=device)
         ##No grad at first on the mask weights !!
-        self.weights = torch.nn.Parameter(data=alpha, requires_grad=False)
+        self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
         self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
@@ -61,7 +61,7 @@ class Net(torch.nn.Module):
         for i in range(self.N_residues):
             windows_set = self.bs_per_res[i]  # Extracting the indexes of the windows for the given residue
             weights_per_residues[i, :] = torch.prod(self.weights[windows_set, :],
-                                                    axis=0)  # Muliplying the weights of all the windows, for each subsystem
+                                                    dim=0)  # Muliplying the weights of all the windows, for each subsystem
 
         #weights_per_residues = weights_per_residues**2
         #weights_per_residues = weights_per_residues/torch.sum(weights_per_residues, dim=0, keepdim=True)
@@ -131,7 +131,7 @@ class Net(torch.nn.Module):
         return new_atom_positions, translation_per_residue
 
     #def forward(self, images):
-    def forward(self, indexes):
+    def forward(self, indexes, rotation_angles):
         """
         Encode then decode image
         :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
@@ -144,14 +144,17 @@ class Net(torch.nn.Module):
         #distrib_parameters = self.encode(images)
         #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)
-        scalars_per_domain = self.decoder.forward(latent_variables)
+        features = torch.cat([latent_variables, rotation_angles[:, None]], dim=1)
+        print("Features shape")
+        print(features.shape)
+        scalars_per_domain = self.decoder.forward(features)
         scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
         #return new_structure, weights, translations, distrib_parameters
         return new_structure, weights, translations, latent_variables
 
 
-    def loss(self, new_structures, mask_weights, images, distrib_parameters, train=True):
+    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, train=True):
         """
 
         :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
@@ -160,7 +163,7 @@ class Net(torch.nn.Module):
                             the encoder outputs.
         :return: the RMSD loss and the entropy loss
         """
-        new_images = self.renderer.compute_x_y_values_all_atoms(new_structures)
+        new_images = self.renderer.compute_x_y_values_all_atoms(new_structures, rotation_matrices)
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
