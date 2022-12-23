@@ -52,9 +52,19 @@ class Net(torch.nn.Module):
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
-        self.tau = 1
+        self.tau = 0.05
         #self.annealing_tau = 0.5
         self.annealing_tau = 1
+
+        self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32)[None, :],
+                                                requires_grad=True)
+        self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32)[None, :],
+                                              requires_grad=True)
+        self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32)[None, :], requires_grad=True)
+        self.residues = torch.arange(0, 1510, 1, dtype=torch.float32)[:, None]
+
+        print(self.cluster_means.shape)
+        print(self.residues.shape)
 
     def multiply_windows_weights(self):
         weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
@@ -76,6 +86,13 @@ class Net(torch.nn.Module):
         #attention_softmax[1000:, 2] = 1
         return attention_softmax
 
+    def compute_mask(self):
+        proportions = torch.softmax(self.cluster_proportions, dim=1)
+        log_num = -0.5*(self.residues - self.cluster_means)**2/self.cluster_std**2 + \
+              torch.log(proportions)
+
+        mask = torch.softmax(log_num/self.tau, dim=1)
+        return mask
 
     def encode(self, images):
         """
@@ -100,13 +117,6 @@ class Net(torch.nn.Module):
                       + self.latent_mean[distrib_parameters]
         return latent_vars
 
-    def func(self):
-        attention_softmax = self.multiply_windows_weights()
-        attention_softmax_log = torch.log(attention_softmax)
-        prod = attention_softmax_log * attention_softmax
-        loss = -torch.sum(prod)
-
-        return loss / self.N_residues
 
     def deform_structure(self, weights, translation_scalars):
         """
@@ -140,7 +150,8 @@ class Net(torch.nn.Module):
         """
         #batch_size = images.shape[0]
         batch_size = indexes.shape[0]
-        weights = self.multiply_windows_weights()
+        #weights = self.multiply_windows_weights()
+        weights = self.compute_mask()
         #distrib_parameters = self.encode(images)
         #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)

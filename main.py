@@ -172,7 +172,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         np.save("data/losses_mask.npy", np.array(all_mask_loss))
         np.save("data/all_tau.npy", np.array(all_tau))
         #np.save("data/losses_test.npy", np.array(losses_test))
-        mask = network.multiply_windows_weights()
+        mask = network.compute_mask()
         mask_python = mask.to("cpu").detach()
         np.save("data/mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
