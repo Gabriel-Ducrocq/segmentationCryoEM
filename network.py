@@ -56,12 +56,13 @@ class Net(torch.nn.Module):
         #self.annealing_tau = 0.5
         self.annealing_tau = 1
 
-        self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32)[None, :],
+        self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
                                                 requires_grad=True)
-        self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32)[None, :],
+        self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
-        self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32)[None, :], requires_grad=True)
-        self.residues = torch.arange(0, 1510, 1, dtype=torch.float32)[:, None]
+        self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
+                                                      requires_grad=True)
+        self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
         print(self.cluster_means.shape)
         print(self.residues.shape)
