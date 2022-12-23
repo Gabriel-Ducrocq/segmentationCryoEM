@@ -29,7 +29,8 @@ cutoff1 = 300
 cutoff2 = 1000
 K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
-B = 10
+#B = 10
+B = 100
 S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
@@ -107,7 +108,14 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
-                                                                                                   batch_rotations)
+                                                                                            batch_rotations)
+            print("Mask weights")
+            print(mask_weights)
+            b = np.argmax(mask_weights.detach().numpy(), axis=1)
+            print(np.sum(b==0))
+            print(np.sum(b == 1))
+            print(np.sum(b == 2))
+            print(np.sum(b == 3))
             #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
             loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, mask_weights,deformed_images, batch_indexes,
                                                            batch_rotation_matrices)
