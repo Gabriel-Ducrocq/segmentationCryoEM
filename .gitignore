@@ -4,3 +4,4 @@
 *.pyc
 *model
 *.sh
+*/__pycache__/*
