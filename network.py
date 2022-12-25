@@ -48,8 +48,8 @@ class Net(torch.nn.Module):
         ##No grad at first on the mask weights !!
         self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
 
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((50000, self.latent_dim)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((50000, self.latent_dim)), requires_grad=True)
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 0.05
