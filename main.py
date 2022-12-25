@@ -38,7 +38,7 @@ test_set_size = int(dataset_size/10)
 
 def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=50)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
@@ -47,7 +47,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 
     if generate_dataset:
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
-        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
+        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
         conformation1 = torch.broadcast_to(conformation1, (5000, 12))
         conformation2 = torch.broadcast_to(conformation2, (5000, 12))
@@ -191,7 +191,7 @@ def experiment(graph_file="data/features.npy"):
     translation_mlp = MLP(latent_dim + 1, 3*N_input_domains, 350, device, num_hidden_layers=2)
     encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=4)
 
-    pixels_x = np.linspace(-70, 70, num=64).reshape(1, -1)
+    pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
