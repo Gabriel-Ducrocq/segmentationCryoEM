@@ -48,7 +48,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 
     if generate_dataset:
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
-        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0]]), dtype=torch.float32)
+        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
         conformation1 = torch.broadcast_to(conformation1, (25000, 12))
         conformation2 = torch.broadcast_to(conformation2, (25000, 12))
