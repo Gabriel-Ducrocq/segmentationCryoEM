@@ -18,7 +18,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 100
+batch_size = 500
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -85,13 +85,13 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(500)
+        epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
-        for i in range(500):
+        for i in range(100):
             start = time.time()
             print("epoch:", epoch)
-            print(i/500)
+            print(i/100)
             #batch_data = next(iter(data_loader))
             batch_indexes = next(iter(data_loader))
             ##Getting the batch translations, rotations and corresponding rotation matrices
