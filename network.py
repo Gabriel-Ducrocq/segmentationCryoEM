@@ -142,7 +142,7 @@ class Net(torch.nn.Module):
         return new_atom_positions, translation_per_residue
 
     #def forward(self, images):
-    def forward(self, indexes, rotation_angles):
+    def forward(self, indexes, rotation_angles, rotation_axis):
         """
         Encode then decode image
         :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
@@ -156,7 +156,7 @@ class Net(torch.nn.Module):
         #distrib_parameters = self.encode(images)
         #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)
-        features = torch.cat([latent_variables, rotation_angles[:, None]], dim=1)
+        features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         print("Features shape")
         print(features.shape)
         scalars_per_domain = self.decoder.forward(features)

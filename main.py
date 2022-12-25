@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 from imageRenderer import Renderer
 import torchvision
+from pytorch3d.transforms import axis_angle_to_matrix
 
 
 writer = SummaryWriter()
@@ -49,49 +50,54 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
         conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
-        conformation1 = torch.broadcast_to(conformation1, (5000, 12))
-        conformation2 = torch.broadcast_to(conformation2, (5000, 12))
+        conformation1 = torch.broadcast_to(conformation1, (25000, 12))
+        conformation2 = torch.broadcast_to(conformation2, (25000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
-        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=10000), dtype=torch.float32)
-        rotation_matrices = torch.zeros((10000, 3, 3))
-        rotation_matrices[:, 0, 0] = torch.cos(rotation_angles)
-        rotation_matrices[:, 1, 1] = torch.cos(rotation_angles)
-        rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
-        rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
-        rotation_matrices[:, 2, 2] = 1
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(50000,1)), dtype=torch.float32)
+        rotation_axis = torch.randn(size=(50000, 3))
+        rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
+        axis_angle_format = rotation_axis*rotation_angles
+        rotation_matrices = axis_angle_to_matrix(axis_angle_format)
+        #rotation_matrices = torch.zeros((10000, 3, 3))
+        #rotation_matrices[:, 0, 0] = torch.cos(rotation_angles)
+        #rotation_matrices[:, 1, 1] = torch.cos(rotation_angles)
+        #rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
+        #rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
+        #rotation_matrices[:, 2, 2] = 1
 
-        #true_deformations[:, 2] = 0
-        #true_deformations[:, 5] = 0
-        #true_deformations[:, 8] = 0
 
         training_set = true_deformations.to(device)
         training_rotations_matrices = rotation_matrices.to(device)
-        training_rotations = rotation_angles.to(device)
+        training_rotations_angles = rotation_angles.to(device)
+        training_rotations_axis = rotation_axis.to(device)
 
 
         torch.save(training_set, dataset_path + "training_set.npy")
-        torch.save(training_rotations, dataset_path + "training_rotations.npy")
+        torch.save(training_rotations_angles, dataset_path + "training_rotations_angles.npy")
+        torch.save(training_rotations_axis, dataset_path + "training_rotations_axis.npy")
         torch.save(training_rotations_matrices, dataset_path + "training_rotations_matrices.npy")
         #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
-    training_rotations = torch.load(dataset_path + "training_rotations.npy").to(device)
+    training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy").to(device)
+    training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
 
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(100)
+        epoch_loss = torch.empty(500)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
-        for i in range(100):
+        for i in range(500):
             start = time.time()
             print("epoch:", epoch)
-            print(i/100)
+            print(i/500)
             #batch_data = next(iter(data_loader))
             batch_indexes = next(iter(data_loader))
             ##Getting the batch translations, rotations and corresponding rotation matrices
             batch_data = training_set[batch_indexes]
-            batch_rotations = training_rotations[batch_indexes]
+            batch_rotations_angles = training_rotations_angles[batch_indexes]
+            batch_rotations_axis = training_rotations_axis[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
             ## Deforming the structure for each batch data point
@@ -108,7 +114,8 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
-                                                                                            batch_rotations)
+                                                                                            batch_rotations_angles,
+                                                                                            batch_rotations_axis)
             #print("Mask weights")
             #print(mask_weights)
             #b = np.argmax(mask_weights.detach().numpy(), axis=1)
@@ -188,7 +195,7 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    translation_mlp = MLP(latent_dim + 1, 3*N_input_domains, 350, device, num_hidden_layers=2)
+    translation_mlp = MLP(latent_dim + 4, 3*N_input_domains, 350, device, num_hidden_layers=2)
     encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=4)
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
