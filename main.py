@@ -18,7 +18,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 500
+batch_size = 100
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -50,11 +50,11 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
         conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
-        conformation1 = torch.broadcast_to(conformation1, (25000, 12))
-        conformation2 = torch.broadcast_to(conformation2, (25000, 12))
+        conformation1 = torch.broadcast_to(conformation1, (5000, 12))
+        conformation2 = torch.broadcast_to(conformation2, (5000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
-        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(50000,1)), dtype=torch.float32, device=device)
-        rotation_axis = torch.randn(size=(50000, 3), device=device)
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
+        rotation_axis = torch.randn(size=(10000, 3), device=device)
         rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
         axis_angle_format = rotation_axis*rotation_angles
         rotation_matrices = axis_angle_to_matrix(axis_angle_format)
@@ -83,7 +83,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
 
-    training_indexes = torch.tensor(np.array(range(50000)))
+    training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
