@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 from mlp import MLP
 from torch.utils.tensorboard import SummaryWriter
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
 class Net(torch.nn.Module):
@@ -20,9 +21,11 @@ class Net(torch.nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.renderer = renderer
-        ##Local frame is now with vectors in rows
+        self.local_frame_in_colums = local_frame
+        ##Local frame is set with vectors in rows in the next line:
         self.local_frame = torch.transpose(local_frame, 0, 1)
         self.atom_absolute_positions = atom_absolute_positions
+        ##Next line compute the coordinates in the local frame (N_atoms,3)
         self.relative_positions = torch.matmul(self.atom_absolute_positions, local_frame)
         self.batch_size = batch_size
         self.alpha_entropy = alpha_entropy
@@ -119,12 +122,14 @@ class Net(torch.nn.Module):
         return latent_vars
 
 
-    def deform_structure(self, weights, translation_scalars):
+    def deform_structure(self, weights, translation_scalars, rotations_per_residue):
         """
-
+        Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
+         otherwise the rotation will NOT be approximately rigid !!!
         :param weights: weights of the attention mask tensor (N_residues, N_domains)
         :param translation_scalars: translations scalars used to compute translation vectors:
                 tensor (Batch_size, N_domains, 3)
+        :param rotations_per_residue: tensor (N_batch, N_res, 3, 3) of rotation matrices per residue
         :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
                 of translation vectors
 
@@ -138,10 +143,37 @@ class Net(torch.nn.Module):
         translation_per_residue = torch.matmul(weights, translation_vectors)
         ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
         ## residue.
-        new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
+        ##We compute the rotated frame for each residues, still set at the origin.
+        rotated_frame_per_residue = torch.matmul(rotations_per_residue, self.local_frame_in_colums)
+        ##Given the rotated frames and the atom positions in these frames, we recover the transformed absolute positions
+        transformed_absolute_positions = torch.matmul(self.relative_positions[None, :, :],
+                                                      torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
+        new_atom_positions = transformed_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
-    #def forward(self, images):
+    def compute_rotations(self, quaternions, mask):
+        """
+        Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
+        weighted by the mask value of the corresponding domain.
+        :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+        :param mask: tensor (N_residues, N_input_domains)
+        :return: tensor (N_batch, N_residues, N_input_domain, 3, 3) rotation matrix for each residue
+        """
+        #NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+        rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+        mask_rotation_per_domains_axis_angle = mask[None, :, :, None]*rotation_per_domains_axis_angle[:, None, :, :]
+
+        mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
+        overall_rotation_matrices = torch.zeros((self.batch_size, self.N_residues,3,3))
+        overall_rotation_matrices[:, :, 0, 0] = 1
+        overall_rotation_matrices[:, :, 1, 1] = 1
+        overall_rotation_matrices[:, :, 2, 2] = 1
+        for i in range(self.N_domains):
+            overall_rotation_matrices = torch.matmul(mask_rotation_matrix_per_domain_per_residue[:, :, i, :, :],
+                                                     overall_rotation_matrices)
+
+        return overall_rotation_matrices
+
     def forward(self, indexes, rotation_angles, rotation_axis):
         """
         Encode then decode image
@@ -157,12 +189,14 @@ class Net(torch.nn.Module):
         #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)
         features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        print("Features shape")
-        print(features.shape)
-        scalars_per_domain = self.decoder.forward(features)
-        scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
-        new_structure, translations = self.deform_structure(weights, scalars_per_domain)
-        #return new_structure, weights, translations, distrib_parameters
+        output = self.decoder.forward(features)
+        ## The translations are the first 3 scalars and quaternions the last 3
+        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
+        scalars_per_domain = output[:, :, :3]
+        quaternions_per_domain = torch.cat([torch.ones(size=(self.batch_size, self.N_domains, 1)),output[:, :, 3:]],
+                                           dim=-1)
+        rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
+        new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         return new_structure, weights, translations, latent_variables
 
 
