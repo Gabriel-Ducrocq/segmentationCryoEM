@@ -20,8 +20,10 @@ class Net(torch.nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.renderer = renderer
+        ##Local frame is now with vectors in rows
         self.local_frame = torch.transpose(local_frame, 0, 1)
         self.atom_absolute_positions = atom_absolute_positions
+        self.relative_positions = torch.matmul(self.atom_absolute_positions, local_frame)
         self.batch_size = batch_size
         self.alpha_entropy = alpha_entropy
         self.cutoff1 = cutoff1
@@ -64,8 +66,6 @@ class Net(torch.nn.Module):
                                                       requires_grad=True)
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
-        print(self.cluster_means.shape)
-        print(self.residues.shape)
 
     def multiply_windows_weights(self):
         weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)

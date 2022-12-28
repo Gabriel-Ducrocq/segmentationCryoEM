@@ -69,8 +69,8 @@ absolute_positions = absolute_positions.reshape(1, -1, 3)
 absolute_positions = torch.tensor(absolute_positions).to(device)
 print(absolute_positions.shape)
 
-pixels_x = np.linspace(-70, 70, num = 1024).reshape(1, -1)
-pixels_y = np.linspace(-150, 150, num = 1024).reshape(1, -1)
+pixels_x = np.linspace(-150, 150, num = 64).reshape(1, -1)
+pixels_y = np.linspace(-150, 150, num = 64).reshape(1, -1)
 rend = Renderer(pixels_x, pixels_y, std=1)
 print(torch.min(absolute_positions[0, :, 0]))
 print(torch.max(absolute_positions[0, :, 0]))
@@ -78,7 +78,7 @@ print(torch.max(absolute_positions[0, :, 0]))
 print(torch.min(absolute_positions[0, :, 1]))
 print(torch.max(absolute_positions[0, :, 1]))
 
-res = rend.compute_x_y_values_all_atoms(absolute_positions)
+res = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
 res = res[0].detach().numpy()
 
 print(np.unique(res))
@@ -86,6 +86,6 @@ print(res.shape)
 
 plt.imshow(res.T, cmap="gray")
 plt.show()
-"""
 
+"""
 

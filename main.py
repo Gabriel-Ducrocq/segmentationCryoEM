@@ -54,6 +54,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         conformation2 = torch.broadcast_to(conformation2, (5000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
         rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
+        #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
         rotation_axis = torch.randn(size=(10000, 3), device=device)
         rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
         axis_angle_format = rotation_axis*rotation_angles
@@ -64,6 +65,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         #rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
         #rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
         #rotation_matrices[:, 2, 2] = 1
+        #rotation_angles = rotation_angles[:, None]
 
 
         training_set = true_deformations.to(device)
@@ -135,6 +137,7 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
             #print("Mask weights:",network.multiply_windows_weights())
             #print("Total loss:",loss)
+            print("Printing metrics")
             all_losses.append(loss.cpu().detach())
             all_dkl_losses.append(Dkl_loss.cpu().detach())
             all_rmsd.append(rmsd.cpu().detach())
