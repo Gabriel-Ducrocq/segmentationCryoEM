@@ -201,14 +201,14 @@ class Net(torch.nn.Module):
         ## The translations are the first 3 scalars and quaternions the last 3
         output = torch.reshape(output, (batch_size, self.N_domains,2*3))
         scalars_per_domain = output[:, :, :3]
-        #quaternions_per_domain = torch.cat([torch.ones(size=(self.batch_size, self.N_domains, 1)),output[:, :, 3:]],
-        #                                   dim=-1)
-        #rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
+        quaternions_per_domain = torch.cat([torch.ones(size=(self.batch_size, self.N_domains, 1)),output[:, :, 3:]],
+                                           dim=-1)
+        rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
 
-        rotations_per_residue = torch.zeros((self.batch_size, self.N_residues, 3, 3))
-        rotations_per_residue[:, :, 0, 0] = 1
-        rotations_per_residue[:, :, 1, 1] = 1
-        rotations_per_residue[:, :, 2, 2] = 1
+        #rotations_per_residue = torch.zeros((self.batch_size, self.N_residues, 3, 3))
+        #rotations_per_residue[:, :, 0, 0] = 1
+        #rotations_per_residue[:, :, 1, 1] = 1
+        #rotations_per_residue[:, :, 2, 2] = 1
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         return new_structure, weights, translations, latent_variables
 
