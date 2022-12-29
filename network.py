@@ -150,7 +150,9 @@ class Net(torch.nn.Module):
                                                             (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
                                                       torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
 
-        new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
+        #new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
+        new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
+
         return new_atom_positions, translation_per_residue
 
     def compute_rotations(self, quaternions, mask):
