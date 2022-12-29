@@ -146,12 +146,15 @@ class Net(torch.nn.Module):
         ##We compute the rotated frame for each residues, still set at the origin.
         rotated_frame_per_residue = torch.matmul(rotations_per_residue, self.local_frame_in_colums)
         ##Given the rotated frames and the atom positions in these frames, we recover the transformed absolute positions
-        transformed_absolute_positions = torch.matmul(torch.broadcast_to(self.relative_positions,
+        #transformed_absolute_positions = torch.matmul(torch.broadcast_to(self.relative_positions,
+        ##### I think I should transpose the rotated frame before computing the new positions.
+        #                                                    (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
+        #                                              torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
+        atom_abs_pos = torch.matmul(torch.broadcast_to(self.relative_positions,
                                                             (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
-                                                      torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
-
+                                                      self.local_frame)
         #new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
-        new_atom_positions = self.atom_absolute_positions + torch.repeat_interleave(translation_per_residue, 3, 1)
+        new_atom_positions = atom_abs_pos + torch.repeat_interleave(translation_per_residue, 3, 1)
 
         return new_atom_positions, translation_per_residue
 
