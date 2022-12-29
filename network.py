@@ -154,7 +154,7 @@ class Net(torch.nn.Module):
                                                             (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
                                                       self.local_frame)
         #new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
-        new_atom_positions = atom_abs_pos + torch.repeat_interleave(translation_per_residue, 3, 1)
+        new_atom_positions = atom_abs_pos[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
 
         return new_atom_positions, translation_per_residue
 
