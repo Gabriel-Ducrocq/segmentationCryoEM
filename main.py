@@ -53,19 +53,22 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         conformation1 = torch.broadcast_to(conformation1, (5000, 12))
         conformation2 = torch.broadcast_to(conformation2, (5000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
-        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
+        #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
         #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
-        rotation_axis = torch.randn(size=(10000, 3), device=device)
-        rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
-        axis_angle_format = rotation_axis*rotation_angles
-        rotation_matrices = axis_angle_to_matrix(axis_angle_format)
-        #rotation_matrices = torch.zeros((10000, 3, 3))
-        #rotation_matrices[:, 0, 0] = torch.cos(rotation_angles)
-        #rotation_matrices[:, 1, 1] = torch.cos(rotation_angles)
-        #rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
-        #rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
-        #rotation_matrices[:, 2, 2] = 1
-        #rotation_angles = rotation_angles[:, None]
+        #rotation_axis = torch.randn(size=(10000, 3), device=device)
+        #rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
+        #axis_angle_format = rotation_axis*rotation_angles
+        #rotation_matrices = axis_angle_to_matrix(axis_angle_format)
+        rotation_matrices = torch.zeros((10000, 3, 3))
+        rotation_matrices[:, 0, 0] = torch.cos(rotation_angles)
+        rotation_matrices[:, 1, 1] = torch.cos(rotation_angles)
+        rotation_matrices[:, 1, 0] = torch.sin(rotation_angles)
+        rotation_matrices[:, 0, 1] = -torch.sin(rotation_angles)
+        rotation_matrices[:, 2, 2] = 1
+        rotation_angles = rotation_angles[:, None]
+        rotation_axis = torch.zeros((10000, 3), dtype=torch.float32)
+        rotation_axis[:, 2] = 1
 
 
         training_set = true_deformations.to(device)

@@ -157,8 +157,6 @@ class Net(torch.nn.Module):
         #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)
         features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        print("Features shape")
-        print(features.shape)
         scalars_per_domain = self.decoder.forward(features)
         scalars_per_domain = torch.reshape(scalars_per_domain, (batch_size, self.N_domains,3))
         new_structure, translations = self.deform_structure(weights, scalars_per_domain)
