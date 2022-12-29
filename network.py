@@ -59,7 +59,7 @@ class Net(torch.nn.Module):
 
         self.tau = 0.05
         #self.annealing_tau = 0.5
-        self.annealing_tau = 1
+        self.annealing_tau = 0.1
 
         self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
                                                 requires_grad=True)
