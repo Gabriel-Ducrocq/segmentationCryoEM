@@ -163,12 +163,12 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         #    network.latent_std.requires_grad = not network.latent_std.requires_grad
         #    network.latent_mean.requires_grad = not network.latent_mean.requires_grad
 
-        if (epoch+1)%20 == 0:
+        if (epoch+1)%100 == 0:
             network.tau = network.annealing_tau * network.tau
 
-        if epoch+1 == 30:
-            for g in optimizer.param_groups:
-                g['lr'] = 0.001
+        #if epoch+1 == 30:
+        #    for g in optimizer.param_groups:
+        #        g['lr'] = 0.001
 
         #test_set_normed = (test_set - avg)/std
 
