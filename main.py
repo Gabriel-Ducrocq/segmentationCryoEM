@@ -38,7 +38,7 @@ test_set_size = int(dataset_size/10)
 
 
 def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
@@ -165,6 +165,10 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
 
         if (epoch+1)%20 == 0:
             network.tau = network.annealing_tau * network.tau
+
+        if epoch+1 == 30:
+            for g in optimizer.param_groups:
+                g['lr'] = 0.001
 
         #test_set_normed = (test_set - avg)/std
 
