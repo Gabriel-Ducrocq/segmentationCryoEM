@@ -58,7 +58,7 @@ class Net(torch.nn.Module):
         #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
 
         self.tau = 0.05
-        
+
         #self.annealing_tau = 0.5
         self.annealing_tau = 1
 
