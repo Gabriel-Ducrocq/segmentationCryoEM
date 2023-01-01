@@ -146,6 +146,8 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             #print("Lat mean:", network.latent_mean)
             #print("Lat std:", network.latent_std)
             end = time.time()
+            print("Gradient of mask:")
+            print(torch.sum(network.cluster_means.grad)**2)
             print("Running time one iteration:", end-start)
             #print(network.weights.requires_grad)
             #network.weights.requires_grad = False
