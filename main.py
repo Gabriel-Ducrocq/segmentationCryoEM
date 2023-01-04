@@ -37,7 +37,7 @@ dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
 
-def train_loop(network, absolute_positions, renderer, generate_dataset=True, dataset_path="data/"):
+def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
@@ -46,10 +46,24 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
     all_mask_loss = []
     all_tau = []
 
+    relative_positions = torch.matmul(absolute_positions, local_frame)
+
     if generate_dataset:
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
         conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
+        conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
+        conformation1_rotation_angle = torch.tensor(np.array([np.pi/4, 0, np.pi/8, 0]), dtype=torch.float32)
+        conformation1_rotation_axis_angle = conformation1_rotation_axis*conformation1_rotation_angle[:, None]
+        conformation1_rotation_matrix = axis_angle_to_matrix(conformation1_rotation_axis_angle)
+        conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
+        conformation2_rotation_angle = torch.tensor(np.array([-np.pi/4, 0, 0, 0]), dtype=torch.float32)
+        conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
+        conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
+
+        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))
+        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5000, 4, 3, 3))
+        conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
         conformation1 = torch.broadcast_to(conformation1, (5000, 12))
         conformation2 = torch.broadcast_to(conformation2, (5000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
@@ -72,18 +86,21 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
         training_rotations_matrices = rotation_matrices.to(device)
         training_rotations_angles = rotation_angles.to(device)
         training_rotations_axis = rotation_axis.to(device)
+        training_conformation_rotation_matrix = conformation_rotation_matrix.to(device)
 
 
         torch.save(training_set, dataset_path + "training_set.npy")
         torch.save(training_rotations_angles, dataset_path + "training_rotations_angles.npy")
         torch.save(training_rotations_axis, dataset_path + "training_rotations_axis.npy")
         torch.save(training_rotations_matrices, dataset_path + "training_rotations_matrices.npy")
+        torch.save(training_conformation_rotation_matrix, dataset_path + "training_conformation_rotation_matrices.npy")
         #torch.save(test_set, dataset_path + "test_set.npy")
 
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
     training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy").to(device)
     training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
+    training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
 
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
@@ -102,9 +119,12 @@ def train_loop(network, absolute_positions, renderer, generate_dataset=True, dat
             batch_rotations_axis = training_rotations_axis[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
             batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
+            batch_conformation_rotation_matrices = training_conformation_rotation_matrix[batch_indexes]
             ## Deforming the structure for each batch data point
             deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2,batch_data_for_deform,
+                                                         batch_conformation_rotation_matrices, local_frame, relative_positions,
                                                          1510, device)
+
 
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
@@ -214,7 +234,7 @@ def experiment(graph_file="data/features.npy"):
     net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
               absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
-    train_loop(net, absolute_positions, renderer)
+    train_loop(net, absolute_positions, renderer, local_frame)
 
 
 if __name__ == '__main__':

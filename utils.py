@@ -163,15 +163,44 @@ def get_positions(residue, name):
     z = residue["C"].get_coord()
     return x,y,z
 
-def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, N_residues, device):
+def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotation_matrices_per_domain,
+                     local_frame_in_columns, relative_positions, N_residues, device):
+    """
+
+    :param base_structure: tensor (N_atoms, 3) of absolute positions
+    :param cutoff1: integer, frst cutoff
+    :param cutoff2: integer, second cutoff
+    :param true_deformation: (N_batch, N_domains, 3) translation per domain
+    :param rotation_matrices_per_domain:  (N_batch, N_domains, 3, 3) rotation matrices per domain
+    :param local_frame_in_columns: tensor (3, 3) basis vectors of the local frame in columns
+    :param relative_positions: tensor (N_atoms, 3) of the positions im the local frame
+    :param N_residues: integer, number of residues
+    :param device: string, device to use
+    :return:
+    """
+    list_cutoffs = [0, cutoff1, cutoff2, N_residues]
     batch_size = true_deformation.shape[0]
+    N_domains = true_deformation.shape[1]
+    #This tensor will contain the rotated vectors of the local frame in columns
+    new_local_frame_per_domain_in_column = torch.empty((batch_size, N_domains, 3, 3))
+    for i in range(N_domains):
+        new_local_frame_per_domain_in_column[:, i, :,:] = torch.matmul(rotation_matrices_per_domain[:, i, :, :], local_frame_in_columns)
+
+    new_local_frame_per_domain_in_rows = torch.transpose(new_local_frame_per_domain_in_column, dim0=-2, dim1=-1)
+
+    new_global_rotated_positions = torch.empty((batch_size, 3*N_residues, 3))
     true_deformed_structure = torch.empty((batch_size, 3 * N_residues, 3), device=device)
-    true_deformed_structure[:, :3 * cutoff1, :] = base_structure[:3 * cutoff1,
-                                                       :] + true_deformation[:, 0:1, :]
-    true_deformed_structure[:, 3 * cutoff1:3 * cutoff2, :] = base_structure[
-                                                                       3 * cutoff1:3 * cutoff2,
-                                                                       :] + true_deformation[:, 1:2, :]
-    true_deformed_structure[:, 3 * cutoff2:, :] = base_structure[3 * cutoff2:,
-                                                       :] + true_deformation[:, 2:3, :]
+    for i in range(N_domains-1):
+        start_residue_domain = list_cutoffs[i]
+        end_residue_domain = list_cutoffs[i+1]
+        relative_position_domain = relative_positions[3*start_residue_domain:3*end_residue_domain]
+        new_local_frame_domain = new_local_frame_per_domain_in_rows[:, i, :, :]
+        new_global_rotated_positions[:,3*start_residue_domain:3*end_residue_domain,:] = \
+                    torch.matmul(relative_position_domain, new_local_frame_domain)
+
+        true_deformed_structure[:, 3*start_residue_domain:3 * end_residue_domain, :] = \
+            base_structure[3*start_residue_domain:3 * end_residue_domain,
+                                                       :] + true_deformation[:, i:i+1, :]
+
 
     return true_deformed_structure
