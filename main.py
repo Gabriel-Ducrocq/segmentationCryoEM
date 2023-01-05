@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import time
 from imageRenderer import Renderer
-import torchvision
 from pytorch3d.transforms import axis_angle_to_matrix
 
 
@@ -102,6 +101,9 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
 
+    true_translations = torch.reshape(training_set, (10000, N_input_domains, 3))
+    print("Creating dataset")
+    print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(100)

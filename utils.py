@@ -1,6 +1,7 @@
 import numpy as np
 import Bio.PDB as bpdb
 import torch
+import scipy
 
 restype_1to3 = {
     'A': 'ALA',
@@ -197,10 +198,22 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
         new_local_frame_domain = new_local_frame_per_domain_in_rows[:, i, :, :]
         new_global_rotated_positions[:,3*start_residue_domain:3*end_residue_domain,:] = \
                     torch.matmul(relative_position_domain, new_local_frame_domain)
-
         true_deformed_structure[:, 3*start_residue_domain:3 * end_residue_domain, :] = \
-            base_structure[3*start_residue_domain:3 * end_residue_domain,
+            new_global_rotated_positions[:, 3*start_residue_domain:3 * end_residue_domain,
                                                        :] + true_deformation[:, i:i+1, :]
+        true_deformed_structure = new_global_rotated_positions
+
+    return true_deformed_structure, base_structure
 
 
-    return true_deformed_structure
+
+def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matrices, data_for_deform,
+                                                         conformation_rotation_matrices, local_frame, relative_positions,
+                                                         N_residues, device, renderer):
+    deformed_structures = deform_structure(absolute_positions, cutoff1, cutoff2, data_for_deform, conformation_rotation_matrices,
+                                           local_frame, relative_positions, N_residues, device)
+
+    deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, rotation_matrices)
+    return deformed_images
+
+

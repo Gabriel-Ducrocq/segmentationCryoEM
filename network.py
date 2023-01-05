@@ -14,8 +14,6 @@ class Net(torch.nn.Module):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
-        self.B = B
-        self.S = S
         self.latent_dim = latent_dim
         self.epsilon_mask_loss = 1e-10
         self.encoder = encoder
@@ -34,33 +32,10 @@ class Net(torch.nn.Module):
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-
-        nb_per_res = int(B / S)
-        balance = B - S + 1
-        self.bs_per_res = np.empty((self.N_residues, nb_per_res), dtype=int)
-        self.bs_per_res = torch.tensor(self.bs_per_res, device=device)
-        for i in range(self.N_residues):
-            start = max(i + balance - B, 0) // S  ##Find the smallest window number such that the residue i is inside
-
-            if max(i + balance - B, 0) % S != 0:
-                start += 1  ## If there is a rest, means we have to go one more window
-
-            self.bs_per_res[i, :] = torch.arange(start, start + nb_per_res, device=device)
-
-        nb_windows = self.bs_per_res[-1, -1] + 1
-        #alpha = torch.randn((nb_windows, self.N_domains))
-        alpha = torch.ones((nb_windows, self.N_domains), device=device)
-        ##No grad at first on the mask weights !!
-        self.weights = torch.nn.Parameter(data=alpha, requires_grad=True)
-
         self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
-        #self.latent_std = torch.ones((90000, 3*self.N_domains))*0.001
-
         self.tau = 0.05
-        #self.annealing_tau = 0.5
         self.annealing_tau = 1
-
         self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
                                                 requires_grad=True)
         self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
@@ -68,27 +43,6 @@ class Net(torch.nn.Module):
         self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
                                                       requires_grad=True)
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
-
-
-    def multiply_windows_weights(self):
-        weights_per_residues = torch.empty((self.N_residues, self.N_domains), device=self.device)
-        for i in range(self.N_residues):
-            windows_set = self.bs_per_res[i]  # Extracting the indexes of the windows for the given residue
-            weights_per_residues[i, :] = torch.prod(self.weights[windows_set, :],
-                                                    dim=0)  # Muliplying the weights of all the windows, for each subsystem
-
-        #weights_per_residues = weights_per_residues**2
-        #weights_per_residues = weights_per_residues/torch.sum(weights_per_residues, dim=0, keepdim=True)
-        attention_softmax = F.softmax(weights_per_residues/self.tau, dim=1)
-        #div = torch.transpose(attention_softmax, 0, 1)/(torch.sum(attention_softmax, dim=1) + 1e-10)
-        #attention_softmax = torch.transpose(div, 0, 1)
-        #attention_softmax = F.softmax(weights_per_residues, dim=1)
-
-        #attention_softmax = torch.zeros_like(attention_softmax)
-        #attention_softmax[:300, 0] = 1
-        #attention_softmax[300:1000, 1] = 1
-        #attention_softmax[1000:, 2] = 1
-        return attention_softmax
 
     def compute_mask(self):
         proportions = torch.softmax(self.cluster_proportions, dim=1)
@@ -107,6 +61,7 @@ class Net(torch.nn.Module):
         flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
         distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
+
     def sample_latent(self, distrib_parameters):
         """
         Sample from the approximate posterior over the latent space
@@ -114,9 +69,6 @@ class Net(torch.nn.Module):
         :return: (N_batch, latent_dim) actual samples.
         """
         batch_size = distrib_parameters.shape[0]
-        #latent_vars = torch.randn(size=(batch_size, self.latent_dim), device=self.device)*distrib_parameters[:, self.SLICE_SIGMA]\
-        #              + distrib_parameters[:, self.SLICE_MU]
-
         latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
                       + self.latent_mean[distrib_parameters]
         return latent_vars
@@ -151,12 +103,7 @@ class Net(torch.nn.Module):
         transformed_absolute_positions = torch.matmul(torch.broadcast_to(self.relative_positions,
                                                 (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
                                                       torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
-        #atom_abs_pos = torch.matmul(torch.broadcast_to(self.relative_positions,
-        #                                                    (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
-        #                                              self.local_frame)
         new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
-        #new_atom_positions = atom_abs_pos[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
-
         return new_atom_positions, translation_per_residue
 
     def compute_rotations(self, quaternions, mask):
@@ -189,26 +136,17 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        #batch_size = images.shape[0]
         batch_size = indexes.shape[0]
-        #weights = self.multiply_windows_weights()
         weights = self.compute_mask()
-        #distrib_parameters = self.encode(images)
-        #latent_variables = self.sample_latent(distrib_parameters)
         latent_variables = self.sample_latent(indexes)
         features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         output = self.decoder.forward(features)
         ## The translations are the first 3 scalars and quaternions the last 3
         output = torch.reshape(output, (batch_size, self.N_domains,2*3))
         scalars_per_domain = output[:, :, :3]
-        quaternions_per_domain = torch.cat([torch.ones(size=(self.batch_size, self.N_domains, 1)),output[:, :, 3:]],
-                                           dim=-1)
+        ones = torch.ones(size=(self.batch_size, self.N_domains, 1))
+        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
-
-        #rotations_per_residue = torch.zeros((self.batch_size, self.N_residues, 3, 3))
-        #rotations_per_residue[:, :, 0, 0] = 1
-        #rotations_per_residue[:, :, 1, 1] = 1
-        #rotations_per_residue[:, :, 2, 2] = 1
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         return new_structure, weights, translations, latent_variables
 

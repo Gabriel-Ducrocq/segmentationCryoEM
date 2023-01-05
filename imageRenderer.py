@@ -39,22 +39,9 @@ class Renderer():
         rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, 1, 2)
         all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
         all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
-
         prod= torch.einsum("bki,bkj->bkij", (all_x, all_y))
-        #prod = torch.bmm(all_x, all_y)
         projected_densities = torch.sum(prod, dim=1)
-        #print("Proj:", projected_densities.shape)
-        #fft_densities = torch.fft.rfft2(projected_densities)
-        #print(fft_densities.shape)
-        #CTF_one_dim = torch.sin(torch.linspace(0, 50, 50))
-        #CTF = torch.broadcast_to(torch.outer(CTF_one_dim, CTF_one_dim), (1, 50, 50))
-        #print("CTF",CTF.shape)
-        #print(fft_densities.shape)
-        #torch.einsum("bki,bkj->bkij", (all_x, all_y))
-        #fft_densities = CTF*fft_densities
-        #projected_densities = torch.fft.irfft2(fft_densities)
-        ### ADD THE CTF !!!
-        return projected_densities#+ torch.randn(size=(1, 256, 256))*0.5
+        return projected_densities
 
 
 
