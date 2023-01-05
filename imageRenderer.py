@@ -34,7 +34,7 @@ class Renderer():
         :rotation_matrices: (N_batch, 3, 3)
         :return:
         """
-        transposed_atom_positions = torch.transpose(atom_positions, 1, 2)
+        transposed_atom_positions = torch.transpose(atom_positions, dim0=1, dim1=2)
         rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
         rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, 1, 2)
         all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)

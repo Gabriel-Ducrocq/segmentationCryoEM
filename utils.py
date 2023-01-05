@@ -203,7 +203,7 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
                                                        :] + true_deformation[:, i:i+1, :]
         true_deformed_structure = new_global_rotated_positions
 
-    return true_deformed_structure, base_structure
+    return true_deformed_structure
 
 
 
