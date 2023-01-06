@@ -3,18 +3,26 @@ import torch
 from pytorch3d.transforms import axis_angle_to_matrix
 import utils
 import scipy
+import yaml
 
 
-graph_file="data/features.npy"
-path = "data/"
-N_residues = 1510
-domain_cutoff = [0, 300, 700, 1510]
-batch_size = 10
-N_input_domains = 4
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def construct_conformation_translation(conformation):
+    N = conformation["N_sample"]
+    domains = conformation["domains"]
+    N_domains = len(domains)
+    all_translations = map(lambda domain: domain["translation"],  domains.values())
+    print(np.reshape(all_translations), (N_domains, 3))
 
 
-features = np.load(graph_file, allow_pickle=True)
+with open("dataset.yaml", "r") as file:
+    config = yaml.safe_load(file)
+
+construct_conformation_translation(config["conformations"]["conformation1"])
+device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
+
+
+features = np.load(config["protein_features"], allow_pickle=True)
 features = features.item()
 absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
 absolute_positions = absolute_positions.to(device)
