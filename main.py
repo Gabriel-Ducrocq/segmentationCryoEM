@@ -33,9 +33,9 @@ S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
-print(torch.cuda.is_available())
-"""
-def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True, dataset_path="data/"):
+print("Is cuda available ?", torch.cuda.is_available())
+
+def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True, dataset_path="data/test/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
@@ -206,18 +206,18 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         #losses_test.append(loss_test.to("cpu").detach())
         #print("Loss test:", loss_test)
         print("\n\n\n\n")
-        np.save("data/losses_train.npy", np.array(all_losses))
-        np.save("data/losses_dkl.npy", np.array(all_dkl_losses))
-        np.save("data/losses_rmsd.npy", np.array(all_rmsd))
-        np.save("data/losses_mask.npy", np.array(all_mask_loss))
-        np.save("data/all_tau.npy", np.array(all_tau))
+        np.save(dataset_path + "losses_train.npy", np.array(all_losses))
+        np.save(dataset_path +"losses_dkl.npy", np.array(all_dkl_losses))
+        np.save(dataset_path +"losses_rmsd.npy", np.array(all_rmsd))
+        np.save(dataset_path +"losses_mask.npy", np.array(all_mask_loss))
+        np.save(dataset_path +"all_tau.npy", np.array(all_tau))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.compute_mask()
         mask_python = mask.to("cpu").detach()
-        np.save("data/mask"+str(epoch)+".npy", mask_python)
+        np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
-        torch.save(network.state_dict(), "model")
-        torch.save(network, "full_model")
+        torch.save(network.state_dict(), dataset_path +"model")
+        torch.save(network, dataset_path +"full_model")
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
@@ -243,4 +243,3 @@ def experiment(graph_file="data/features.npy"):
 
 if __name__ == '__main__':
     experiment()
-"""
