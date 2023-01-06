@@ -4,7 +4,7 @@ device: "cuda"
 protein_features: "data/features.npy"
 conformations:
   conformation1:
-    N_sample: 50000
+    N_sample: 5000
     domains:
       domain1:
         start: 0
@@ -25,7 +25,7 @@ conformations:
         rotation_axis: [0, 1, 0]
         rotation_angle: 0.39269908169872414
   conformation2:
-      N_sample: 50000
+      N_sample: 5000
       domains:
         domain1:
           start: 0
