@@ -1,8 +1,6 @@
 import numpy as np
 import torch
-from pytorch3d.transforms import axis_angle_to_matrix
 import utils
-import scipy
 from scipy.spatial.transform import Rotation
 import yaml
 from imageRenderer import Renderer
