@@ -35,7 +35,8 @@ S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
-
+print(torch.cuda.is_available())
+"""
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True, dataset_path="data/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -244,3 +245,4 @@ def experiment(graph_file="data/features.npy"):
 
 if __name__ == '__main__':
     experiment()
+"""
