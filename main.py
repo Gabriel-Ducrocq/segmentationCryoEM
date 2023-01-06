@@ -9,13 +9,11 @@ import numpy as np
 import torch
 import torch.optim.lr_scheduler
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 import time
 from imageRenderer import Renderer
 from pytorch3d.transforms import axis_angle_to_matrix
 
 
-writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
