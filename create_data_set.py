@@ -36,6 +36,8 @@ with open("dataset.yaml", "r") as file:
 
 device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
 print("Device", device)
+print(config["device"] == "cuda")
+print(torch.cuda.is_available())
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
