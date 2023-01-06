@@ -54,6 +54,8 @@ global_axis_angle_dataset = global_rotation_axis*global_rotation_angle
 global_rotation_matrix_dataset = from_axis_angle_to_matrix(global_axis_angle_dataset)
 conformation_matrix_dataset = tuple(map(from_axis_angle_to_matrix, axis_angle_conformations_dataset))
 conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (total_N_sample, N_domains, 3, 3))
+
+print(translation_data_set)
 print("Done having the matrices !")
 
 
@@ -77,6 +79,7 @@ deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff
                                              conformation_matrix_dataset, local_frame, relative_positions,
                                              1510, device)
 
+"""
 print("Rest to create images !")
 deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, global_rotation_matrix_dataset)
-
+"""
