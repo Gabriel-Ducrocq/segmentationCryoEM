@@ -3,75 +3,77 @@ import torch
 from pytorch3d.transforms import axis_angle_to_matrix
 import utils
 import scipy
+from scipy.spatial.transform import Rotation
 import yaml
+from imageRenderer import Renderer
 
 
 
-def construct_conformation_translation(conformation):
+def generate_global_rotation_axis(N):
+    rotation_axis = np.random.normal(size=(N, 3))
+    norm = np.sqrt(np.sum(rotation_axis**2, axis=1))
+    return rotation_axis/norm[:, None]
+
+def generate_global_rotation_angle(N):
+    return np.random.uniform(0, 2*np.pi, size=(N, 1))
+
+def from_axis_angle_to_matrix(axis_angle):
+    rotations = Rotation.from_rotvec(axis_angle)
+    return rotations.as_matrix()
+
+def extractor_domain(conformation, type):
+    assert type in ["translation", "rotation_axis", "rotation_angle"]
+    dim = 1 if type == "rotation_angle" else 3
     N = conformation["N_sample"]
     domains = conformation["domains"]
     N_domains = len(domains)
-    all_translations = map(lambda domain: domain["translation"],  domains.values())
-    print(np.reshape(all_translations), (N_domains, 3))
+    per_domain = tuple(map(lambda domain: domain[type], domains.values()))
+    per_domain = np.reshape(per_domain, (N_domains, dim))
+    return np.repeat(per_domain[None, :, :], N, axis=0)
 
 
 with open("dataset.yaml", "r") as file:
     config = yaml.safe_load(file)
 
-construct_conformation_translation(config["conformations"]["conformation1"])
+
 device = torch.device("cuda" if torch.cuda.is_available() and config["device"] == "cuda" else "cpu")
+pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
+pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
+renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
+
+N_domains = len(config["conformations"]["conformation1"]["domains"])
+translation_data_set = np.vstack(tuple(map(lambda x: extractor_domain(x, "translation"), config["conformations"].values())))
+rotation_axis_dataset = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_axis"), config["conformations"].values())))
+rotation_angle_dataset = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle"), config["conformations"].values())))
+axis_angle_conformations_dataset = rotation_axis_dataset*rotation_angle_dataset
+total_N_sample = axis_angle_conformations_dataset.shape[0]
+global_rotation_axis = generate_global_rotation_axis(total_N_sample)
+global_rotation_angle = generate_global_rotation_angle(total_N_sample)
+global_axis_angle_dataset = global_rotation_axis*global_rotation_angle
+global_rotation_matrix_dataset = from_axis_angle_to_matrix(global_axis_angle_dataset)
+conformation_matrix_dataset = tuple(map(from_axis_angle_to_matrix, axis_angle_conformations_dataset))
+conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (total_N_sample, N_domains, 3, 3))
 
 
 features = np.load(config["protein_features"], allow_pickle=True)
 features = features.item()
-absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
-absolute_positions = absolute_positions.to(device)
+local_frame = features["local_frame"]
+absolute_positions = features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0)
+relative_positions = np.matmul(absolute_positions, local_frame)
 
-local_frame = torch.tensor(features["local_frame"])
-local_frame = local_frame.to(device)
+cutoff1 = config["conformations"]["conformation1"]["domains"]["domain1"]["end"]
+cutoff2 = config["conformations"]["conformation1"]["domains"]["domain3"]["end"]
 
-relative_positions = torch.matmul(absolute_positions, local_frame)
-conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
-conformation2 = torch.tensor(np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
-conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
-conformation1_rotation_angle = torch.tensor(np.array([np.pi / 4, 0, np.pi / 8, 0]), dtype=torch.float32)
-conformation1_rotation_axis_angle = conformation1_rotation_axis * conformation1_rotation_angle[:, None]
-conformation1_rotation_matrix = axis_angle_to_matrix(conformation1_rotation_axis_angle)
-conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
-conformation2_rotation_angle = torch.tensor(np.array([-np.pi / 4, 0, 0, 0]), dtype=torch.float32)
-conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
-conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
+absolute_positions = torch.tensor(absolute_positions, dtype=torch.float32, device=device)
+translation_data_set = torch.tensor(translation_data_set, dtype=torch.float32, device=device)
+conformation_matrix_dataset = torch.tensor(conformation_matrix_dataset, dtype=torch.float32, device=device)
+global_rotation_matrix_dataset = torch.tensor(global_rotation_matrix_dataset, dtype=torch.float32, device=device)
+local_frame = torch.tensor(local_frame, dtype=torch.float32, device=device)
+relative_positions = torch.tensor(relative_positions, dtype=torch.float32, device=device)
 
-conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5, 4, 3, 3))
-conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5, 4, 3, 3))
-conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
-conformation1 = torch.broadcast_to(conformation1, (5, 12))
-conformation2 = torch.broadcast_to(conformation2, (5, 12))
-true_deformations = torch.cat([conformation1, conformation2], dim=0)
-#rotation_angles = torch.tensor(np.random.uniform(0, 2 * np.pi, size=(10, 1)), dtype=torch.float32, device=device)
-rotation_angles = torch.zeros((10, 1), dtype=torch.float32, device=device)
-rotation_axis = torch.randn(size=(10, 3), device=device)
-rotation_axis = rotation_axis / torch.sqrt(torch.sum(rotation_axis ** 2, dim=1))[:, None]
-axis_angle_format = rotation_axis * rotation_angles
-rotation_matrices = axis_angle_to_matrix(axis_angle_format)
-
-
-batch_data_for_deform = torch.reshape(true_deformations, (batch_size, N_input_domains, 3))
-batch_conformation_rotation_matrices = conformation_rotation_matrix
-deformed_structures, base_structure = utils.deform_structure(absolute_positions, domain_cutoff[1], domain_cutoff[2], batch_data_for_deform,
-                                             batch_conformation_rotation_matrices, local_frame, relative_positions,
+deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2, translation_data_set,
+                                             conformation_matrix_dataset, local_frame, relative_positions,
                                              1510, device)
 
-l = 2
-start_residue_domain = domain_cutoff[l]
-end_residue_domain = domain_cutoff[l + 1]
-opt_rotation, _ = scipy.spatial.transform.Rotation.align_vectors(absolute_positions[3 * start_residue_domain:3 * end_residue_domain],
-    deformed_structures[0, 3 * start_residue_domain:3 * end_residue_domain, :])
+deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, global_rotation_matrix_dataset)
 
-axis_angle = opt_rotation.as_rotvec()
-print(axis_angle)
-norm = np.sqrt(np.sum(axis_angle**2))
-print(norm)
-print(axis_angle/norm)
-
-print(absolute_positions[3 * start_residue_domain:3 * end_residue_domain] - deformed_structures[0][3 * start_residue_domain:3 * end_residue_domain])

@@ -11,19 +11,19 @@ conformations:
         end: 300
         translation: [-7, -7, 0]
         rotation_axis: [0, 0, 1]
-        rotation_angles: pi/4
+        rotation_angle: 0.7853981633974483
       domain2:
         start: 300
         end: 1000
         translation: [0, 0, 0]
         rotation_axis: [0, 1, 0]
-        rotation_angles: 0
+        rotation_angle: 0
       domain3:
         start: 1000
         end: 1510
         translation: [5, 5, 0]
         rotation_axis: [0, 1, 0]
-        rotation_angles: pi/8
+        rotation_angle: 0.39269908169872414
   conformation2:
       N_sample: 5000
       domains:
@@ -32,19 +32,19 @@ conformations:
           end: 300
           translation: [ 7, -7, 0 ]
           rotation_axis: [ 0, 0, 1 ]
-          rotation_angles: -pi/4
+          rotation_angle: -0.7853981633974483
         domain2:
           start: 300
           end: 1000
           translation: [ 0, 0, 0 ]
           rotation_axis: [ 0, 1, 0 ]
-          rotation_angles: 0
+          rotation_angle: 0
         domain3:
           start: 1000
           end: 1510
           translation: [ 0, 0, 0 ]
           rotation_axis: [ 0, 1, 0 ]
-          rotation_angles: 0
+          rotation_angle: 0
 
 
 
