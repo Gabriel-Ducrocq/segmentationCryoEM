@@ -75,5 +75,6 @@ deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff
                                              conformation_matrix_dataset, local_frame, relative_positions,
                                              1510, device)
 
+print("Rest to create images !")
 deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, global_rotation_matrix_dataset)
 
