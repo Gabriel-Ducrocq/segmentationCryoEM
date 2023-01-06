@@ -41,6 +41,7 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
+print("start")
 N_domains = len(config["conformations"]["conformation1"]["domains"])
 translation_data_set = np.vstack(tuple(map(lambda x: extractor_domain(x, "translation"), config["conformations"].values())))
 rotation_axis_dataset = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_axis"), config["conformations"].values())))
@@ -53,6 +54,7 @@ global_axis_angle_dataset = global_rotation_axis*global_rotation_angle
 global_rotation_matrix_dataset = from_axis_angle_to_matrix(global_axis_angle_dataset)
 conformation_matrix_dataset = tuple(map(from_axis_angle_to_matrix, axis_angle_conformations_dataset))
 conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (total_N_sample, N_domains, 3, 3))
+print("Done having the matrices !")
 
 
 features = np.load(config["protein_features"], allow_pickle=True)
