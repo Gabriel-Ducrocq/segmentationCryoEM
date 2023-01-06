@@ -4,7 +4,6 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 from mlp import MLP
-from torch.utils.tensorboard import SummaryWriter
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
