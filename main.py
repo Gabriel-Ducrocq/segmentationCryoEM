@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/imagesGMMRotations/"):
+               dataset_path="data/latentForces/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
@@ -140,17 +140,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.show()
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
-                                                                                            batch_rotations_angles,
-                                                                                            batch_rotations_axis)
-            #print("Mask weights")
-            #print(mask_weights)
-            #b = np.argmax(mask_weights.detach().numpy(), axis=1)
-            #print(np.sum(b==0))
-            #print(np.sum(b == 1))
-            #print(np.sum(b == 2))
-            #print(np.sum(b == 3))
-            #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
+            new_structure, mask_weights, translations = network.forward(batch_indexes)
+
             loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, mask_weights,deformed_images, batch_indexes,
                                                            batch_rotation_matrices)
             optimizer.zero_grad()

@@ -1,0 +1,14 @@
+data_path:  "data/"
+optimizer:
+  name: "adam"
+  learning_rate: "3e-4"
+scheduler:
+  name: "ReduceLROnPlateau"
+  patience: 300
+  factor: 0.5
+annealing_mask:
+  annealing: False
+  factor: 0.5
+  patience: 300
+
+

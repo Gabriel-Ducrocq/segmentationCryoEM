@@ -31,8 +31,6 @@ class Net(torch.nn.Module):
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
         self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
@@ -43,6 +41,16 @@ class Net(torch.nn.Module):
                                                       requires_grad=True)
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
+        self.dim = 3
+        ##Forces:
+        self.mean_translations = torch.zeros((N_domains, 3), dtype=torch.float32, device=device)
+        self.std_translations = torch.ones((N_domains, 3), dtype=torch.float32, device=device)
+
+        self.mean_quaternions = torch.zeros((N_domains, 3), dtype=torch.float32, device=device)
+        self.std_quaternions = torch.ones((N_domains, 3), dtype=torch.float32, device=device)
+
+
+
     def compute_mask(self):
         proportions = torch.softmax(self.cluster_proportions, dim=1)
         log_num = -0.5*(self.residues - self.cluster_means)**2/self.cluster_std**2 + \
@@ -51,26 +59,20 @@ class Net(torch.nn.Module):
         mask = torch.softmax(log_num/self.tau, dim=1)
         return mask
 
-    def encode(self, images):
-        """
-        Encode images into latent varaibles
-        :param images: (N_batch, N_pix_x, N_pix_y) containing the cryoEM images
-        :return: (N_batch, 2*N_domains) predicted gaussian distribution over the latent variables
-        """
-        flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
-        distrib_parameters = self.encoder.forward(flattened_images)
-        return distrib_parameters
-
-    def sample_latent(self, distrib_parameters):
+    def sample_forces(self, batch_indexes):
         """
         Sample from the approximate posterior over the latent space
         :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
         :return: (N_batch, latent_dim) actual samples.
         """
-        batch_size = distrib_parameters.shape[0]
-        latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
-                      + self.latent_mean[distrib_parameters]
-        return latent_vars
+        batch_size = batch_indexes.shape[0]
+        samples_translations_scalars = self.mean_translations + torch.randn(size=(batch_size, self.N_domains, self.dim), device = self.device) \
+                *self.std_translations
+
+        samples_quaternions = self.mean_quaternions + torch.randn(size=(batch_size, self.N_domains, self.dim), device = self.device) \
+                *self.std_quaternions
+
+        return samples_translations_scalars, samples_quaternions
 
 
     def deform_structure(self, weights, translation_scalars, rotations_per_residue):
@@ -130,26 +132,20 @@ class Net(torch.nn.Module):
 
         return overall_rotation_matrices
 
-    def forward(self, indexes, rotation_angles, rotation_axis):
+    def forward(self, indexes):
         """
         Encode then decode image
         :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = indexes.shape[0]
         weights = self.compute_mask()
-        latent_variables = self.sample_latent(indexes)
-        features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        output = self.decoder.forward(features)
-        ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
-        scalars_per_domain = output[:, :, :3]
+        scalars_per_domain, quaternions = self.sample_forces(indexes)
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
+        quaternions_per_domain = torch.cat([ones,quaternions], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
-        return new_structure, weights, translations, latent_variables
+        return new_structure, weights, translations
 
 
     def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, train=True):
@@ -173,11 +169,19 @@ class Net(torch.nn.Module):
         #means = distrib_parameters[:, self.SLICE_MU]
         #std = distrib_parameters[:, self.SLICE_SIGMA]
         #batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
-        batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
-                                         - self.latent_mean[distrib_parameters] ** 2 \
-                                         - self.latent_std[distrib_parameters] ** 2, dim=1)
-        Dkl_loss = -torch.mean(batch_Dkl_loss)
-        total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
+
+        #We sum on the different latent force of the different domains and at the same time on the different
+        batch_Dkl_loss_translations = 0.5 * torch.sum(1 + torch.log(self.std_translations ** 2)\
+                                         - self.mean_translations ** 2 \
+                                         - self.std_translations ** 2)
+
+        batch_Dkl_loss_quaternions = 0.5 * torch.sum(1 + torch.log(self.std_quaternions ** 2)\
+                                         - self.mean_quaternions ** 2 \
+                                         - self.std_quaternions ** 2)
+
+
+        Dkl_loss = -batch_Dkl_loss_translations - batch_Dkl_loss_quaternions
+        total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss_translations - 0.001*batch_Dkl_loss_quaternions
         loss = torch.mean(total_loss_per_batch)
         if train:
             print("RMSD:", nll)
