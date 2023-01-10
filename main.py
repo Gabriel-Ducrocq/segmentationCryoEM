@@ -62,15 +62,15 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
         conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
 
-        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (10000, 4, 3, 3))
-        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (10000, 4, 3, 3))
+        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (12500, 4, 3, 3))
+        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (12500, 4, 3, 3))
         conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
-        conformation1 = torch.broadcast_to(conformation1, (10000, 12))
-        conformation2 = torch.broadcast_to(conformation2, (10000, 12))
+        conformation1 = torch.broadcast_to(conformation1, (12500, 12))
+        conformation2 = torch.broadcast_to(conformation2, (12500, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
-        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(20000,1)), dtype=torch.float32, device=device)
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(25000,1)), dtype=torch.float32, device=device)
         #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
-        rotation_axis = torch.randn(size=(20000, 3), device=device)
+        rotation_axis = torch.randn(size=(25000, 3), device=device)
         rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
         axis_angle_format = rotation_axis*rotation_angles
         rotation_matrices = axis_angle_to_matrix(axis_angle_format)
@@ -106,15 +106,15 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
     print("Creating dataset")
     print("Done creating dataset")
-    training_indexes = torch.tensor(np.array(range(20000)))
-    for epoch in range(0,1000):
-        epoch_loss = torch.empty(80)
+    training_indexes = torch.tensor(np.array(range(25000)))
+    for epoch in range(0,5000):
+        epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
-        for i in range(80):
+        for i in range(100):
             start = time.time()
             print("epoch:", epoch)
-            print(i/80)
+            print(i/100)
             #batch_data = next(iter(data_loader))
             batch_indexes = next(iter(data_loader))
             ##Getting the batch translations, rotations and corresponding rotation matrices
