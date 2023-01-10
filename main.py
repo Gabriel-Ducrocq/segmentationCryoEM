@@ -106,7 +106,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
     print("Creating dataset")
     print("Done creating dataset")
-    training_indexes = torch.tensor(np.array(range(100000)))
+    training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,1000):
         epoch_loss = torch.empty(50)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
