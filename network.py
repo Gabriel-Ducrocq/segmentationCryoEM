@@ -31,8 +31,8 @@ class Net(torch.nn.Module):
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim)), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
         self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],

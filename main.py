@@ -108,13 +108,13 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(100000)))
     for epoch in range(0,1000):
-        epoch_loss = torch.empty(200)
+        epoch_loss = torch.empty(500)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
-        for i in range(200):
+        for i in range(500):
             start = time.time()
             print("epoch:", epoch)
-            print(i/200)
+            print(i/500)
             #batch_data = next(iter(data_loader))
             batch_indexes = next(iter(data_loader))
             ##Getting the batch translations, rotations and corresponding rotation matrices
