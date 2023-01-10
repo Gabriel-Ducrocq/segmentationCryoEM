@@ -20,29 +20,29 @@ class Renderer():
         self.N_heavy_atoms = N_heavy
         self.torch_sqrt_2pi= torch.sqrt(torch.tensor(2*np.pi, device=device))
 
-    #def compute_gaussian_kernel(self, x, pixels_pos):
-    #    """
-    #    Computes the values of the gaussian kernel for one axis only but all heavy atoms and samples in batch
-    #    :param x: (N_batch, 1): the coordinate of all heavy atoms on one axis for all samples in batch.
-    #    :return: (N_batch, N_atoms, N_pix)
-    #    """
-    #    batch_size = x.shape[0]
-    #    scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_heavy_atoms, -1)) -
-    #                               x[:, :, None])**2/self.std_blob**2
-    #    axis_val = torch.exp(scaled_distances)/self.torch_sqrt_2pi
-    #    return axis_val
-
-    def compute_gaussian_kernel(self, x):
+    def compute_gaussian_kernel(self, x, pixels_pos):
         """
         Computes the values of the gaussian kernel for one axis only but all heavy atoms and samples in batch
         :param x: (N_batch, 1): the coordinate of all heavy atoms on one axis for all samples in batch.
         :return: (N_batch, N_atoms, N_pix)
         """
         batch_size = x.shape[0]
-        expended_atom_positions = torch.broadcast_to(x[:, :, None, None, :], (batch_size, self.N_heavy_atoms, self.len_y, self.len_x, 2))
-        exponent = torch.exp(-0.5*torch.sum((expended_atom_positions - self.grid)**2/self.std_blob**2, dim=-1))/(self.torch_sqrt_2pi**2*
-        self.std_blob**2)
-        return torch.sum(exponent, dim=1)
+        scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_heavy_atoms, -1)) -
+                                   x[:, :, None])**2/self.std_blob**2
+        axis_val = torch.exp(scaled_distances)/self.torch_sqrt_2pi
+        return axis_val
+
+    #def compute_gaussian_kernel(self, x):
+    #    """
+    #    Computes the values of the gaussian kernel for one axis only but all heavy atoms and samples in batch
+    #    :param x: (N_batch, 1): the coordinate of all heavy atoms on one axis for all samples in batch.
+    #    :return: (N_batch, N_atoms, N_pix)
+    #    """
+    #    batch_size = x.shape[0]
+    #    expended_atom_positions = torch.broadcast_to(x[:, :, None, None, :], (batch_size, self.N_heavy_atoms, self.len_y, self.len_x, 2))
+    #    exponent = torch.exp(-0.5*torch.sum((expended_atom_positions - self.grid)**2/self.std_blob**2, dim=-1))/(self.torch_sqrt_2pi**2*
+    #    self.std_blob**2)
+    #    return torch.sum(exponent, dim=1)
 
     def compute_x_y_values_all_atoms(self, atom_positions, rotation_matrices):
         """
@@ -54,11 +54,11 @@ class Renderer():
         transposed_atom_positions = torch.transpose(atom_positions, dim0=1, dim1=2)
         rotated_transposed_atom_positions = torch.matmul(rotation_matrices, transposed_atom_positions)
         rotated_atom_positions = torch.transpose(rotated_transposed_atom_positions, 1, 2)
-        projected_densities = self.compute_gaussian_kernel(rotated_atom_positions[:, :, :2])
-        #all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
-        #all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
-        #prod= torch.einsum("bki,bkj->bkij", (all_x, all_y))
-        #projected_densities = torch.sum(prod, dim=1)
+        #projected_densities = self.compute_gaussian_kernel(rotated_atom_positions[:, :, :2])
+        all_x = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 0], self.pixels_x)
+        all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
+        prod= torch.einsum("bki,bkj->bkij", (all_x, all_y))
+        projected_densities = torch.sum(prod, dim=1)
         return projected_densities
 
 
