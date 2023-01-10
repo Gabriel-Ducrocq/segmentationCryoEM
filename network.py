@@ -43,11 +43,11 @@ class Net(torch.nn.Module):
 
         self.dim = 3
         ##Forces:
-        self.mean_translations = torch.zeros((N_domains, 3), dtype=torch.float32, device=device)
-        self.std_translations = torch.ones((N_domains, 3), dtype=torch.float32, device=device)
+        self.mean_translations = torch.zeros((N_domains, 3), dtype=torch.float32, device=device, requires_grad=True)
+        self.std_translations = torch.ones((N_domains, 3), dtype=torch.float32, device=device, requires_grad=True)
 
-        self.mean_quaternions = torch.zeros((N_domains, 3), dtype=torch.float32, device=device)
-        self.std_quaternions = torch.ones((N_domains, 3), dtype=torch.float32, device=device)
+        self.mean_quaternions = torch.zeros((N_domains, 3), dtype=torch.float32, device=device, requires_grad=True)
+        self.std_quaternions = torch.ones((N_domains, 3), dtype=torch.float32, device=device, requires_grad=True)
 
 
 
