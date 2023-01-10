@@ -15,7 +15,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 500
+batch_size = 200
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
