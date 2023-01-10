@@ -37,7 +37,7 @@ print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/latentForces/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.01)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
