@@ -165,6 +165,9 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("Gradient of mask:")
             print(torch.sum(network.cluster_means.grad)**2)
             print("Running time one iteration:", end-start)
+            print(network.cluster_means.grad)
+            print(network.cluster_std.grad)
+            print(network.cluster_proportions.grad)
             #print(network.weights.requires_grad)
             #network.weights.requires_grad = False
             print("\n\n")

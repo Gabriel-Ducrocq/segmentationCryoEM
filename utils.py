@@ -194,6 +194,8 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
     for i in range(N_domains-1):
         start_residue_domain = list_cutoffs[i]
         end_residue_domain = list_cutoffs[i+1]
+        print(start_residue_domain, end_residue_domain)
+        print("\n")
         relative_position_domain = relative_positions[3*start_residue_domain:3*end_residue_domain]
         new_local_frame_domain = new_local_frame_per_domain_in_rows[:, i, :, :]
         new_global_rotated_positions[:,3*start_residue_domain:3*end_residue_domain,:] = \
