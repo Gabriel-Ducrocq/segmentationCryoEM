@@ -15,7 +15,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 250
+batch_size = 100
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/imagesGMMRotations1Domainlowerlr/"):
+               dataset_path="data/imagesGMMRotations1Domainlowerlr10000/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
@@ -63,15 +63,15 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
         conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
 
-        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (12500, 4, 3, 3))
-        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (12500, 4, 3, 3))
+        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))
+        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5000, 4, 3, 3))
         conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
-        conformation1 = torch.broadcast_to(conformation1, (12500, 12))
-        conformation2 = torch.broadcast_to(conformation2, (12500, 12))
+        conformation1 = torch.broadcast_to(conformation1, (5000, 12))
+        conformation2 = torch.broadcast_to(conformation2, (5000, 12))
         true_deformations = torch.cat([conformation1, conformation2], dim=0)
-        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(25000,1)), dtype=torch.float32, device=device)
+        rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
         #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
-        rotation_axis = torch.randn(size=(25000, 3), device=device)
+        rotation_axis = torch.randn(size=(10000, 3), device=device)
         rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
         axis_angle_format = rotation_axis*rotation_angles
         rotation_matrices = axis_angle_to_matrix(axis_angle_format)
@@ -107,7 +107,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
     print("Creating dataset")
     print("Done creating dataset")
-    training_indexes = torch.tensor(np.array(range(25000)))
+    training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
