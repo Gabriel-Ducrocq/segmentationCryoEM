@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/imagesGMMRotations1Domainlowerlr10000/"):
+               dataset_path="data/imagesGMMRotationsPresentation/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
