@@ -24,7 +24,7 @@ N_input_domains = 4
 latent_dim = 9
 num_nodes = 1510
 cutoff1 = 300
-cutoff2 = 1000
+cutoff2 = 1353
 K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
 #B = 10
@@ -49,16 +49,17 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
 
     if generate_dataset:
         #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
-        conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
-        conformation2 = torch.tensor(np.array([7, -7, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
+        conformation1 = torch.tensor(np.array([[-8, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
+        #conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
+        conformation2 = torch.tensor(np.array([0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
         conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
         #conformation1_rotation_angle = torch.tensor(np.array([np.pi/4, 0, np.pi/8, 0]), dtype=torch.float32)
-        conformation1_rotation_angle = torch.tensor(np.array([np.pi / 4, 0, 0, 0]), dtype=torch.float32)
+        conformation1_rotation_angle = torch.tensor(np.array([-np.pi / 4, 0, np.pi/2, 0]), dtype=torch.float32)
         #conformation1_rotation_angle = torch.tensor(np.array([0, 0, 0, 0]))
         conformation1_rotation_axis_angle = conformation1_rotation_axis*conformation1_rotation_angle[:, None]
         conformation1_rotation_matrix = axis_angle_to_matrix(conformation1_rotation_axis_angle)
         conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
-        conformation2_rotation_angle = torch.tensor(np.array([-np.pi/4, 0, 0, 0]), dtype=torch.float32)
+        conformation2_rotation_angle = torch.tensor(np.array([0, 0, -np.pi/2, 0]), dtype=torch.float32)
         #conformation2_rotation_angle = torch.tensor(np.array([0, 0, 0, 0]))
         conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
         conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
