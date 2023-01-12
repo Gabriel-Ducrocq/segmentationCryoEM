@@ -119,7 +119,7 @@ class Net(torch.nn.Module):
 
         mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
         #Transposed here because pytorch3d has right matrix multiplication convention.
-        mask_rotation_matrix_per_domain_per_residue = torch.transpose(mask_rotation_matrix_per_domain_per_residue, dim0=-2, dim1=-1)
+        #mask_rotation_matrix_per_domain_per_residue = torch.transpose(mask_rotation_matrix_per_domain_per_residue, dim0=-2, dim1=-1)
         overall_rotation_matrices = torch.zeros((self.batch_size, self.N_residues,3,3), device=self.device)
         overall_rotation_matrices[:, :, 0, 0] = 1
         overall_rotation_matrices[:, :, 1, 1] = 1

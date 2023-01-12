@@ -86,11 +86,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
 
 
         training_set = true_deformations.to(device)
-        rotation_matrices = torch.transpose(rotation_matrices, dim0=-2, dim1=-1)
+        #rotation_matrices = torch.transpose(rotation_matrices, dim0=-2, dim1=-1)
         training_rotations_matrices = rotation_matrices.to(device)
         training_rotations_angles = rotation_angles.to(device)
         training_rotations_axis = rotation_axis.to(device)
-        conformation_rotation_matrix = torch.transpose(conformation_rotation_matrix, dim0=-2, dim1=-1)
+        #conformation_rotation_matrix = torch.transpose(conformation_rotation_matrix, dim0=-2, dim1=-1)
         training_conformation_rotation_matrix = conformation_rotation_matrix.to(device)
 
 
