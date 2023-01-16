@@ -35,17 +35,57 @@ class Net(torch.nn.Module):
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
-        self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
-                                                requires_grad=True)
-        self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
-        self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
-                                                      requires_grad=True)
+        #self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
+        #                                        requires_grad=True)
+        #self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+        #                                      requires_grad=True)
+        #self.cluster_proportions = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
+        #                                              requires_grad=True)
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
+
+        self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
+                                                requires_grad=True)
+
+        self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+                                              requires_grad=True)
+
+        self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+                                              requires_grad=True)
+
+        self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
+                                              requires_grad=True)
+
+        self.cluster_proportions_mean = torch.nn.Parameter(torch.zeros(4, dtype=torch.float32, device=device)[None, :],
+                                                      requires_grad=True)
+
+        self.cluster_proportions_std = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
+                           requires_grad=True)
+
+
+        self.cluster_parameters = {"means":{"mean":self.cluster_means_mean, "std":self.cluster_means_std},
+                                   "stds":{"mean":self.cluster_std_mean, "std":self.cluster_std_std},
+                                   "proportions":{"mean":self.cluster_proportions_mean, "std":self.cluster_proportions_std}}
+
+
+        self.cluster_prior_means_mean = torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :]
+        self.cluster_prior_means_std = torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_std_mean = torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_std_std = torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_proportions_mean = torch.zeros(4, dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_proportions_std = torch.ones(4, dtype=torch.float32, device=device)[None, :]
+
+        self.cluster_prior = {"means":{"mean":self.cluster_prior_means_mean, "std": self.cluster_prior_means_std},
+                                   "stds":{"mean":self.cluster_prior_std_mean, "std": self.cluster_prior_std_std},
+                                   "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
+
+
     def compute_mask(self):
-        proportions = torch.softmax(self.cluster_proportions, dim=1)
-        log_num = -0.5*(self.residues - self.cluster_means)**2/self.cluster_std**2 + \
+        cluster_proportions = torch.randn(4)*self.cluster_proportions_std + self.cluster_proportions_mean
+        cluster_means = torch.randn(4)*self.cluster_means_std + self.cluster_means_mean
+        cluster_std = torch.randn(4)*self.cluster_std_std + self.cluster_std_mean
+        proportions = torch.softmax(cluster_proportions, dim=1)
+        log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
               torch.log(proportions)
 
         mask = torch.softmax(log_num/self.tau, dim=1)
@@ -130,6 +170,19 @@ class Net(torch.nn.Module):
 
         return overall_rotation_matrices
 
+    def compute_Dkl_mask(self, variable):
+        """
+        Compute the Dkl loss between the prior and the approximated posterior distribution
+        :param variable: string, either "proportions", "means" or "std"
+        :return: Dkl loss
+        """
+        assert variable in ["means", "stds", "proportions"]
+        return torch.sum(-1/2 + torch.log(self.cluster_prior[variable]["std"]/self.cluster_parameters[variable]["std"]) \
+        + (1/2)*(self.cluster_parameters[variable]["std"]**2 +
+        (self.cluster_prior[variable]["mean"] - self.cluster_parameters[variable]["mean"])**2)/self.cluster_prior[variable]["std"]**2)
+
+
+
     def forward(self, indexes, rotation_angles, rotation_axis):
         """
         Encode then decode image
@@ -165,25 +218,23 @@ class Net(torch.nn.Module):
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
-
-        attention_softmax_log = torch.log(mask_weights+self.epsilon_mask_loss)
-        prod = attention_softmax_log * mask_weights
-        loss_mask = -torch.sum(prod)
-
-        #means = distrib_parameters[:, self.SLICE_MU]
-        #std = distrib_parameters[:, self.SLICE_SIGMA]
-        #batch_Dkl_loss = 0.5*torch.sum(1 + torch.log(std**2) - means**2 - std**2, dim=1)
-        batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
+        minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
                                          - self.latent_mean[distrib_parameters] ** 2 \
                                          - self.latent_std[distrib_parameters] ** 2, dim=1)
-        Dkl_loss = -torch.mean(batch_Dkl_loss)
-        total_loss_per_batch = -batch_ll - 0.001*batch_Dkl_loss
-        loss = torch.mean(total_loss_per_batch)
+
+        minus_batch_Dkl_mask_mean = -self.compute_Dkl_mask("means")
+        minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
+        minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
+        Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
+        total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+        loss = torch.mean(total_loss_per_batch) - 0.001*minus_batch_Dkl_mask_mean - 0.001*minus_batch_Dkl_mask_std \
+               - 0.001*minus_batch_Dkl_mask_proportions
         if train:
+            print("Mask", mask_weights)
             print("RMSD:", nll)
             print("Dkl:", Dkl_loss)
-            print("loss mask:", loss_mask)
-            return loss, nll, Dkl_loss, loss_mask
+            print("DKLS:", minus_batch_Dkl_mask_mean, minus_batch_Dkl_mask_proportions, minus_batch_Dkl_mask_std)
+            return loss, nll, Dkl_loss, -minus_batch_Dkl_mask_mean, -minus_batch_Dkl_mask_std, -minus_batch_Dkl_mask_proportions
 
         return nll
 

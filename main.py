@@ -36,14 +36,17 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/imagesGMMRotationsPresentationContinuous/"):
+               dataset_path="data/imagesGMMRotationsPresentationContinuousLatentMask/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
-    all_mask_loss = []
     all_tau = []
+
+    all_cluster_means_loss = []
+    all_cluster_std_loss = []
+    all_cluster_proportions_loss = []
 
     relative_positions = torch.matmul(absolute_positions, local_frame)
 
@@ -157,8 +160,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #print(np.sum(b == 2))
             #print(np.sum(b == 3))
             #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
-            loss, rmsd, Dkl_loss, mask_loss = network.loss(new_structure, mask_weights,deformed_images, batch_indexes,
-                                                           batch_rotation_matrices)
+            loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
+                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -172,13 +175,13 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             all_losses.append(loss.cpu().detach())
             all_dkl_losses.append(Dkl_loss.cpu().detach())
             all_rmsd.append(rmsd.cpu().detach())
-            all_mask_loss.append(mask_loss.cpu().detach())
             all_tau.append(network.tau)
+            all_cluster_means_loss.append(Dkl_mask_mean.cpu().detach())
+            all_cluster_std_loss.append(Dkl_mask_std.cpu().detach())
+            all_cluster_proportions_loss.append(Dkl_mask_proportions.cpu().detach())
             #print("Lat mean:", network.latent_mean)
             #print("Lat std:", network.latent_std)
             end = time.time()
-            print("Gradient of mask:")
-            print(torch.sum(network.cluster_means.grad)**2)
             print("Running time one iteration:", end-start)
             #print(network.weights.requires_grad)
             #network.weights.requires_grad = False
@@ -216,7 +219,9 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         np.save(dataset_path + "losses_train.npy", np.array(all_losses))
         np.save(dataset_path +"losses_dkl.npy", np.array(all_dkl_losses))
         np.save(dataset_path +"losses_rmsd.npy", np.array(all_rmsd))
-        np.save(dataset_path +"losses_mask.npy", np.array(all_mask_loss))
+        np.save(dataset_path + "losses_cluster_mean", np.array(all_cluster_means_loss))
+        np.save(dataset_path + "losses_cluster_std", np.array(all_cluster_std_loss))
+        np.save(dataset_path + "losses_cluster_proportions", np.array(all_cluster_proportions_loss))
         np.save(dataset_path +"all_tau.npy", np.array(all_tau))
         #np.save("data/losses_test.npy", np.array(losses_test))
         mask = network.compute_mask()
