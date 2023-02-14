@@ -193,7 +193,8 @@ class Net(torch.nn.Module):
         batch_size = indexes.shape[0]
         weights = self.compute_mask()
         latent_variables = self.sample_latent(indexes)
-        features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
+        #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
+        features = latent_variables
         output = self.decoder.forward(features)
         ## The translations are the first 3 scalars and quaternions the last 3
         output = torch.reshape(output, (batch_size, self.N_domains,2*3))
