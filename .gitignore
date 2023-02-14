@@ -5,3 +5,5 @@
 *model
 *.sh
 */__pycache__/*
+*/data/*
+data/*

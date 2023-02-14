@@ -31,8 +31,8 @@ class Net(torch.nn.Module):
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim)), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
+        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
         #self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
@@ -81,9 +81,9 @@ class Net(torch.nn.Module):
 
 
     def compute_mask(self):
-        cluster_proportions = torch.randn(4)*self.cluster_proportions_std + self.cluster_proportions_mean
-        cluster_means = torch.randn(4)*self.cluster_means_std + self.cluster_means_mean
-        cluster_std = torch.randn(4)*self.cluster_std_std + self.cluster_std_mean
+        cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
+        cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
+        cluster_std = torch.randn(4, device=self.device)*self.cluster_std_std + self.cluster_std_mean
         proportions = torch.softmax(cluster_proportions, dim=1)
         log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
               torch.log(proportions)

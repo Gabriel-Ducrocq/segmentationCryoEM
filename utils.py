@@ -201,7 +201,6 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
         true_deformed_structure[:, 3*start_residue_domain:3 * end_residue_domain, :] = \
             new_global_rotated_positions[:, 3*start_residue_domain:3 * end_residue_domain,
                                                        :] + true_deformation[:, i:i+1, :]
-        true_deformed_structure = new_global_rotated_positions
 
     return true_deformed_structure
 
