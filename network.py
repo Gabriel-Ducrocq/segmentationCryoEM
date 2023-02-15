@@ -47,7 +47,7 @@ class Net(torch.nn.Module):
         self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
                                                 requires_grad=True)
 
-        self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+        self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
         self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
@@ -228,8 +228,8 @@ class Net(torch.nn.Module):
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
         Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
         total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
-        loss = torch.mean(total_loss_per_batch) - 0.001*minus_batch_Dkl_mask_mean - 0.001*minus_batch_Dkl_mask_std \
-               - 0.001*minus_batch_Dkl_mask_proportions
+        loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+               - 0.0001*minus_batch_Dkl_mask_proportions
         if train:
             print("Mask", mask_weights)
             print("RMSD:", nll)
