@@ -254,5 +254,5 @@ def experiment(graph_file="data/features.npy"):
 
 
 if __name__ == '__main__':
-    #experiment()
     print("Is cuda available ?", torch.cuda.is_available())
+    experiment()
