@@ -28,7 +28,9 @@ class Renderer():
         self.amplitude_contrast_ratio = amplitude_contrast_ratio
         self.grid_period = period
 
-        self.frequencies = torch.tensor([k/(period*self.len_x) for k in range(-int(self.len_x/2), int(self.len_x/2))])
+        self.frequencies = torch.tensor([k/(period*self.len_x) for k in range(-int(self.len_x/2), int(self.len_x/2))],
+                                        device=device)
+        
         freqs = self.frequencies[:, None]**2 + self.frequencies[None, -int(self.len_y/2 + 1):]**2
         self.ctf_grid = self.compute_ctf_np(freqs, accelerating_voltage, spherical_aberration, amplitude_contrast_ratio,
                                             defocus)
