@@ -30,7 +30,7 @@ class Renderer():
 
         self.frequencies = torch.tensor([k/(period*self.len_x) for k in range(-int(self.len_x/2), int(self.len_x/2))],
                                         device=device)
-        
+
         freqs = self.frequencies[:, None]**2 + self.frequencies[None, -int(self.len_y/2 + 1):]**2
         self.ctf_grid = self.compute_ctf_np(freqs, accelerating_voltage, spherical_aberration, amplitude_contrast_ratio,
                                             defocus)
@@ -69,7 +69,7 @@ class Renderer():
                 - phase_shift
         )
 
-        ctf = np.sqrt(1 - w ** 2) * np.sin(gamma) - w * np.cos(gamma)
+        ctf = torch.sqrt(1 - w ** 2) * torch.sin(gamma) - w * torch.cos(gamma)
         if bfactor is not None:
             ctf *= np.exp(-bfactor / 4 * s2)
 
