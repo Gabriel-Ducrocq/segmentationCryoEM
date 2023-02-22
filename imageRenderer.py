@@ -27,6 +27,7 @@ class Renderer():
         self.accelerating_voltage = accelerating_voltage # see the paper cited by cryoSparc site on CTF.
         self.amplitude_contrast_ratio = amplitude_contrast_ratio
         self.grid_period = period
+        self.device = device
 
         self.frequencies = torch.tensor([k/(period*self.len_x) for k in range(-int(self.len_x/2), int(self.len_x/2))],
                                         device=device)
@@ -69,7 +70,8 @@ class Renderer():
                 - phase_shift
         )
 
-        ctf = torch.sqrt(1 - w ** 2) * torch.sin(gamma) - w * torch.cos(gamma)
+        ctf = torch.sqrt(torch.tensor(1 - w ** 2, device=self.device)) * torch.sin(torch.tensor(gamma, device=self.device))\
+                         - w * torch.cos(torch.tensor(gamma), device=self.device)
         if bfactor is not None:
             ctf *= np.exp(-bfactor / 4 * s2)
 
