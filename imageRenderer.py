@@ -71,7 +71,7 @@ class Renderer():
         )
 
         ctf = torch.sqrt(torch.tensor(1 - w ** 2, device=self.device)) * torch.sin(torch.tensor(gamma, device=self.device))\
-                         - w * torch.cos(torch.tensor(gamma), device=self.device)
+                         - w * torch.cos(torch.tensor(gamma, device=self.device))
         if bfactor is not None:
             ctf *= np.exp(-bfactor / 4 * s2)
 
