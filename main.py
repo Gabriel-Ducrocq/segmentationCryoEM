@@ -37,9 +37,10 @@ print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/cosineAnnealing2Conformations/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    #optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.000001)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
