@@ -36,11 +36,11 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/cosineAnnealing2Conformations/"):
-    #optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
-    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
+               dataset_path="data/vae2Conformations/"):
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
@@ -147,19 +147,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.show()
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(batch_indexes,
-                                                                                            batch_rotations_angles,
-                                                                                            batch_rotations_axis)
-            #print("Mask weights")
-            #print(mask_weights)
-            #b = np.argmax(mask_weights.detach().numpy(), axis=1)
-            #print(np.sum(b==0))
-            #print(np.sum(b == 1))
-            #print(np.sum(b == 2))
-            #print(np.sum(b == 3))
-            #loss, rmsd, Dkl_loss = network.loss(new_structure, deformed_images, latent_distrib_parameters)
+            new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
+                = network.forward(batch_indexes, deformed_images)
+
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
-                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices)
+                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -190,9 +182,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        all_lr.append(scheduler.get_last_lr())
-        #scheduler.step(torch.mean(epoch_loss))
-        scheduler.step()
+        scheduler.step(torch.mean(epoch_loss))
+        #scheduler.step()
 
         #if (epoch+1)%50 == 0:
         #    network.weights.requires_grad = not network.weights.requires_grad
@@ -242,7 +233,7 @@ def experiment(graph_file="data/features.npy"):
     local_frame = local_frame.to(device)
 
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, 1024, device, num_hidden_layers=4)
+    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)

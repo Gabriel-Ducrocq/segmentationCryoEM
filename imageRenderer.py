@@ -121,7 +121,7 @@ class Renderer():
 """
 pixels_x = np.linspace(-150, 150, num = 128).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num = 128).reshape(1, -1)
-rend = Renderer(pixels_x, pixels_y, std=1, defocus=5000)
+rend = Renderer(pixels_x, pixels_y)
 k = torch.tensor(np.linspace(0, 1, 1000))
 ctf = rend.ctf_grid
 plt.imshow(ctf[:, :])
@@ -148,6 +148,8 @@ print(torch.max(absolute_positions[0, :, 1]))
 
 res = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
 res = res[0].detach().numpy()
+print("power:", np.var(res))
+res += np.random.normal(scale=0.1, size=(64, 64))
 
 print(np.unique(res))
 print(res.shape)

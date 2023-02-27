@@ -9,7 +9,7 @@ from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 class Net(torch.nn.Module):
     def __init__(self, N_residues, N_domains, latent_dim, B, S, encoder, decoder, renderer, local_frame, atom_absolute_positions,
-                 batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001):
+                 batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001, use_encoder = True):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
@@ -35,6 +35,7 @@ class Net(torch.nn.Module):
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
+        self.use_encoder = True
         #self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
         #                                        requires_grad=True)
         #self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
@@ -101,15 +102,24 @@ class Net(torch.nn.Module):
         distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
 
-    def sample_latent(self, distrib_parameters):
+    def sample_latent(self, distrib_parameters, images=None):
         """
         Sample from the approximate posterior over the latent space
         :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
         :return: (N_batch, latent_dim) actual samples.
         """
+        if self.use_encoder:
+            batch_size = images.shape[0]
+            latent_mean_std = self.encode(images)
+            latent_mean = latent_mean_std[:, :self.latent_dim]
+            latent_std = latent_mean_std[:, self.latent_dim:]
+            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+            return latent_vars, latent_mean, latent_std
+
         batch_size = distrib_parameters.shape[0]
         latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
                       + self.latent_mean[distrib_parameters]
+
         return latent_vars
 
 
@@ -183,7 +193,7 @@ class Net(torch.nn.Module):
 
 
 
-    def forward(self, indexes, rotation_angles, rotation_axis):
+    def forward(self, indexes, images=None):
         """
         Encode then decode image
         :images: (N_batch, N_pix_x, N_pix_y) cryoEM images
@@ -192,7 +202,11 @@ class Net(torch.nn.Module):
         """
         batch_size = indexes.shape[0]
         weights = self.compute_mask()
-        latent_variables = self.sample_latent(indexes)
+        if self.use_encoder:
+            latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
+        else:
+            latent_variables = self.sample_latent(indexes, images)
+
         #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         features = latent_variables
         output = self.decoder.forward(features)
@@ -203,10 +217,14 @@ class Net(torch.nn.Module):
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
-        return new_structure, weights, translations, latent_variables
+        if self.use_encoder:
+            return new_structure, weights, translations, latent_variables, latent_mean, latent_std
+        else:
+            return new_structure, weights, translations, latent_variables, None, None
 
 
-    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, train=True):
+    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_mean=None, latent_std=None
+             , train=True):
         """
 
         :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
@@ -219,7 +237,12 @@ class Net(torch.nn.Module):
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
-        minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
+        if self.use_encoder:
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+                                                   - latent_mean ** 2 \
+                                                   - latent_std ** 2, dim=1)
+        else:
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
                                          - self.latent_mean[distrib_parameters] ** 2 \
                                          - self.latent_std[distrib_parameters] ** 2, dim=1)
 
