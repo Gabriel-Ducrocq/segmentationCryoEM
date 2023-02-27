@@ -149,7 +149,7 @@ print(torch.max(absolute_positions[0, :, 1]))
 res = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
 res = res[0].detach().numpy()
 print("power:", np.var(res))
-res += np.random.normal(scale=0.1, size=(64, 64))
+res += np.random.normal(scale=0.01, size=(64, 64))
 
 print(np.unique(res))
 print(res.shape)
