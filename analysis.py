@@ -37,28 +37,30 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 model_path = "data/vae2Conformations/full_model"
-model = torch.load(model_path)
+model = torch.load(model_path, map_location=torch.device(device))
 
 
-training_set = torch.load(dataset_path + "training_set.npy").to(device)
-training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy").to(device)
-training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
-training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
-training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
+training_set = torch.load(dataset_path + "training_set.npy", map_location=torch.device(device)).to(device)
+training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy", map_location=torch.device(device)).to(device)
+training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy", map_location=torch.device(device)).to(device)
+training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy", map_location=torch.device(device)).to(device)
+training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy", map_location=torch.device(device))
 
 print("SHOULD WE USE ENCODER:", model.use_encoder)
 training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
+all_indexes = []
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
-    data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
+    data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
     for i in range(100):
         start = time.time()
         print("epoch:", epoch)
         print(i / 100)
         # batch_data = next(iter(data_loader))
-        batch_indexes = next(iter(data_loader))
+        batch_indexes = next(data_loader)
+        print(batch_indexes)
         ##Getting the batch translations, rotations and corresponding rotation matrices
         batch_data = training_set[batch_indexes]
         batch_rotations_angles = training_rotations_angles[batch_indexes]
@@ -77,6 +79,8 @@ for epoch in range(0, 1):
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
         latent_distrib = model.encode(deformed_images)
         all_latent_distrib.append(latent_distrib.detach().numpy())
+        all_indexes.append(batch_indexes.detach().numpy())
 
 
-np.save(dataset_path + "latent_distrib.npy")
+np.save(dataset_path + "latent_distrib.npy", np.array(all_latent_distrib))
+np.save(dataset_path + "indexes.npy", np.array(all_indexes))

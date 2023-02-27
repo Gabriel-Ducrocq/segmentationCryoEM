@@ -118,7 +118,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     for epoch in range(0,5000):
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
-        data_loader = DataLoader(training_indexes, batch_size=batch_size, shuffle=True)
+        data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
         for i in range(100):
             start = time.time()
             print("epoch:", epoch)
