@@ -35,7 +35,7 @@ class Net(torch.nn.Module):
         self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
-        self.use_encoder = True
+        self.use_encoder = use_encoder
         #self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
         #                                        requires_grad=True)
         #self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
