@@ -21,7 +21,7 @@ N_domains = 3
 N_pixels = 64*64
 #This represents the number of domain we think there are
 N_input_domains = 4
-latent_dim = 9
+latent_dim = 1
 num_nodes = 1510
 cutoff1 = 300
 cutoff2 = 1353
@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vae2Conformations/"):
+               dataset_path="data/vaeContinuous/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -54,24 +54,29 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     relative_positions = torch.matmul(absolute_positions, local_frame)
 
     if generate_dataset:
-        #true_deformations = 5*torch.randn((dataset_size,3*N_input_domains))
-        conformation1 = torch.tensor(np.array([[-8, -8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
-        #conformation1 = torch.tensor(np.array([[-7, -7, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0]]), dtype=torch.float32)
+        conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
         conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
-        #conformation1_rotation_angle = torch.tensor(np.array([np.pi/4, 0, np.pi/8, 0]), dtype=torch.float32)
-        conformation1_rotation_angle = torch.tensor(np.array([-np.pi / 4, 0, np.pi/2, 0]), dtype=torch.float32)
-        #conformation1_rotation_angle = torch.tensor(np.array([0, 0, 0, 0]))
-        conformation1_rotation_axis_angle = conformation1_rotation_axis*conformation1_rotation_angle[:, None]
+        #conformation1_rotation_angle = torch.tensor(np.array([-np.pi / 4, 0, np.pi/2, 0]), dtype=torch.float32)
+        conformation1_rotation_angle = torch.zeros((5000, 4), dtype=torch.float32)
+        conformation1_rotation_angle[:, 2] = -torch.rand(size=(5000,))*torch.pi
+        #conformation1_rotation_axis_angle = conformation1_rotation_axis*conformation1_rotation_angle[:, None]
+        conformation1_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (5000, 4, 3))\
+                                            * conformation1_rotation_angle[:, :, None]
+
         conformation1_rotation_matrix = axis_angle_to_matrix(conformation1_rotation_axis_angle)
-        conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
-        conformation2_rotation_angle = torch.tensor(np.array([0, 0, -np.pi/2, 0]), dtype=torch.float32)
-        #conformation2_rotation_angle = torch.tensor(np.array([0, 0, 0, 0]))
-        conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
+
+        #conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
+        #conformation2_rotation_angle = torch.tensor(np.array([0, 0, -np.pi/2, 0]), dtype=torch.float32)
+        conformation2_rotation_angle = torch.zeros((5000, 4), dtype=torch.float32)
+        conformation2_rotation_angle[:, 2] = -torch.rand(size=(5000,))*torch.pi
+        #conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
+        conformation2_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (5000, 4, 3))\
+                                            * conformation1_rotation_angle[:, :, None]
         conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
 
-        conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))
-        conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5000, 4, 3, 3))
+        #conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))
+        #conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5000, 4, 3, 3))
         conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
         conformation1 = torch.broadcast_to(conformation1, (5000, 12))
         conformation2 = torch.broadcast_to(conformation2, (5000, 12))
