@@ -5,7 +5,7 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vae2Conformations/"
+dataset_path="data/vaeContinuous/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -36,8 +36,9 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vae2Conformations/full_model"
+model_path = "data/vaeContinuous/full_model"
 model = torch.load(model_path, map_location=torch.device(device))
+
 
 
 training_set = torch.load(dataset_path + "training_set.npy", map_location=torch.device(device)).to(device)

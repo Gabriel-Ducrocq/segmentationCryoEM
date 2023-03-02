@@ -36,6 +36,10 @@ class Renderer():
         self.ctf_grid = self.compute_ctf_np(freqs, accelerating_voltage, spherical_aberration, amplitude_contrast_ratio,
                                             defocus)
 
+        freqs = np.linspace(0, 0.5, 1000)
+        self.ctf_grid_test = self.compute_ctf_np(freqs, accelerating_voltage, spherical_aberration, amplitude_contrast_ratio,
+                                            defocus)
+
     def compute_ctf_np(self,
             freqs: np.ndarray,
             volt: float,
@@ -115,10 +119,10 @@ class Renderer():
         all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
         prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
         projected_densities = torch.sum(prod, dim=1)
-        projected_densities = self.ctf_corrupting(projected_densities)
-        return projected_densities
+        projected_densities_ctf = self.ctf_corrupting(projected_densities)
+        return projected_densities_ctf, projected_densities
 
-"""
+
 pixels_x = np.linspace(-150, 150, num = 128).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num = 128).reshape(1, -1)
 rend = Renderer(pixels_x, pixels_y)
@@ -146,16 +150,24 @@ print(torch.max(absolute_positions[0, :, 0]))
 print(torch.min(absolute_positions[0, :, 1]))
 print(torch.max(absolute_positions[0, :, 1]))
 
-res = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
+res, res_no_ctf = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
 res = res[0].detach().numpy()
+res_no_ctf = res_no_ctf[0].detach().numpy()
 print("power:", np.var(res))
-res += np.random.normal(scale=0.01, size=(64, 64))
+#res += np.random.normal(scale=0.01, size=(64, 64))
 
 print(np.unique(res))
 print(res.shape)
 
 plt.imshow(res.T, cmap="gray")
 plt.show()
-"""
+plt.imshow(res_no_ctf.T, cmap="gray")
+plt.show()
 
+plt.plot(np.linspace(0, 0.5, 1000), rend.ctf_grid_test)
+plt.show()
+np.save("data/ctf.npy", rend.ctf_grid_test)
+
+#np.save("data/ctf_corrupted.npy", res)
+#np.save("data/no_ctf_corrupted.npy", res_no_ctf)
 
