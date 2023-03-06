@@ -227,9 +227,11 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
-    main_encoder_mlp = MLP(N_pixels, 512, [2048, 1024, 512], device, num_hidden_layers=4)
-    encoders_mlp = [MLP(512, latent_dim*2, 512, device, num_hidden_layers=1) for _ in range(N_input_domains)]
+    decoder_mlp = MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2)
+    #decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
+    decoders_mlp = [decoder_mlp for _ in range(N_input_domains)]
+    main_encoder_mlp = MLP(N_pixels, 1024, [2048], device, num_hidden_layers=4)
+    encoders_mlp = [MLP(1024, latent_dim*2, [1024, 512, 512], device, num_hidden_layers=1) for _ in range(N_input_domains)]
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)

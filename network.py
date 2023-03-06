@@ -121,7 +121,6 @@ class Net(torch.nn.Module):
         batch_size = images.shape[0]
         if self.use_encoder:
             all_domain_parameters = self.encode(images)
-
             latent_mean = all_domain_parameters[:, :, self.slice_mean]
             latent_std = all_domain_parameters[:, :, self.slice_std]
             latent_vars = latent_std*torch.randn(size=(batch_size, self.N_domains, self.latent_dim), device=self.device) + latent_mean
