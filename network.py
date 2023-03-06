@@ -249,6 +249,9 @@ class Net(torch.nn.Module):
                             the encoder outputs.
         :return: the RMSD loss and the entropy loss
         """
+
+        print("latent std", latent_std.shape)
+        print("latent_mean", latent_mean.shape)
         new_images = self.renderer.compute_x_y_values_all_atoms(new_structures, rotation_matrices)
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
@@ -256,7 +259,7 @@ class Net(torch.nn.Module):
         if self.use_encoder:
             minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
                                                    - latent_mean ** 2 \
-                                                   - latent_std ** 2, dim=1)
+                                                   - latent_std ** 2, dim=(1, 2))
         else:
             minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
                                          - self.latent_mean[distrib_parameters] ** 2 \
