@@ -120,9 +120,9 @@ class Renderer():
         prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
         projected_densities = torch.sum(prod, dim=1)
         projected_densities_ctf = self.ctf_corrupting(projected_densities)
-        return projected_densities_ctf, projected_densities
+        return projected_densities_ctf
 
-
+"""
 pixels_x = np.linspace(-150, 150, num = 128).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num = 128).reshape(1, -1)
 rend = Renderer(pixels_x, pixels_y)
@@ -170,4 +170,4 @@ np.save("data/ctf.npy", rend.ctf_grid_test)
 
 #np.save("data/ctf_corrupted.npy", res)
 #np.save("data/no_ctf_corrupted.npy", res_no_ctf)
-
+"""

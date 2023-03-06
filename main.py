@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuous/"):
+               dataset_path="data/vae2conformationsDecoupledLatent/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -146,12 +146,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
-            #print(batch_rotations[0])
-            #print(batch_data)
-            #plt.imshow(deformed_images[0], cmap="gray")
-            #plt.show()
             print("images")
-            #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
                 = network.forward(batch_indexes, deformed_images)
 
@@ -237,15 +232,15 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
-    #encoder_mlp = MLP(N_pixels, latent_dim * 2, [1024, 512, 128], device, num_hidden_layers=4)
+    decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
+    main_encoder_mlp = MLP(N_pixels, 512, [2048, 1024, 512], device, num_hidden_layers=4)
+    encoders_mlp = [MLP(512, latent_dim*2, 512, device, num_hidden_layers=1) for _ in range(N_input_domains)]
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
-    net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
+    net = Net(num_nodes, N_input_domains, latent_dim, B, S, main_encoder_mlp, encoders_mlp, decoders_mlp, renderer, local_frame,
               absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)

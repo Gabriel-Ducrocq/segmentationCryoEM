@@ -8,15 +8,17 @@ from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, latent_dim, B, S, encoder, decoder, renderer, local_frame, atom_absolute_positions,
+    def __init__(self, N_residues, N_domains, latent_dim, B, S, main_encoder, encoders, decoders, renderer, local_frame, atom_absolute_positions,
                  batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001, use_encoder = True):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
         self.latent_dim = latent_dim
         self.epsilon_mask_loss = 1e-10
-        self.encoder = encoder
-        self.decoder = decoder
+        assert len(decoders) == N_domains, "The number of decoders does not match the number of domain."
+        self.main_encoder = main_encoder
+        self.encoders = encoders
+        self.decoder = decoders
         self.renderer = renderer
         self.local_frame_in_colums = local_frame
         ##Local frame is set with vectors in rows in the next line:
@@ -81,6 +83,8 @@ class Net(torch.nn.Module):
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
 
 
+        self.slice_mean = slice(0, self.latent_dim)
+        self.slice_std = slice(self.latent_dim, 2*self.latent_dim)
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
@@ -94,29 +98,34 @@ class Net(torch.nn.Module):
 
     def encode(self, images):
         """
-        Encode images into latent varaibles
+        Encode images into latent variables
         :param images: (N_batch, N_pix_x, N_pix_y) containing the cryoEM images
-        :return: (N_batch, 2*N_domains) predicted gaussian distribution over the latent variables
+        :return: (N_batch, N_domains, 2*latent_dim) predicted gaussian distribution over the latent variables
         """
         flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
-        distrib_parameters = self.encoder.forward(flattened_images)
-        return distrib_parameters
+        main_latent = self.main_encoder.forward(flattened_images)
+        all_domain_parameters = []
+        for n_domain in range(self.N_domains):
+            distrib_parameters = self.encoders[n_domain].forward(main_latent)
+            all_domain_parameters.append(distrib_parameters[:, None, :])
+
+        all_domain_parameters = torch.cat(all_domain_parameters, dim=1)
+        return all_domain_parameters
 
     def sample_latent(self, distrib_parameters, images=None):
         """
         Sample from the approximate posterior over the latent space
-        :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
+        :param distrib_parameters: (N_batch, N_domain, 2*latent_dim) the parameters mu, sigma of the approximate posteriors
         :return: (N_batch, latent_dim) actual samples.
         """
+        batch_size = images.shape[0]
         if self.use_encoder:
-            batch_size = images.shape[0]
-            latent_mean_std = self.encode(images)
-            latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_std = latent_mean_std[:, self.latent_dim:]
-            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+            all_domain_parameters = self.encode(images)
+            latent_mean = all_domain_parameters[:, :, self.slice_mean]
+            latent_std = all_domain_parameters[:, :, self.slice_std]
+            latent_vars = latent_std*torch.randn(size=(batch_size, self.N_domains, self.latent_dim), device=self.device) + latent_mean
             return latent_vars, latent_mean, latent_std
 
-        batch_size = distrib_parameters.shape[0]
         latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
                       + self.latent_mean[distrib_parameters]
 
@@ -200,21 +209,27 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = indexes.shape[0]
         weights = self.compute_mask()
         if self.use_encoder:
             latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
         else:
             latent_variables = self.sample_latent(indexes, images)
 
-        #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        features = latent_variables
-        output = self.decoder.forward(features)
-        ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
-        scalars_per_domain = output[:, :, :3]
+        all_translation_scalars = []
+        all_quaternions_domain = []
+        for n_domain in range(self.N_domains):
+            features = latent_variables[:, n_domain, :]
+            domain_output = self.decoder[n_domain].forward(features)
+            ## The translations are the first 3 scalars and quaternions the last 3
+            translation_scalars_domain = domain_output[:, :3]
+            quaternions_domain = domain_output[:, 3:]
+            all_translation_scalars.append(translation_scalars_domain[:, None, :])
+            all_quaternions_domain.append(quaternions_domain[:, None, :])
+
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
+        scalars_per_domain = torch.cat(all_translation_scalars, dim=1)
+        quaternions_per_domain = torch.cat(all_quaternions_domain, dim=1)
+        quaternions_per_domain = torch.cat([ones, quaternions_per_domain[:, :, :]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         if self.use_encoder:
