@@ -15,7 +15,7 @@ class Net(torch.nn.Module):
         self.N_domains = N_domains
         self.latent_dim = latent_dim
         self.epsilon_mask_loss = 1e-10
-        assert len(decoders) == N_domains, "The number of decoders does not match the number of domain."
+        #assert len(decoders) == N_domains, "The number of decoders does not match the number of domain."
         self.main_encoder = main_encoder
         self.encoders = encoders
         self.decoder = decoders
@@ -85,6 +85,7 @@ class Net(torch.nn.Module):
 
         self.slice_mean = slice(0, self.latent_dim)
         self.slice_std = slice(self.latent_dim, 2*self.latent_dim)
+        self.decouple_latent = False
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
@@ -103,14 +104,20 @@ class Net(torch.nn.Module):
         :return: (N_batch, N_domains, 2*latent_dim) predicted gaussian distribution over the latent variables
         """
         flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
-        main_latent = self.main_encoder.forward(flattened_images)
-        all_domain_parameters = []
-        for n_domain in range(self.N_domains):
-            distrib_parameters = self.encoders[n_domain].forward(main_latent)
-            all_domain_parameters.append(distrib_parameters[:, None, :])
+        if self.decouple_latent:
+            main_latent = self.main_encoder.forward(flattened_images)
+            all_domain_parameters = []
+            for n_domain in range(self.N_domains):
+                distrib_parameters = self.encoders[n_domain].forward(main_latent)
+                all_domain_parameters.append(distrib_parameters[:, None, :])
 
-        all_domain_parameters = torch.cat(all_domain_parameters, dim=1)
-        return all_domain_parameters
+            all_domain_parameters = torch.cat(all_domain_parameters, dim=1)
+            return all_domain_parameters
+        else:
+            print(flattened_images.shape)
+            distrib_parameters = self.main_encoder.forward(flattened_images)
+            return distrib_parameters
+
 
     def sample_latent(self, distrib_parameters, images=None):
         """
@@ -120,11 +127,20 @@ class Net(torch.nn.Module):
         """
         batch_size = images.shape[0]
         if self.use_encoder:
-            all_domain_parameters = self.encode(images)
-            latent_mean = all_domain_parameters[:, :, self.slice_mean]
-            latent_std = all_domain_parameters[:, :, self.slice_std]
-            latent_vars = latent_std*torch.randn(size=(batch_size, self.N_domains, self.latent_dim), device=self.device) + latent_mean
-            return latent_vars, latent_mean, latent_std
+            if self.decouple_latent:
+                all_domain_parameters = self.encode(images)
+                latent_mean = all_domain_parameters[:, :, self.slice_mean]
+                latent_std = all_domain_parameters[:, :, self.slice_std]
+                latent_vars = latent_std*torch.randn(size=(batch_size, self.N_domains, self.latent_dim), device=self.device) + latent_mean
+                return latent_vars, latent_mean, latent_std
+            else:
+                latent_mean_std = self.encode(images)
+                latent_mean = latent_mean_std[:, :self.latent_dim]
+                latent_std = latent_mean_std[:, self.latent_dim:]
+                latent_vars = latent_std * torch.randn(size=(batch_size, self.latent_dim),
+                                                       device=self.device) + latent_mean
+                return latent_vars, latent_mean, latent_std
+
 
         latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
                       + self.latent_mean[distrib_parameters]
@@ -210,25 +226,38 @@ class Net(torch.nn.Module):
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
         weights = self.compute_mask()
+        batch_size = images.shape[0]
         if self.use_encoder:
             latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
         else:
             latent_variables = self.sample_latent(indexes, images)
 
-        all_translation_scalars = []
-        all_quaternions_domain = []
-        for n_domain in range(self.N_domains):
-            features = latent_variables[:, n_domain, :]
-            domain_output = self.decoder[n_domain].forward(features)
+        if self.decouple_latent:
+            all_translation_scalars = []
+            all_quaternions_domain = []
+            for n_domain in range(self.N_domains):
+                features = latent_variables[:, n_domain, :]
+                domain_output = self.decoder[n_domain].forward(features)
+                ## The translations are the first 3 scalars and quaternions the last 3
+                translation_scalars_domain = domain_output[:, :3]
+                quaternions_domain = domain_output[:, 3:]
+                all_translation_scalars.append(translation_scalars_domain[:, None, :])
+                all_quaternions_domain.append(quaternions_domain[:, None, :])
+
+            scalars_per_domain = torch.cat(all_translation_scalars, dim=1)
+            quaternions_per_domain = torch.cat(all_quaternions_domain, dim=1)
+        else:
+            #latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
+            # features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
+            features = latent_variables
+            output = self.decoder.forward(features)
             ## The translations are the first 3 scalars and quaternions the last 3
-            translation_scalars_domain = domain_output[:, :3]
-            quaternions_domain = domain_output[:, 3:]
-            all_translation_scalars.append(translation_scalars_domain[:, None, :])
-            all_quaternions_domain.append(quaternions_domain[:, None, :])
+            output = torch.reshape(output, (batch_size, self.N_domains, 2 * 3))
+            scalars_per_domain = output[:, :, :3]
+            quaternions_per_domain = output[:, :, 3:]
+
 
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
-        scalars_per_domain = torch.cat(all_translation_scalars, dim=1)
-        quaternions_per_domain = torch.cat(all_quaternions_domain, dim=1)
         quaternions_per_domain = torch.cat([ones, quaternions_per_domain[:, :, :]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
@@ -256,9 +285,15 @@ class Net(torch.nn.Module):
         nll = -torch.mean(batch_ll)
 
         if self.use_encoder:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
-                                                   - latent_mean ** 2 \
-                                                   - latent_std ** 2, dim=(1, 2))
+            if self.decouple_latent:
+                minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+                                                       - latent_mean ** 2 \
+                                                       - latent_std ** 2, dim=(1, 2))
+            else:
+                minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+                                                       - latent_mean ** 2 \
+                                                       - latent_std ** 2, dim=1)
+
         else:
             minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
                                          - self.latent_mean[distrib_parameters] ** 2 \

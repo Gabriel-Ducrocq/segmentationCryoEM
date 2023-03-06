@@ -203,7 +203,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/network.py</url>
-          <line>128</line>
+          <line>144</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
