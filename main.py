@@ -21,7 +21,7 @@ N_domains = 3
 N_pixels = 64*64
 #This represents the number of domain we think there are
 N_input_domains = 4
-latent_dim = 1
+latent_dim = 9
 num_nodes = 1510
 cutoff1 = 300
 cutoff2 = 1353
