@@ -85,7 +85,7 @@ class Net(torch.nn.Module):
 
         self.slice_mean = slice(0, self.latent_dim)
         self.slice_std = slice(self.latent_dim, 2*self.latent_dim)
-        self.decouple_latent = False
+        self.decouple_latent = True
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
