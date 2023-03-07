@@ -35,7 +35,7 @@ test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
-def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=False,
+def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/vae2conformationsDecoupledLatent/"):
     #vae2conformationsDecoupledLatent
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0007)
@@ -113,7 +113,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
-    network = torch.load(dataset_path + "full_model")
+    #network = torch.load(dataset_path + "full_model")
     print("Creating dataset")
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
