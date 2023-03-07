@@ -37,6 +37,7 @@ print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/vae2conformationsDecoupledLatent/"):
+    #vae2conformationsDecoupledLatent
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -227,7 +228,8 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    decoder_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
+    #decoder_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
+    decoder_mlp = MLP(latent_dim, 2 * 3, 350, device, num_hidden_layers=2)
     #decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
     decoders_mlp = [decoder_mlp for _ in range(N_input_domains)]
     main_encoder_mlp = MLP(N_pixels, 1024, [2048], device, num_hidden_layers=4)
