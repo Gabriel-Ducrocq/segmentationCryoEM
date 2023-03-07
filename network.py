@@ -83,8 +83,8 @@ class Net(torch.nn.Module):
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
 
 
-        self.slice_mean = slice(0, self.latent_dim)
-        self.slice_std = slice(self.latent_dim, 2*self.latent_dim)
+        self.slice_mean = slice(0, self.latent_dim, 1)
+        self.slice_std = slice(self.latent_dim, 2*self.latent_dim, 1)
         self.decouple_latent = True
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
@@ -129,6 +129,7 @@ class Net(torch.nn.Module):
         if self.use_encoder:
             if self.decouple_latent:
                 all_domain_parameters = self.encode(images)
+
                 latent_mean = all_domain_parameters[:, :, self.slice_mean]
                 latent_std = all_domain_parameters[:, :, self.slice_std]
                 latent_vars = latent_std*torch.randn(size=(batch_size, self.N_domains, self.latent_dim), device=self.device) + latent_mean
