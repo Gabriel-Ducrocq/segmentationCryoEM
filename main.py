@@ -35,10 +35,10 @@ test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
-def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
+def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=False,
                dataset_path="data/vae2conformationsDecoupledLatent/"):
     #vae2conformationsDecoupledLatent
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0009)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
@@ -113,10 +113,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
+    network = torch.load(dataset_path + "full_model")
     print("Creating dataset")
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
-    for epoch in range(0,5000):
+    for epoch in range(682,5000):
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
@@ -143,7 +144,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
             print("images")
-            new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
+            new_structure, mask_weights, translations, latent_vars, latent_mean, latent_std\
                 = network.forward(batch_indexes, deformed_images)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
