@@ -117,7 +117,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("Creating dataset")
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
-    for epoch in range(682,5000):
+    for epoch in range(0,5000):
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
@@ -218,7 +218,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
         torch.save(network.state_dict(), dataset_path +"model")
-        torch.save(network, dataset_path +"full_model")
+        torch.save(network, dataset_path +"full_model"+str(epoch))
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
