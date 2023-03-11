@@ -12,8 +12,11 @@ from torch.utils.data import DataLoader
 import time
 from imageRenderer import Renderer
 from pytorch3d.transforms import axis_angle_to_matrix
+from torch.utils.tensorboard import SummaryWriter
+from torch import nn
 
 
+writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -35,9 +38,57 @@ test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
+def weight_histograms_linear(writer, step, weights, layer_number):
+  flattened_weights = weights.flatten()
+  tag = f"layer_{layer_number}"
+  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+
+
+def grad_histograms_linear(writer, step, weights, layer_number):
+  print(layer_number)
+  flattened_weights = weights.grad.flatten()
+  tag = f"grad_{layer_number }"
+  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+
+
+def weight_mlp_histogram(writer, step, model, name, get_grad = False):
+    weights = model.input_layer[0].weight
+    weight_histograms_linear(writer, step, weights, name + "_input_layer")
+    for layer_number in range(len(model.linear_relu_stack)):
+        layer = model.linear_relu_stack[layer_number][0]
+        if isinstance(layer, nn.Linear):
+            weights = layer.weight
+            weight_histograms_linear(writer, step, weights, name + "_" + str(layer_number))
+
+    weights = model.output_layer[0].weight
+    weight_histograms_linear(writer, step, weights, name + "_final")
+
+    if get_grad:
+        weights = model.input_layer[0].weight
+        grad_histograms_linear(writer, step, weights, name + "_input_layer")
+        for layer_number in range(len(model.linear_relu_stack)):
+            layer = model.linear_relu_stack[layer_number][0]
+            if isinstance(layer, nn.Linear):
+                weights = layer.weight
+                grad_histograms_linear(writer, step, weights, name + "_" + str(layer_number))
+
+        weights = model.output_layer[0].weight
+        grad_histograms_linear(writer, step, weights, name + "_final")
+
+
+def weight_histograms(writer, step, model, get_grad=False):
+    print("Visualizing model weights...")
+    # Iterate over all model layers
+    weight_mlp_histogram(writer, step, model.main_encoder, "main_encoder", get_grad)
+    for i in range(len(model.encoders)):
+        weight_mlp_histogram(writer, step, model.encoders[i], "encoder_number"+ str(i), get_grad)
+
+    for i in range(len(model.decoder)):
+        weight_mlp_histogram(writer, step, model.decoder[i], "decoder_number"+ str(i), get_grad)
+
+
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/vae2conformationsDecoupledLatent/"):
-    #vae2conformationsDecoupledLatent
     optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -118,6 +169,10 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
+        if epoch == 0:
+            weight_histograms(writer, epoch, network)
+        else:
+            weight_histograms(writer, epoch, network, True)
         epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
@@ -126,7 +181,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("epoch:", epoch)
             print(i/100)
             #batch_data = next(iter(data_loader))
-            batch_indexes = next(iter(data_loader))
+            batch_indexes = next(data_loader)
             ##Getting the batch translations, rotations and corresponding rotation matrices
             batch_data = training_set[batch_indexes]
             batch_rotations_angles = training_rotations_angles[batch_indexes]
@@ -143,6 +198,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
+
+            #writer.add_graph(network, input_to_model=deformed_images[0], verbose=True)
             print("images")
             new_structure, mask_weights, translations, latent_vars, latent_mean, latent_std\
                 = network.forward(batch_indexes, deformed_images)
@@ -179,6 +236,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
+        writer.add_scalar("Loss/train", torch.mean(epoch_loss), epoch)
         scheduler.step(torch.mean(epoch_loss))
         #scheduler.step()
 
@@ -230,9 +288,9 @@ def experiment(graph_file="data/features.npy"):
     local_frame = local_frame.to(device)
 
     #decoder_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    decoder_mlp = MLP(latent_dim, 2 * 3, 350, device, num_hidden_layers=2)
-    #decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
-    decoders_mlp = [decoder_mlp for _ in range(N_input_domains)]
+    #decoder_mlp = MLP(latent_dim, 2 * 3, 350, device, num_hidden_layers=2)
+    decoders_mlp = [MLP(latent_dim, 2*3, 350, device, num_hidden_layers=2) for _ in range(N_input_domains)]
+    #decoders_mlp = [decoder_mlp for _ in range(N_input_domains)]
     main_encoder_mlp = MLP(N_pixels, 1024, [2048], device, num_hidden_layers=4)
     #main_encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
     encoders_mlp = [MLP(1024, latent_dim*2, [1024, 512, 512], device, num_hidden_layers=1) for _ in range(N_input_domains)]
