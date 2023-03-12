@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuous/"):
+               dataset_path="data/vaeContinuousNoisy/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -52,6 +52,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     all_lr = []
 
     relative_positions = torch.matmul(absolute_positions, local_frame)
+    generated_noise = torch.randn(size=(10000, 64,64))*np.sqrt(0.2)
 
     if generate_dataset:
         conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
@@ -146,11 +147,18 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
+            #print("Variance mean:", torch.mean(torch.var(deformed_images, dim=(1,2))))
+            #print("Variance std:", torch.std(torch.var(deformed_images, dim=(1, 2))))
+            noise_components = generated_noise[batch_indexes].to(device)
+            deformed_images += noise_components
+            #for image in deformed_images.detach().numpy():
+            #    plt.imshow(image, cmap="gray")
+            #    plt.show()
             #print(batch_rotations[0])
             #print(batch_data)
             #plt.imshow(deformed_images[0], cmap="gray")
             #plt.show()
-            print("images")
+            #print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
                 = network.forward(batch_indexes, deformed_images)

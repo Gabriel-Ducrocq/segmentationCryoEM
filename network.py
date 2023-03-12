@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 from mlp import MLP
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
+from torch.distributions.exponential import Exponential
 
 
 class Net(torch.nn.Module):
@@ -51,11 +52,14 @@ class Net(torch.nn.Module):
         self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
-        self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+        #self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
+        #                                      requires_grad=True)
+
+        self.cluster_std_theta = torch.nn.Parameter(data=torch.tensor([0.01, 0.01, 0.01, 0.01], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
-        self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
+        #self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
+        #                                      requires_grad=True)
 
         self.cluster_proportions_mean = torch.nn.Parameter(torch.zeros(4, dtype=torch.float32, device=device)[None, :],
                                                       requires_grad=True)
@@ -65,26 +69,27 @@ class Net(torch.nn.Module):
 
 
         self.cluster_parameters = {"means":{"mean":self.cluster_means_mean, "std":self.cluster_means_std},
-                                   "stds":{"mean":self.cluster_std_mean, "std":self.cluster_std_std},
+                                   "stds":{"theta":self.cluster_std_theta},
                                    "proportions":{"mean":self.cluster_proportions_mean, "std":self.cluster_proportions_std}}
 
 
         self.cluster_prior_means_mean = torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :]
         self.cluster_prior_means_std = torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
-        self.cluster_prior_std_mean = torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
-        self.cluster_prior_std_std = torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :]
+        #self.cluster_prior_std_mean = torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
+        #self.cluster_prior_std_std = torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_theta = torch.tensor([0.01, 0.01, 0.01, 0.01], dtype=torch.float32, device=device)[None, :]
         self.cluster_prior_proportions_mean = torch.zeros(4, dtype=torch.float32, device=device)[None, :]
         self.cluster_prior_proportions_std = torch.ones(4, dtype=torch.float32, device=device)[None, :]
 
         self.cluster_prior = {"means":{"mean":self.cluster_prior_means_mean, "std": self.cluster_prior_means_std},
-                                   "stds":{"mean":self.cluster_prior_std_mean, "std": self.cluster_prior_std_std},
+                                   "stds":{"theta": self.cluster_prior_theta},
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
 
 
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
-        cluster_std = torch.randn(4, device=self.device)*self.cluster_std_std + self.cluster_std_mean
+        cluster_std = Exponential(torch.ones(4)).sample().to(self.device)/self.cluster_std_theta
         proportions = torch.softmax(cluster_proportions, dim=1)
         log_num = -0.5*(self.residues - cluster_means)**2/cluster_std**2 + \
               torch.log(proportions)
@@ -187,9 +192,13 @@ class Net(torch.nn.Module):
         :return: Dkl loss
         """
         assert variable in ["means", "stds", "proportions"]
-        return torch.sum(-1/2 + torch.log(self.cluster_prior[variable]["std"]/self.cluster_parameters[variable]["std"]) \
-        + (1/2)*(self.cluster_parameters[variable]["std"]**2 +
-        (self.cluster_prior[variable]["mean"] - self.cluster_parameters[variable]["mean"])**2)/self.cluster_prior[variable]["std"]**2)
+        if variable == "stds":
+            return torch.sum(torch.log(self.cluster_parameters[variable]["theta"]) - self.cluster_prior[variable]["theta"] \
+        + self.cluster_prior[variable]["theta"]/self.cluster_parameters[variable]["theta"] - 1)
+        else:
+            return torch.sum(-1/2 + torch.log(self.cluster_prior[variable]["std"]/self.cluster_parameters[variable]["std"]) \
+            + (1/2)*(self.cluster_parameters[variable]["std"]**2 +
+            (self.cluster_prior[variable]["mean"] - self.cluster_parameters[variable]["mean"])**2)/self.cluster_prior[variable]["std"]**2)
 
 
 
