@@ -36,8 +36,8 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousNoisy/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.00008)
+               dataset_path="data/vaeContinuousExpPrior/"):
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
@@ -149,8 +149,10 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
             #print("Variance mean:", torch.mean(torch.var(deformed_images, dim=(1,2))))
             #print("Variance std:", torch.std(torch.var(deformed_images, dim=(1, 2))))
-            noise_components = generated_noise[batch_indexes].to(device)
-            deformed_images += noise_components
+
+            ##NOISE IS REMOVED !!!!
+            #noise_components = generated_noise[batch_indexes].to(device)
+            #deformed_images += noise_components
             #for image in deformed_images.detach().numpy():
             #    plt.imshow(image, cmap="gray")
             #    plt.show()

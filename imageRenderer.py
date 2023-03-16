@@ -122,7 +122,7 @@ class Renderer():
         projected_densities_ctf = self.ctf_corrupting(projected_densities)
         return projected_densities_ctf
 
-
+"""
 pixels_x = np.linspace(-150, 150, num = 64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num = 64).reshape(1, -1)
 rend = Renderer(pixels_x, pixels_y, defocus=5000)
@@ -160,7 +160,8 @@ print("power:", np.var(res))
 print(np.unique(res))
 print(res.shape)
 
-plt.imshow(res.T + np.random.normal(size=(64,64))*np.sqrt(0.1), cmap="gray")
+#plt.imshow(res.T + np.random.normal(size=(64,64))*np.sqrt(0.1), cmap="gray")
+plt.imshow(res.T, cmap="gray")
 plt.show()
 #plt.imshow(res_no_ctf.T, cmap="gray")
 #∂÷ç÷plt.show()
@@ -170,6 +171,6 @@ plt.plot(np.linspace(0, 0.5, 1000), rend2.ctf_grid_test)
 plt.show()
 np.save("data/ctf.npy", rend.ctf_grid_test)
 
-#np.save("data/ctf_corrupted.npy", res)
+np.save("data/ctf_corrupted.npy", res)
 #np.save("data/no_ctf_corrupted.npy", res_no_ctf)
-
+"""
