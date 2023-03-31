@@ -79,7 +79,7 @@ class Net(torch.nn.Module):
         self.cluster_prior = {"means":{"mean":self.cluster_prior_means_mean, "std": self.cluster_prior_means_std},
                                    "stds":{"mean":self.cluster_prior_std_mean, "std": self.cluster_prior_std_std},
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
-
+        self.leakyRel = torch.nn.LeakyReLU()
 
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
@@ -112,9 +112,9 @@ class Net(torch.nn.Module):
             batch_size = images.shape[0]
             latent_mean_std = self.encode(images)
             latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_std = latent_mean_std[:, self.latent_dim:]
-            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
-            return latent_vars, latent_mean, latent_std
+            latent_variance = torch.min(torch.exp(self.leakyRel(latent_mean_std[:, self.latent_dim:])), torch.ones_like(latent_mean_std[:, self.latent_dim:])*10)
+            latent_vars = torch.sqrt(latent_variance)*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+            return latent_vars, latent_mean, latent_variance
 
         batch_size = distrib_parameters.shape[0]
         latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
@@ -204,6 +204,7 @@ class Net(torch.nn.Module):
         weights = self.compute_mask()
         if self.use_encoder:
             latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
+            print("Lat VAR STD MIN FORWARD", torch.min(torch.abs(latent_std)))
         else:
             latent_variables = self.sample_latent(indexes, images)
 
@@ -212,6 +213,7 @@ class Net(torch.nn.Module):
         output = self.decoder.forward(features)
         ## The translations are the first 3 scalars and quaternions the last 3
         output = torch.reshape(output, (batch_size, self.N_domains,2*3))
+        print("Output mean:", torch.mean(output))
         scalars_per_domain = output[:, :, :3]
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
@@ -234,13 +236,18 @@ class Net(torch.nn.Module):
         :return: the RMSD loss and the entropy loss
         """
         new_images = self.renderer.compute_x_y_values_all_atoms(new_structures, rotation_matrices)
+        print("New images mean:", torch.mean(new_images))
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
         if self.use_encoder:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+            print("DISTRIB MEAN MIN:", torch.min(latent_mean))
+            print("DISTRIB STD MIN:", torch.min(torch.abs(latent_std)))
+            print("DISTRIB MEAN MAX:", torch.max(latent_mean))
+            print("DISTRIB STD MAX:", torch.max(torch.abs(latent_std)))
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std+1e-15) \
                                                    - latent_mean ** 2 \
-                                                   - latent_std ** 2, dim=1)
+                                                   - latent_std, dim=1)
         else:
             minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
                                          - self.latent_mean[distrib_parameters] ** 2 \
@@ -250,7 +257,8 @@ class Net(torch.nn.Module):
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
         Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
-        total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - minus_batch_Dkl_loss
         loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
                - 0.0001*minus_batch_Dkl_mask_proportions
         if train:

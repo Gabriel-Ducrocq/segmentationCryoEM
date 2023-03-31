@@ -12,8 +12,10 @@ from torch.utils.data import DataLoader
 import time
 from imageRenderer import Renderer
 from pytorch3d.transforms import axis_angle_to_matrix
+from torch.utils.tensorboard import SummaryWriter
+from torch import nn
 
-
+writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -32,12 +34,73 @@ B = 100
 S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
+NUM_ACCUMULATION_STEP = 10
 
 print("Is cuda available ?", torch.cuda.is_available())
 
+def weight_histograms_linear(writer, step, weights, layer_number):
+  flattened_weights = weights.flatten()
+  tag = f"layer_{layer_number}"
+  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+
+
+def mask_histogram(writer, step, model, get_grad=True):
+    for typ, parameters in model.cluster_parameters.items():
+        avg = parameters["mean"]
+        std = parameters["std"]
+        for i in range(N_input_domains):
+            tag_avg = f"layer_{typ}_mean_{i}"
+            tag_std = f"layer_{typ}_std_{i}"
+            writer.add_scalar(tag_avg, avg[0][i], global_step=step)
+            writer.add_scalar(tag_std, std[0][i], global_step=step)
+            if get_grad:
+                tag_avg = f"gradient_{typ}_mean_{i}"
+                tag_std = f"gradient_{typ}_std_{i}"
+                writer.add_scalar(tag_avg, avg.grad[0][i], global_step=step)
+                writer.add_scalar(tag_std, std.grad[0][i], global_step=step)
+
+def grad_histograms_linear(writer, step, weights, layer_number):
+  print(layer_number)
+  flattened_weights = weights.grad.flatten()
+  tag = f"grad_{layer_number }"
+  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+
+
+def weight_mlp_histogram(writer, step, model, name, get_grad = False):
+    weights = model.input_layer[0].weight
+    weight_histograms_linear(writer, step, weights, name + "_input_layer")
+    for layer_number in range(len(model.linear_relu_stack)):
+        layer = model.linear_relu_stack[layer_number][0]
+        if isinstance(layer, nn.Linear):
+            weights = layer.weight
+            weight_histograms_linear(writer, step, weights, name + "_" + str(layer_number))
+
+    weights = model.output_layer[0].weight
+    weight_histograms_linear(writer, step, weights, name + "_final")
+
+    if get_grad:
+        weights = model.input_layer[0].weight
+        grad_histograms_linear(writer, step, weights, name + "_input_layer")
+        for layer_number in range(len(model.linear_relu_stack)):
+            layer = model.linear_relu_stack[layer_number][0]
+            if isinstance(layer, nn.Linear):
+                weights = layer.weight
+                grad_histograms_linear(writer, step, weights, name + "_" + str(layer_number))
+
+        weights = model.output_layer[0].weight
+        grad_histograms_linear(writer, step, weights, name + "_final")
+
+
+def weight_histograms(writer, step, model, get_grad=False):
+    print("Visualizing model weights...")
+    # Iterate over all model layers
+    weight_mlp_histogram(writer, step, model.encoder, "encoder", get_grad)
+    weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
+    mask_histogram(writer, step, model, get_grad=get_grad)
+
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuous/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+               dataset_path="data/vaeContinuousNoisyBatchSize1000Quater/"):
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
@@ -52,7 +115,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     all_lr = []
 
     relative_positions = torch.matmul(absolute_positions, local_frame)
-
+    generated_noise = torch.randn(size=(10000, 64,64))*np.sqrt(0.2)
     if generate_dataset:
         conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
@@ -121,15 +184,25 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("Done creating dataset")
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
-        epoch_loss = torch.empty(100)
+        if epoch == 0:
+            weight_histograms(writer, epoch, network)
+        else:
+            weight_histograms(writer, epoch, network, True)
+        
+        epoch_loss = torch.zeros(10, device=device)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
         for i in range(100):
             start = time.time()
             print("epoch:", epoch)
             print(i/100)
+            #if epoch == 0:
+            #    weight_histograms(writer, epoch, network)
+            #else:
+            #    weight_histograms(writer, epoch, network, True)
+
             #batch_data = next(iter(data_loader))
-            batch_indexes = next(iter(data_loader))
+            batch_indexes = next(data_loader)
             ##Getting the batch translations, rotations and corresponding rotation matrices
             batch_data = training_set[batch_indexes]
             batch_rotations_angles = training_rotations_angles[batch_indexes]
@@ -146,22 +219,29 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("Deformed")
             ## We then rotate the structure and project them on the x-y plane.
             deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
+            print("Deformed mean",torch.mean(deformed_images))
             #print(batch_rotations[0])
             #print(batch_data)
             #plt.imshow(deformed_images[0], cmap="gray")
             #plt.show()
             print("images")
+            noise_components = generated_noise[batch_indexes].to(device)
+            deformed_images += noise_components
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
             new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
                 = network.forward(batch_indexes, deformed_images)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                 new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
-            optimizer.zero_grad()
+            loss = loss/NUM_ACCUMULATION_STEP
+            #optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+            if (i+1)%NUM_ACCUMULATION_STEP == 0:
+                optimizer.step()
+                optimizer.zero_grad()
+
             k = np.random.randint(0, 6000)
-            epoch_loss[i] = loss
+            epoch_loss[i//NUM_ACCUMULATION_STEP] += loss
             #print("Translation network:", translations[k, :, :])
             #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
             #print("Mask weights:",network.multiply_windows_weights())
@@ -187,7 +267,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        scheduler.step(torch.mean(epoch_loss))
+        writer.add_scalar("Loss/train", torch.mean(epoch_loss), epoch)
+        #scheduler.step(torch.mean(epoch_loss))
         #scheduler.step()
 
         #if (epoch+1)%50 == 0:
@@ -226,7 +307,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
         torch.save(network.state_dict(), dataset_path +"model")
-        torch.save(network, dataset_path +"full_model")
+        torch.save(network, dataset_path +"full_model"+str(epoch))
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
