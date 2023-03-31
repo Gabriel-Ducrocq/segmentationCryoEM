@@ -8,3 +8,8 @@
 */data/*
 data/*
 runs/*
+*slurm*
+*ipynb
+*png
+runs
+*pycache*
