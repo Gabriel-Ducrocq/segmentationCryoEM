@@ -79,7 +79,7 @@ class Net(torch.nn.Module):
         self.cluster_prior = {"means":{"mean":self.cluster_prior_means_mean, "std": self.cluster_prior_means_std},
                                    "stds":{"mean":self.cluster_prior_std_mean, "std": self.cluster_prior_std_std},
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
-        self.leakyRel = torch.nn.LeakyReLU()
+        self.ELU = torch.nn.ELU()
 
     def compute_mask(self):
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
@@ -112,7 +112,7 @@ class Net(torch.nn.Module):
             batch_size = images.shape[0]
             latent_mean_std = self.encode(images)
             latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_variance = torch.min(torch.exp(self.leakyRel(latent_mean_std[:, self.latent_dim:])), torch.ones_like(latent_mean_std[:, self.latent_dim:])*10)
+            latent_variance = self.ELU(latent_mean_std[:, self.latent_dim:])+1
             latent_vars = torch.sqrt(latent_variance)*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
             return latent_vars, latent_mean, latent_variance
 
