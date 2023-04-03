@@ -244,6 +244,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                     weight_histograms(writer, epoch, network, True)
 
                 if (i+1)%NUM_ACCUMULATION_STEP == 0:
+                    torch.nn.utils.clip_grad_norm(network.parameters(),10)
                     optimizer.step()
                     optimizer.zero_grad()
 
