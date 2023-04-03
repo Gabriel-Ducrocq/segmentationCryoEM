@@ -1,0 +1,34 @@
+N_residue: 1510
+N_domains: 3
+device: "cuda"
+type: continuous
+protein_features: "data/features.npy"
+noise_variance: 0.2
+conformations:
+  conformation1:
+    N_sample: 10000
+    domains:
+      domain1:
+        start: 0
+        end: 1000
+        translation: [0, 0, 0]
+        rotation_axis: [0, 0, 0]
+        rotation_angle_min: 0
+        rotation_angle_max: 0
+      domain2:
+        start: 1000
+        end: 1353
+        translation: [ 0, 0, 0 ]
+        rotation_axis: [ 0, 0, 0 ]
+        rotation_angle_min: 0
+        rotation_angle_max: 0
+      domain3:
+        start: 1353
+        end: 1510
+        translation: [0, 0, 0]
+        rotation_axis: [0, 1, 0]
+        rotation_angle_min: -3.141592653589793
+        rotation_angle_max: 0
+
+
+
