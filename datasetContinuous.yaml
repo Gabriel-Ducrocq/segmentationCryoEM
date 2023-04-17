@@ -6,7 +6,7 @@ protein_features: "data/features.npy"
 noise_variance: 0.2
 conformations:
   conformation1:
-    N_sample: 10000
+    N_sample: 1000
     domains:
       domain1:
         start: 0
