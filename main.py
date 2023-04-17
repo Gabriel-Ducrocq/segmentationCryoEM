@@ -34,7 +34,7 @@ B = 100
 S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
-NUM_ACCUMULATION_STEP = 1
+NUM_ACCUMULATION_STEP = 5
 
 print("Is cuda available ?", torch.cuda.is_available())
 
@@ -98,8 +98,8 @@ def weight_histograms(writer, step, model, get_grad=False):
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
     #mask_histogram(writer, step, model, get_grad=get_grad)
 
-def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousNoisy/"):
+def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=False,
+               dataset_path="data/vaeContinuousNoisyl2PenDeeperSaveNoiseBatch500/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003, weight_decay=0)
     #optimizer = torch.optim.SGD(network.parameters(), lr=0.03)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
@@ -116,8 +116,10 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     all_lr = []
 
     relative_positions = torch.matmul(absolute_positions, local_frame)
-    generated_noise = torch.randn(size=(10000, 64,64))*np.sqrt(0.2)
     if generate_dataset:
+        print("TEST GENERATE !!!")
+        generated_noise = torch.randn(size=(10000, 64,64))*np.sqrt(0.2)
+        torch.save(generated_noise, dataset_path + "noise_component")
         conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
         conformation2 = torch.tensor(np.array([0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
         conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
@@ -176,6 +178,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         torch.save(training_conformation_rotation_matrix, dataset_path + "training_conformation_rotation_matrices.npy")
         #torch.save(test_set, dataset_path + "test_set.npy")
 
+    print("NOT GENERATING PART")
     training_set = torch.load(dataset_path + "training_set.npy").to(device)
     training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy").to(device)
     training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
@@ -183,15 +186,17 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
     print("Creating dataset")
     print("Done creating dataset")
+    generated_noise = torch.load(dataset_path + "noise_component")
     training_indexes = torch.tensor(np.array(range(10000)))
+    network = torch.load(dataset_path + "full_model2220")
     with autograd.detect_anomaly():
-        for epoch in range(0,5000):
+        for epoch in range(2221,10000):
             #if epoch == 0:
             #    weight_histograms(writer, epoch, network)
             #else:
             #    weight_histograms(writer, epoch, network, True)
             
-            epoch_loss = torch.zeros(100, device=device)
+            epoch_loss = torch.zeros(20, device=device)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
             data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
             for i in range(100):
@@ -238,17 +243,18 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 loss = loss/NUM_ACCUMULATION_STEP
                 #optimizer.zero_grad()
                 loss.backward()
-                if epoch == 0:
-                    weight_histograms(writer, epoch, network)
-                else:
-                    weight_histograms(writer, epoch, network, True)
-
                 if (i+1)%NUM_ACCUMULATION_STEP == 0:
-                    torch.nn.utils.clip_grad_norm(network.parameters(),10)
+                    #total_grad_norm = torch.nn.utils.clip_grad_norm_(network.parameters(),1)
+                    #print("total grad norm:", total_grad_norm)
+                    if epoch == 0 and i== 0:
+                        weight_histograms(writer, epoch, network)
+                    else:
+                        weight_histograms(writer, epoch, network, True)
+                    
                     optimizer.step()
                     optimizer.zero_grad()
 
-                k = np.random.randint(0, 6000)
+                k = np.random.randint(0, 6000) 
                 epoch_loss[i//NUM_ACCUMULATION_STEP] += loss
                 #print("Translation network:", translations[k, :, :])
                 #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
@@ -315,7 +321,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
             #scheduler.step(loss_test)
             torch.save(network.state_dict(), dataset_path +"model")
-            #torch.save(network, dataset_path +"full_model"+str(epoch))
+            torch.save(network, dataset_path +"full_model"+str(epoch))
             #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
@@ -326,10 +332,10 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
-    #translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=1)
-    #encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048], device, num_hidden_layers=4)
+    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
+    #translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=1)
+    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
+    #encoder_mlp = MLP(N_pixels, latent_dim*2, [2048], device, num_hidden_layers=4)
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [1024, 512, 128], device, num_hidden_layers=4)
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)

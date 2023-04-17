@@ -112,7 +112,7 @@ class Net(torch.nn.Module):
             batch_size = images.shape[0]
             latent_mean_std = self.encode(images)
             latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_variance = self.ELU(latent_mean_std[:, self.latent_dim:])+1
+            latent_variance = self.ELU(latent_mean_std[:, self.latent_dim:])+1+1e-5
             latent_vars = torch.sqrt(latent_variance)*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
             return latent_vars, latent_mean, latent_variance
 
@@ -245,7 +245,7 @@ class Net(torch.nn.Module):
             print("DISTRIB STD MIN:", torch.min(torch.abs(latent_std)))
             print("DISTRIB MEAN MAX:", torch.max(latent_mean))
             print("DISTRIB STD MAX:", torch.max(torch.abs(latent_std)))
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std+1e-15) \
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + 2*torch.log(torch.sqrt(latent_std)+1e-5) \
                                                    - latent_mean ** 2 \
                                                    - latent_std, dim=1)
         else:
@@ -257,10 +257,15 @@ class Net(torch.nn.Module):
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
         Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
-        #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
-        total_loss_per_batch = -batch_ll - minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.1*minus_batch_Dkl_loss
+        l2_pen = 0
+        for name,p in self.named_parameters():
+            if "weight" in name and ("encoder" in name or "decoder" in name):
+                l2_pen += torch.sum(p**2)
+
         loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-               - 0.0001*minus_batch_Dkl_mask_proportions
+               - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
         if train:
             print("Mask", mask_weights)
             print("RMSD:", nll)
