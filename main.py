@@ -99,7 +99,7 @@ def weight_histograms(writer, step, model, get_grad=False):
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
     mask_histogram(writer, step, model, get_grad=get_grad)
 
-def train_loop(network, dataset_path="data/vaeContinuousNoisyBatchSize1000Quater/"):
+def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []

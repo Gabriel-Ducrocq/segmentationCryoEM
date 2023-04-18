@@ -5,6 +5,9 @@ from scipy.spatial.transform import Rotation
 import yaml
 from imageRenderer import Renderer
 import matplotlib.pyplot as plt
+from protein.main import rotate_domain_pdb_structure_matrix
+from Bio.PDB import PDBParser
+from Bio.PDB import PDBIO
 
 
 
@@ -38,8 +41,8 @@ def extractor_domain(conformation, type):
     :param type: str describing the quantity we look for (translation, rot axis or rot angle)
     :return:
     """
-    assert type in ["translation", "rotation_axis", "rotation_angle", "rotation_angle_min", "rotation_angle_max"]
-    dim = 1 if type in ["rotation_angle", "rotation_angle_min", "rotation_angle_max"] else 3
+    assert type in ["translation", "rotation_axis", "rotation_angle", "rotation_angle_min", "rotation_angle_max", "step"]
+    dim = 1 if type in ["rotation_angle", "rotation_angle_min", "rotation_angle_max", "step"] else 3
     N = conformation["N_sample"]
     domains = conformation["domains"]
     N_domains = len(domains)
@@ -51,7 +54,7 @@ def extractor_domain(conformation, type):
     return np.repeat(per_domain[None, :, :], N, axis=0)
 
 
-with open("datasetContinuous.yaml", "r") as file:
+with open("datasetContinuousZhongFashion.yaml", "r") as file:
     config = yaml.safe_load(file)
 
 
@@ -83,6 +86,30 @@ def get_structures(config, device="cpu"):
         rotation_angle_min = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle_min"), config["conformations"].values())))
         rotation_angle_max = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle_max"), config["conformations"].values())))
         rotation_angle_dataset = np.random.uniform(low=rotation_angle_min, high=rotation_angle_max)
+    elif config["type"] == "continuous_zhong":
+        ##If Ellen Zhong type, we sample conformations regularly and generate several thousands images with one conformation.
+        ## See cryoFold or cryoDRGN
+        rotation_angle_min = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle_min"), config["conformations"].values())))
+        rotation_angle_max = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle_max"), config["conformations"].values())))
+        step = np.vstack(tuple(map(lambda x: extractor_domain(x, "step"), config["conformations"].values())))
+        N = config["conformations"]["conformation1"]["N_sample"]
+        all_particle_dataset = []
+        for n_particle in range(N):
+            all_domains_dataset = []
+            for rot_min_part, st_part, rot_max_part in zip(rotation_angle_min[n_particle], step[n_particle],rotation_angle_max[n_particle]):
+                rotation_angle_dataset = []
+                for rot_min, st, rot_max in zip(rot_min_part, st_part, rot_max_part):
+                    if st != 0:
+                        rotation_angle_dataset.append(np.linspace(rot_min,rot_max, st)[n_particle])
+                    else:
+                        assert step == N, "Number of steps not equal to number of particles set in the cryoDRGN style dataset"
+                        rotation_angle_dataset.append(np.zeros(50))
+
+                all_domains_dataset.append(rotation_angle_dataset)
+
+            all_particle_dataset.append(all_domains_dataset)
+
+        rotation_angle_dataset = np.array(all_particle_dataset)[:, :, :]
     else:
         rotation_angle_dataset = np.vstack(tuple(map(lambda x: extractor_domain(x, "rotation_angle"), config["conformations"].values())))
 
@@ -93,6 +120,21 @@ def get_structures(config, device="cpu"):
     #We turn the rotation per domain from axis_angle representation to matrix representation
     conformation_matrix_dataset = tuple(map(from_axis_angle_to_matrix, axis_angle_conformations_dataset))
     conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (total_N_sample, N_domains, 3, 3))
+    features = np.load(config["protein_features"], allow_pickle=True)
+    features = features.item()
+    local_frame = features["local_frame"]
+    local_frame_in_columns = local_frame.T
+    if config["type"] == "continuous_zhong":
+        for i in range(total_N_sample):
+            if i%10 == 0:
+                print(i)
+
+            pdb_parser = PDBParser()
+            io = PDBIO()
+            struct = pdb_parser.get_structure("A", "data/vaeContinuous/ranked_0.pdb")
+            rotate_domain_pdb_structure_matrix(struct, 1353, 1510, conformation_matrix_dataset[i, 2, :, :], local_frame_in_columns)
+            io.set_structure(struct)
+            io.save("data/true_structure"+str(i)+".pdb", preserve_atom_numbering = True)
 
     #We get the relative positions of each atom in the local frame given by the first residue.
     features = np.load(config["protein_features"], allow_pickle=True)
@@ -117,7 +159,7 @@ def get_structures(config, device="cpu"):
     return deformed_structures
 
 
-def get_images(deformed_structures, noise_variance, device="cpu"):
+def get_images(deformed_structures, noise_variance, config, device="cpu"):
     """
     Gives a random orientatin to each deformed structure and projects it into a 2d image.
     :param deformed_structures: torch tensor (N_total, N_atoms, 3) describing to the conformationnally displaced structures. N_total is the
