@@ -42,8 +42,8 @@ print("Is cuda available ?", torch.cuda.is_available())
 def weight_histograms_linear(writer, step, weights, layer_number):
   flattened_weights = weights.flatten()
   tag = f"layer_{layer_number}"
-  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
-
+  #writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+  print(tag, torch.sum(flattened_weights**2))
 
 def mask_histogram(writer, step, model, get_grad=True):
     for typ, parameters in model.cluster_parameters.items():
@@ -61,10 +61,12 @@ def mask_histogram(writer, step, model, get_grad=True):
                 writer.add_scalar(tag_std, std.grad[0][i], global_step=step)
 
 def grad_histograms_linear(writer, step, weights, layer_number):
-  print(layer_number)
+  print("GRADGRADGRADGRAD")
   flattened_weights = weights.grad.flatten()
   tag = f"grad_{layer_number }"
-  writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+  #writer.add_histogram(tag, flattened_weights, global_step=step, bins='tensorflow')
+  print(tag, torch.sum(flattened_weights**2))
+
 
 
 def weight_mlp_histogram(writer, step, model, name, get_grad = False):
@@ -92,12 +94,14 @@ def weight_mlp_histogram(writer, step, model, name, get_grad = False):
         grad_histograms_linear(writer, step, weights, name + "_final")
 
 
+
+
 def weight_histograms(writer, step, model, get_grad=False):
     print("Visualizing model weights...")
     # Iterate over all model layers
     weight_mlp_histogram(writer, step, model.encoder, "encoder", get_grad)
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
-    mask_histogram(writer, step, model, get_grad=get_grad)
+    #mask_histogram(writer, step, model, get_grad=get_grad)
 
 def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
@@ -114,15 +118,17 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
 
     training_rotations_matrices = torch.load(dataset_path + "rotationPoseDataSet").to(device)
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
+    print("SHAPE IMAGES:", training_images.shape)
+    print("SHAPE pose rotations:", training_rotations_matrices.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
     with autograd.detect_anomaly():
         for epoch in range(0,5000):
-            #if epoch == 0:
-            #    weight_histograms(writer, epoch, network)
-            #else:
-            #    weight_histograms(writer, epoch, network, True)
+            if epoch == 0:
+                weight_histograms(writer, epoch, network)
+            else:
+                weight_histograms(writer, epoch, network, True)
 
-            epoch_loss = torch.zeros(10, device=device)
+            epoch_loss = torch.zeros(100, device=device)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
             data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
             for i in range(100):
@@ -203,7 +209,7 @@ def experiment(graph_file="data/features.npy"):
     net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
               absolute_positions, batch_size, cutoff1, cutoff2, device)
     net.to(device)
-    train_loop(net, renderer)
+    train_loop(net)
 
 
 if __name__ == '__main__':

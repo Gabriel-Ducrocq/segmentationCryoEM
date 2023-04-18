@@ -116,6 +116,7 @@ renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
 noise_variance = np.sqrt(0.2)
 all_images = []
+all_pose_rotation_matrix = []
 for n in range(N_conf):
     print("N_conf", n)
     global_rotation_axis = generate_global_rotation_axis(N_images_per_conf)
@@ -125,6 +126,7 @@ for n in range(N_conf):
     # We turn the poses into a rotation matrix
     global_rotation_matrix_dataset = from_axis_angle_to_matrix(global_axis_angle_dataset)
     global_rotation_matrix_dataset = torch.tensor(global_rotation_matrix_dataset, dtype=torch.float32, device=device)
+    all_pose_rotation_matrix.append(global_rotation_matrix_dataset)
     all_deformed_images = torch.empty((N_images_per_conf, 64, 64))
     deformed_structure = deformed_structures[n][None, :, :]
     deformed_structure = deformed_structure.repeat(N_images_per_conf, 1, 1)
@@ -135,5 +137,9 @@ for n in range(N_conf):
     #all_deformed_images = deformed_images
 
 all_images = torch.concat(all_images)
-torch.save(all_images, "data/datasetContinuous.py")
+all_pose_rotation_matrix = torch.concat(all_pose_rotation_matrix)
+print(all_images.shape)
+print(all_pose_rotation_matrix.shape)
+torch.save(all_images, "data/continuousConformationDataSet")
+torch.save(all_pose_rotation_matrix, "data/rotationPoseDataSet")
 np.save("data/structures_indexes.npy", np.array(random_conf, dtype=int))
