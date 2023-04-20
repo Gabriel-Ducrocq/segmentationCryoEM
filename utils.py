@@ -188,16 +188,24 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
         new_local_frame_per_domain_in_column[:, i, :,:] = torch.matmul(rotation_matrices_per_domain[:, i, :, :], local_frame_in_columns)
 
     new_local_frame_per_domain_in_rows = torch.transpose(new_local_frame_per_domain_in_column, dim0=-2, dim1=-1)
-
-    new_global_rotated_positions = torch.empty((batch_size, 3*N_residues, 3), device=device)
-    true_deformed_structure = torch.empty((batch_size, 3 * N_residues, 3), device=device)
-    for i in range(N_domains-1):
+    new_global_rotated_positions = torch.zeros((batch_size, 3*N_residues, 3), device=device)
+    true_deformed_structure = torch.zeros((batch_size, 3 * N_residues, 3), device=device)
+    #print("SHAPESHAPE", true_deformed_structure.shape)
+    for i in range(N_domains):
+        #print(new_global_rotated_positions)
         start_residue_domain = list_cutoffs[i]
         end_residue_domain = list_cutoffs[i+1]
+        #print("start, end", start_residue_domain, end_residue_domain)
         relative_position_domain = relative_positions[3*start_residue_domain:3*end_residue_domain]
         new_local_frame_domain = new_local_frame_per_domain_in_rows[:, i, :, :]
+        #print(torch.max(torch.abs(new_local_frame_per_domain_in_rows)))
+        #print(torch.max(torch.abs(relative_position_domain)))
         new_global_rotated_positions[:,3*start_residue_domain:3*end_residue_domain,:] = \
                     torch.matmul(relative_position_domain, new_local_frame_domain)
+        #print(new_local_frame_domain.shape)
+        #print(relative_position_domain.shape)
+        #print(torch.max(torch.abs(new_global_rotated_positions)))
+        #print(new_global_rotated_positions[:,3*1353:3*1510,:])
         true_deformed_structure[:, 3*start_residue_domain:3 * end_residue_domain, :] = \
             new_global_rotated_positions[:, 3*start_residue_domain:3 * end_residue_domain,
                                                        :] + true_deformation[:, i:i+1, :]
