@@ -121,8 +121,12 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
     print("SHAPE IMAGES:", training_images.shape)
     print("SHAPE pose rotations:", training_rotations_matrices.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
+    restart = True
+    if restart:
+        network = torch.load(dataset_path + "full_model2351")
+
     with autograd.detect_anomaly():
-        for epoch in range(0,5000):
+        for epoch in range(2352,10000):
             if epoch == 0:
                 weight_histograms(writer, epoch, network)
             else:

@@ -5,7 +5,7 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vaeContinuousNoisyl2PenDeeperSaveNoiseBatch500/"
+dataset_path="data/vaeContinuousNoisyZhongStyle/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -36,23 +36,24 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vaeContinuousNoisyl2PenDeeperSaveNoiseBatch500/full_model2197"
+model_path = "data/vaeContinuousNoisyZhongStyle/full_model1650"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
-training_set = torch.load(dataset_path + "training_set.npy", map_location=torch.device(device)).to(device)
-training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy", map_location=torch.device(device)).to(device)
-training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy", map_location=torch.device(device)).to(device)
-training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy", map_location=torch.device(device)).to(device)
-training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy", map_location=torch.device(device))
-noise_component = torch.load(dataset_path + "noise_component", map_location=torch.device(device))
+#training_set = torch.load(dataset_path + "training_set.npy", map_location=torch.device(device)).to(device)
+#training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy", map_location=torch.device(device)).to(device)
+#training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy", map_location=torch.device(device)).to(device)
+training_rotations_matrices = torch.load(dataset_path + "rotationPoseDataSet", map_location=torch.device(device)).to(device)
+#training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy", map_location=torch.device(device))
+#noise_component = torch.load(dataset_path + "noise_component", map_location=torch.device(device))
 
+training_images = torch.load("data/vaeContinuousNoisyZhongStyle/continuousConformationDataSet")
 
-print("NOISE")
-print(torch.median(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
-print(torch.mean(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
-print(torch.max(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
-print(torch.min(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
+#print("NOISE")
+#print(torch.median(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
+#print(torch.mean(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
+#print(torch.max(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
+#print(torch.min(0.5*torch.sum(noise_component**2, dim=(-2,-1))))
 
 print("SHOULD WE USE ENCODER:", model.use_encoder)
 training_indexes = torch.tensor(np.array(range(10000)))
@@ -70,22 +71,13 @@ for epoch in range(0, 1):
         batch_indexes = next(data_loader)
         print(batch_indexes)
         ##Getting the batch translations, rotations and corresponding rotation matrices
-        batch_data = training_set[batch_indexes]
-        batch_rotations_angles = training_rotations_angles[batch_indexes]
-        batch_rotations_axis = training_rotations_axis[batch_indexes]
         batch_rotation_matrices = training_rotations_matrices[batch_indexes]
-        batch_data_for_deform = torch.reshape(batch_data, (batch_size, N_input_domains, 3))
-        batch_conformation_rotation_matrices = training_conformation_rotation_matrix[batch_indexes]
+        batch_deformed_images = training_images[batch_indexes]
         ## Deforming the structure for each batch data point
-        deformed_structures = utils.deform_structure(absolute_positions, cutoff1, cutoff2, batch_data_for_deform,
-                                                     batch_conformation_rotation_matrices, local_frame,
-                                                     relative_positions,
-                                                     1510, device)
 
         print("Deformed")
         ## We then rotate the structure and project them on the x-y plane.
-        deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
-        latent_distrib = model.encode(deformed_images)
+        latent_distrib = model.encode(batch_deformed_images)
         all_latent_distrib.append(latent_distrib.detach().numpy())
         all_indexes.append(batch_indexes.detach().numpy())
 

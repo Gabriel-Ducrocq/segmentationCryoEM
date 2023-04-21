@@ -191,7 +191,7 @@ def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotatio
     new_global_rotated_positions = torch.zeros((batch_size, 3*N_residues, 3), device=device)
     true_deformed_structure = torch.zeros((batch_size, 3 * N_residues, 3), device=device)
     #print("SHAPESHAPE", true_deformed_structure.shape)
-    for i in range(N_domains):
+    for i in range(N_domains-1):
         #print(new_global_rotated_positions)
         start_residue_domain = list_cutoffs[i]
         end_residue_domain = list_cutoffs[i+1]
