@@ -127,7 +127,7 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
 
     with autograd.detect_anomaly():
         for epoch in range(2351,10000):
-            if epoch == 0:
+            if epoch == 2351:
                 weight_histograms(writer, epoch, network)
             else:
                 weight_histograms(writer, epoch, network, True)
