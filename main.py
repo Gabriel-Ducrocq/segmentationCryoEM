@@ -123,10 +123,10 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle/"):
     training_indexes = torch.tensor(np.array(range(10000)))
     restart = True
     if restart:
-        network = torch.load(dataset_path + "full_model2351")
+        network = torch.load(dataset_path + "full_model2350")
 
     with autograd.detect_anomaly():
-        for epoch in range(2352,10000):
+        for epoch in range(2351,10000):
             if epoch == 0:
                 weight_histograms(writer, epoch, network)
             else:
