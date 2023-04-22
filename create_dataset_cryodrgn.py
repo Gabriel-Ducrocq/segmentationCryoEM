@@ -46,13 +46,13 @@ def from_matrix_to_axis_angle(matrix):
 
 
 #Get regular spacing along the 1D continuous motion
-rotation_axis = np.repeat(np.array([[0, 1, 0]]), 50, axis=0)
-rotation_angle = np.arange(-1.85, -1.6, 0.005)[:, None]
+rotation_axis = np.repeat(np.array([[0, 1, 0]]), 10, axis=0)
+rotation_angle = np.arange(-2.5, 0, 0.25)[:, None]
 #Get in axis angle format
 axis_angle = rotation_axis * rotation_angle
 #Get in rotation matrix format
 conformation_matrix_dataset = tuple(map(from_axis_angle_to_matrix, axis_angle))
-conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (50, 3, 3))
+conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (10, 3, 3))
 
 features = np.load(config["protein_features"], allow_pickle=True)
 features = features.item()
@@ -79,7 +79,8 @@ local_frame_in_columns = torch.tensor(local_frame.T, dtype=torch.float32)
 #    else:
 #        random_conf.append(np.round(np.random.uniform(40, 49)))
 
-random_conf = [ 9, 6, 48, 2, 44, 41, 4, 47, 1, 45]
+#random_conf = [ 9, 6, 48, 2, 44, 41, 4, 47, 1, 45]
+random_conf = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 conformation_matrix_rot_dataset = conformation_matrix_dataset[np.array(random_conf, dtype=int)]
 conformation_matrix_rot_dataset = np.stack([np.zeros((N_conf, 3, 3)), np.zeros((N_conf, 3, 3)), conformation_matrix_rot_dataset[:, :, :]], axis=1)
 conformation_matrix_rot_dataset[:, :2, 0, 0] = conformation_matrix_rot_dataset[:, :2, 1, 1] = conformation_matrix_rot_dataset[:, :2, 2, 2] =1
@@ -164,6 +165,6 @@ all_images = torch.concat(all_images)
 all_pose_rotation_matrix = torch.concat(all_pose_rotation_matrix)
 print(all_images.shape)
 print(all_pose_rotation_matrix.shape)
-torch.save(all_images, "data/vaeContinuousNoisyZhongStyle/continuousConformationDataSet")
-torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyle/rotationPoseDataSet")
-np.save("data/vaeContinuousNoisyZhongStyle/structures_indexes.npy", np.array(random_conf, dtype=int))
+torch.save(all_images, "data/vaeContinuousNoisyZhongStyle2/continuousConformationDataSet")
+torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyle2/rotationPoseDataSet")
+np.save("data/vaeContinuousNoisyZhongStyle2/structures_indexes.npy", np.array(random_conf, dtype=int))
