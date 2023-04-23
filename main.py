@@ -121,7 +121,7 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle3/"):
     print("SHAPE IMAGES:", training_images.shape)
     print("SHAPE pose rotations:", training_rotations_matrices.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
-    restart = True
+    restart = False
     if restart:
         network = torch.load(dataset_path + "full_model2310")
 
