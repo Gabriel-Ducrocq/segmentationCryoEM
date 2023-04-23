@@ -69,7 +69,7 @@ for i in range(10):
     rotate_domain_pdb_structure_matrix(struct, 1353, 1510, conformation_matrix_dataset[i, :, :],
                                        local_frame_in_columns)
     io.set_structure(struct)
-    io.save("data/vaeContinuousNoisyZhongStyle2/true_structure" + str(i) + ".pdb", preserve_atom_numbering=True)
+    io.save("data/vaeContinuousNoisyZhongStyleNoCTF/true_structure" + str(i) + ".pdb", preserve_atom_numbering=True)
 
 # Sampling the conformations present in the dataset among all the 50 conformations
 #random_conf = []
@@ -158,6 +158,8 @@ for n in range(N_conf):
     print("Images:", deformed_images.shape)
     print(deformed_images)
     deformed_images += torch.randn_like(deformed_images) * np.sqrt(noise_variance)
+    #plt.imshow(deformed_images[0], cmap="gray")
+    #plt.show()
     all_images.append(deformed_images)
     #all_deformed_images = deformed_images
 
@@ -165,6 +167,6 @@ all_images = torch.concat(all_images)
 all_pose_rotation_matrix = torch.concat(all_pose_rotation_matrix)
 print(all_images.shape)
 print(all_pose_rotation_matrix.shape)
-torch.save(all_images, "data/vaeContinuousNoisyZhongStyle2/continuousConformationDataSet")
-torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyle2/rotationPoseDataSet")
-np.save("data/vaeContinuousNoisyZhongStyle2/structures_indexes.npy", np.array(random_conf, dtype=int))
+torch.save(all_images, "data/vaeContinuousNoisyZhongStyleNoCTF/continuousConformationDataSet")
+torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyleNoCTF/rotationPoseDataSet")
+np.save("data/vaeContinuousNoisyZhongStyleNoCTF/structures_indexes.npy", np.array(random_conf, dtype=int))

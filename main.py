@@ -18,7 +18,7 @@ from torch import autograd
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 10
+batch_size = 100
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -103,8 +103,8 @@ def weight_histograms(writer, step, model, get_grad=False):
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
     #mask_histogram(writer, step, model, get_grad=get_grad)
 
-def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle3/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0001)
+def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyleNoCTF/"):
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
@@ -132,13 +132,13 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle3/"):
             else:
                 weight_histograms(writer, epoch, network, True)
 
-            epoch_loss = torch.zeros(1000, device=device)
+            epoch_loss = torch.zeros(100, device=device)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
             data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
-            for i in range(1000):
+            for i in range(100):
                 start = time.time()
                 print("epoch:", epoch)
-                print(i/1000)
+                print(i/100)
                 #batch_data = next(iter(data_loader))
                 batch_indexes = next(data_loader)
                 ##Getting the batch translations, rotations and corresponding rotation matrices

@@ -115,7 +115,7 @@ class Renderer():
         all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
         prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
         projected_densities = torch.sum(prod, dim=1)
-        projected_densities = self.ctf_corrupting(projected_densities)
+        #projected_densities = self.ctf_corrupting(projected_densities)
         return projected_densities
 
 """
