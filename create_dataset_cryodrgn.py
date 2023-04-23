@@ -58,18 +58,18 @@ features = np.load(config["protein_features"], allow_pickle=True)
 features = features.item()
 local_frame = features["local_frame"]
 local_frame_in_columns = torch.tensor(local_frame.T, dtype=torch.float32)
-#for i in range(50):
-#    if i % 10 == 0:
-#        print(i)
+for i in range(10):
+    if i % 1 == 0:
+        print(i)
 
 
-#    pdb_parser = PDBParser()
-#    io = PDBIO()
-#    struct = pdb_parser.get_structure("A", "data/vaeContinuous/ranked_0.pdb")
-#    rotate_domain_pdb_structure_matrix(struct, 1353, 1510, conformation_matrix_dataset[i, :, :],
-#                                       local_frame_in_columns)
-#    io.set_structure(struct)
-#    io.save("data/true_structure" + str(i) + ".pdb", preserve_atom_numbering=True)
+    pdb_parser = PDBParser()
+    io = PDBIO()
+    struct = pdb_parser.get_structure("A", "data/vaeContinuous/ranked_0.pdb")
+    rotate_domain_pdb_structure_matrix(struct, 1353, 1510, conformation_matrix_dataset[i, :, :],
+                                       local_frame_in_columns)
+    io.set_structure(struct)
+    io.save("data/vaeContinuousNoisyZhongStyle2/true_structure" + str(i) + ".pdb", preserve_atom_numbering=True)
 
 # Sampling the conformations present in the dataset among all the 50 conformations
 #random_conf = []

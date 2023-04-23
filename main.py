@@ -104,7 +104,7 @@ def weight_histograms(writer, step, model, get_grad=False):
     #mask_histogram(writer, step, model, get_grad=get_grad)
 
 def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle2/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
@@ -121,13 +121,13 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle2/"):
     print("SHAPE IMAGES:", training_images.shape)
     print("SHAPE pose rotations:", training_rotations_matrices.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
-    restart = False
+    restart = True
     if restart:
-        network = torch.load(dataset_path + "full_model2350")
+        network = torch.load(dataset_path + "full_model2310")
 
     with autograd.detect_anomaly():
-        for epoch in range(0,10000):
-            if epoch == 0:
+        for epoch in range(2311,10000):
+            if epoch == 2311:
                 weight_histograms(writer, epoch, network)
             else:
                 weight_histograms(writer, epoch, network, True)
