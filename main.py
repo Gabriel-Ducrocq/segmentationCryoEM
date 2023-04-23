@@ -18,7 +18,7 @@ from torch import autograd
 
 writer = SummaryWriter()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 100
+batch_size = 10
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -103,8 +103,8 @@ def weight_histograms(writer, step, model, get_grad=False):
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
     #mask_histogram(writer, step, model, get_grad=get_grad)
 
-def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle2/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
+def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle3/"):
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.0001)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
     all_rmsd = []
@@ -126,8 +126,8 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle2/"):
         network = torch.load(dataset_path + "full_model2310")
 
     with autograd.detect_anomaly():
-        for epoch in range(2311,10000):
-            if epoch == 2311:
+        for epoch in range(0,10000):
+            if epoch == 0:
                 weight_histograms(writer, epoch, network)
             else:
                 weight_histograms(writer, epoch, network, True)
@@ -135,10 +135,10 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle2/"):
             epoch_loss = torch.zeros(100, device=device)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
             data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
-            for i in range(100):
+            for i in range(1000):
                 start = time.time()
                 print("epoch:", epoch)
-                print(i/100)
+                print(i/1000)
                 #batch_data = next(iter(data_loader))
                 batch_indexes = next(data_loader)
                 ##Getting the batch translations, rotations and corresponding rotation matrices
