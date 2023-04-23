@@ -132,7 +132,7 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyle3/"):
             else:
                 weight_histograms(writer, epoch, network, True)
 
-            epoch_loss = torch.zeros(100, device=device)
+            epoch_loss = torch.zeros(1000, device=device)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
             data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
             for i in range(1000):
