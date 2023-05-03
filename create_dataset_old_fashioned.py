@@ -3,7 +3,7 @@ import torch
 from pytorch3d.transforms import axis_angle_to_matrix
 import utils
 from imageRenderer import Renderer
-from 
+from torch.utils.data import DataLoader
 
 device="cpu"
 
@@ -95,9 +95,10 @@ training_conformation_rotation_matrix = torch.load(dataset_path + "training_conf
 print("Creating dataset")
 print("Done creating dataset")
 training_indexes = torch.tensor(np.array(range(10000)))
-data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
+data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
+all_images = []
 for i in range(100):
-
+    print(i)
     # batch_data = next(iter(data_loader))
     batch_indexes = next(data_loader)
     ##Getting the batch translations, rotations and corresponding rotation matrices
@@ -122,4 +123,9 @@ for i in range(100):
     # plt.imshow(deformed_images[0], cmap="gray")
     # plt.show()
     print("images")
-    noise_components = generated_noise[batch_indexes].to(device)
+    all_images.append(deformed_images)
+    #noise_components = generated_noise[batch_indexes].to(device)
+
+all_images = torch.concat(all_images, dim=0)
+print(all_images.shape)
+torch.save(all_images, dataset_path + "continuousConformationDataSet")
