@@ -3,6 +3,7 @@ import torch
 from pytorch3d.transforms import axis_angle_to_matrix
 import utils
 from imageRenderer import Renderer
+from 
 
 device="cpu"
 
@@ -15,6 +16,11 @@ absolute_positions = absolute_positions.to(device)
 local_frame = torch.tensor(features["local_frame"])
 local_frame = local_frame.to(device)
 batch_size = 100
+N_input_domains = 4
+latent_dim = 1
+num_nodes = 1510
+cutoff1 = 300
+cutoff2 = 1353
 
 
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
