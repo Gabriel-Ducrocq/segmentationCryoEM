@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 
 
 class Renderer():
+    ## CHANGED STD FROM 1 to 3 !!!
     def __init__(self, pixels_x, pixels_y, N_heavy=4530, period= 300/128, std = 1, defocus= 5000, spherical_aberration=21,
                  accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu"):
-        self.std_blob = std
+        self.std_blob = std*0.225
         self.len_x = pixels_x.shape[1]
         self.len_y = pixels_y.shape[1]
         assert self.len_x == self.len_y, "Number of pixels different on x and y"
@@ -86,7 +87,8 @@ class Renderer():
         batch_size = x.shape[0]
         scaled_distances = -(1/2)*(torch.broadcast_to(pixels_pos, (batch_size, self.N_heavy_atoms, -1)) -
                                    x[:, :, None])**2/self.std_blob**2
-        axis_val = torch.exp(scaled_distances)/self.torch_sqrt_2pi
+
+        axis_val = torch.exp(scaled_distances)/(self.torch_sqrt_2pi * self.std_blob)
         return axis_val
 
     def ctf_corrupting(self, image):
@@ -95,6 +97,7 @@ class Renderer():
         :param image: torch tensor (N_batch, N_pixels_s, N_pixels_y), non corrupted image.
         :return:  torch tensor (N_batch, N_pixels_s, N_pixels_y), corrupted image
         """
+        print(image.shape)
         fourier_images = torch.fft.rfft2(image)
         corrupted_fourier = fourier_images*self.ctf_grid
         corrupted_images = torch.fft.irfft2(corrupted_fourier)
@@ -115,7 +118,7 @@ class Renderer():
         all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
         prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
         projected_densities = torch.sum(prod, dim=1)
-        #projected_densities = self.ctf_corrupting(projected_densities)
+        projected_densities = self.ctf_corrupting(projected_densities)
         return projected_densities
 
 """

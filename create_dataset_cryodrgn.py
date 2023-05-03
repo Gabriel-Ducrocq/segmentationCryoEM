@@ -57,7 +57,7 @@ conformation_matrix_dataset = np.reshape(conformation_matrix_dataset, (10, 3, 3)
 features = np.load(config["protein_features"], allow_pickle=True)
 features = features.item()
 local_frame = features["local_frame"]
-local_frame_in_columns = torch.tensor(local_frame.T, dtype=torch.float32)
+local_frame_in_columns = torch.tensor(local_frame, dtype=torch.float32)
 for i in range(10):
     if i % 1 == 0:
         print(i)
@@ -130,7 +130,7 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
-noise_variance = 0.2
+noise_variance = 0.2**2
 all_images = []
 all_pose_rotation_matrix = []
 for n in range(N_conf):
@@ -155,9 +155,11 @@ for n in range(N_conf):
     #print(torch.max(torch.abs(deformed_structure)))
     deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structure,
                                                             global_rotation_matrix_dataset)
-    print("Images:", deformed_images.shape)
-    print(deformed_images)
-    deformed_images += torch.randn_like(deformed_images) * np.sqrt(noise_variance)
+    #print("Images:", deformed_images.shape)
+    #print(torch.mean(torch.var(deformed_images**2, dim=(1, 2))))
+    #print(torch.mean(torch.var(deformed_images, dim=(1,2))))
+    #deformed_images += torch.randn_like(deformed_images) * np.sqrt(noise_variance)
+    #print(torch.mean(torch.std(deformed_images, dim=(1, 2)))**2)
     #plt.imshow(deformed_images[0], cmap="gray")
     #plt.show()
     all_images.append(deformed_images)
@@ -167,6 +169,6 @@ all_images = torch.concat(all_images)
 all_pose_rotation_matrix = torch.concat(all_pose_rotation_matrix)
 print(all_images.shape)
 print(all_pose_rotation_matrix.shape)
-torch.save(all_images, "data/vaeContinuousNoisyZhongStyleNoCTF/continuousConformationDataSet")
-torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyleNoCTF/rotationPoseDataSet")
-np.save("data/vaeContinuousNoisyZhongStyleNoCTF/structures_indexes.npy", np.array(random_conf, dtype=int))
+torch.save(all_images, "data/vaeContinuousNoisyZhongStyleNoNoise/continuousConformationDataSet")
+torch.save(all_pose_rotation_matrix, "data/vaeContinuousNoisyZhongStyleNoNoise/rotationPoseDataSet")
+np.save("data/vaeContinuousNoisyZhongStyleNoNoise/structures_indexes.npy", np.array(random_conf, dtype=int))

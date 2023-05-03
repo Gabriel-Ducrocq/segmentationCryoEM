@@ -5,7 +5,7 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vaeContinuousNoisyZhongStyle2/"
+dataset_path="data/vaeContinuousNoisyZhongStyleNoCTF/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -36,7 +36,7 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vaeContinuousNoisyZhongStyle2/full_model2310"
+model_path = "data/vaeContinuousNoisyZhongStyleNoCTF/full_model4630"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -47,7 +47,7 @@ training_rotations_matrices = torch.load(dataset_path + "rotationPoseDataSet", m
 #training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy", map_location=torch.device(device))
 #noise_component = torch.load(dataset_path + "noise_component", map_location=torch.device(device))
 
-training_images = torch.load("data/vaeContinuousNoisyZhongStyle2/continuousConformationDataSet")
+training_images = torch.load("data/vaeContinuousNoisyZhongStyleNoCTF/continuousConformationDataSet")
 
 #print("NOISE")
 #print(torch.median(0.5*torch.sum(noise_component**2, dim=(-2,-1))))

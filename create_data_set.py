@@ -54,7 +54,7 @@ def extractor_domain(conformation, type):
     return np.repeat(per_domain[None, :, :], N, axis=0)
 
 
-with open("datasetContinuousZhongFashion.yaml", "r") as file:
+with open("datasetContinuous.yaml", "r") as file:
     config = yaml.safe_load(file)
 
 
@@ -178,25 +178,25 @@ def get_images(deformed_structures, noise_variance, config, device="cpu"):
     global_rotation_matrix_dataset = from_axis_angle_to_matrix(global_axis_angle_dataset)
     global_rotation_matrix_dataset = torch.tensor(global_rotation_matrix_dataset, dtype=torch.float32, device=device)
     all_deformed_images = torch.empty((total_N_sample, 64, 64))
-    for i in range(0, 2):
+    for i in range(0, 20):
         print(i)
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures[i*500:(i+1)*500], global_rotation_matrix_dataset[i*500:(i+1)*500])
-        deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_variance)
+        #deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_variance)
         all_deformed_images[i*500:(i+1)*500] = deformed_images
 
     return all_deformed_images, global_rotation_matrix_dataset
 
 
 deformed_structures = get_structures(config)
-deformed_images, global_rotation_axis = get_images(deformed_structures, 0.2)
-noisy_images = deformed_images + torch.randn_like(deformed_images[0])*np.sqrt(0.2)
+deformed_images, global_rotation_axis = get_images(deformed_structures, 0.2, None)
+noisy_images = deformed_images #+ torch.randn_like(deformed_images[0])*np.sqrt(0.2)
 
 MSD = torch.sum((deformed_images - noisy_images)**2, dim=(-2,-1))
 print("MSD:", MSD)
 print(torch.var(deformed_images))
 print(torch.mean(deformed_images))
-#torch.save(deformed_images, "data/continuousConformationDataSet")
-#torch.save(global_rotation_axis, "data/rotationPoseDataSet")
+torch.save(deformed_images, "data/vaeContinuousNoisyZhongStyleNoNoise/continuousConformationDataSet")
+torch.save(global_rotation_axis, "data/vaeContinuousNoisyZhongStyleNoNoise/rotationPoseDataSet")
 
 for i in range(1000):
     plt.imshow(deformed_images[i], cmap="gray")
