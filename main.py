@@ -103,7 +103,7 @@ def weight_histograms(writer, step, model, get_grad=False):
     weight_mlp_histogram(writer, step, model.decoder, "decoder", get_grad)
     #mask_histogram(writer, step, model, get_grad=get_grad)
 
-def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyleNoCTF/"):
+def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyleNoNoise/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     all_losses = []
@@ -116,7 +116,7 @@ def train_loop(network, dataset_path="data/vaeContinuousNoisyZhongStyleNoCTF/"):
     all_cluster_proportions_loss = []
     all_lr = []
 
-    training_rotations_matrices = torch.load(dataset_path + "rotationPoseDataSet").to(device)
+    training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     print("SHAPE IMAGES:", training_images.shape)
     print("SHAPE pose rotations:", training_rotations_matrices.shape)

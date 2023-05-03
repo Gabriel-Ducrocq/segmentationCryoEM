@@ -92,6 +92,8 @@ training_rotations_angles = torch.load(dataset_path + "training_rotations_angles
 training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy").to(device)
 training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy").to(device)
 training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy")
+print(training_rotations_matrices.shape)
+print(training_conformation_rotation_matrix.shape)
 print("Creating dataset")
 print("Done creating dataset")
 training_indexes = torch.tensor(np.array(range(10000)))
