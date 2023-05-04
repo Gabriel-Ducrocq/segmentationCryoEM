@@ -8,8 +8,8 @@ from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, latent_dim, B, S, encoder, decoder, renderer, local_frame, atom_absolute_positions,
-                 batch_size, cutoff1, cutoff2, device, alpha_entropy = 0.0001, use_encoder = True):
+    def __init__(self, N_residues, N_domains, latent_dim, encoder, decoder, renderer, local_frame, atom_absolute_positions,
+                 batch_size, device, alpha_entropy = 0.0001, use_encoder = True):
         super(Net, self).__init__()
         self.N_residues = N_residues
         self.N_domains = N_domains
@@ -26,8 +26,6 @@ class Net(torch.nn.Module):
         self.relative_positions = torch.matmul(self.atom_absolute_positions, local_frame)
         self.batch_size = batch_size
         self.alpha_entropy = alpha_entropy
-        self.cutoff1 = cutoff1
-        self.cutoff2 = cutoff2
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
