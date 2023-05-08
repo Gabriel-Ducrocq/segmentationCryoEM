@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -9,7 +10,8 @@ from imageRenderer import Renderer
 from os import getcwd
 
 
-dataset_path = "data/vaeContinuousNew/"
+noise_var = 0.4
+dataset_path = "data/vaeContinuousNoisyNoCTF/"
 print(getcwd())
 N_input_domains = 4
 batch_size=100
@@ -26,7 +28,7 @@ local_frame = local_frame.to(device)
 
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
+renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=False)
 
 relative_positions = torch.matmul(absolute_positions, local_frame)
 conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), dtype=torch.float32)
@@ -112,6 +114,10 @@ for epoch in range(0,1):
         print("Deformed")
         ## We then rotate the structure and project them on the x-y plane.
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
+        deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_var)
+        #print(torch.mean(torch.var(deformed_images, dim=(1,2))))
+        #plt.imshow(deformed_images[0], cmap="gray")
+        #plt.show()
         all_images.append(deformed_images)
 
 

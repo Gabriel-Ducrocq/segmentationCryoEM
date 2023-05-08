@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 class Renderer():
     def __init__(self, pixels_x, pixels_y, N_heavy=4530, period= 300/128, std = 1, defocus= 5000, spherical_aberration=21,
-                 accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu"):
+                 accelerating_voltage=300 , amplitude_contrast_ratio = 0.06, device="cpu", use_ctf=True):
         self.std_blob = std
         self.len_x = pixels_x.shape[1]
         self.len_y = pixels_y.shape[1]
@@ -28,7 +28,7 @@ class Renderer():
         self.amplitude_contrast_ratio = amplitude_contrast_ratio
         self.grid_period = period
         self.device = device
-
+        self.use_ctf = use_ctf
         self.frequencies = torch.tensor([k/(period*self.len_x) for k in range(-int(self.len_x/2), int(self.len_x/2))],
                                         device=device)
 
@@ -115,7 +115,9 @@ class Renderer():
         all_y = self.compute_gaussian_kernel(rotated_atom_positions[:, :, 1], self.pixels_y)
         prod = torch.einsum("bki,bkj->bkij", (all_x, all_y))
         projected_densities = torch.sum(prod, dim=1)
-        projected_densities = self.ctf_corrupting(projected_densities)
+        if self.use_ctf:
+            projected_densities = self.ctf_corrupting(projected_densities)
+
         return projected_densities
 
 """

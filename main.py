@@ -31,7 +31,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousNew/"):
+               dataset_path="data/vaeContinuousNoisyNoCTF/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -60,6 +60,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
+            deformed_images = deformed_images.to(device)
+            batch_indexes = batch_indexes.to(device)
             #print(batch_rotations[0])
             #print(batch_data)
             #plt.imshow(deformed_images[0], cmap="gray")
@@ -157,7 +159,7 @@ def experiment(graph_file="data/features.npy"):
 
     pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-    renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
+    renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=False)
 
     net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
               absolute_positions, batch_size, device)
