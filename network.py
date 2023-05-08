@@ -248,9 +248,20 @@ class Net(torch.nn.Module):
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
         Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
-        total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+        #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+        #       - 0.0001*minus_batch_Dkl_mask_proportions
+
+        total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.1*minus_batch_Dkl_loss
+        l2_pen = 0
+        for name,p in self.named_parameters():
+            if "weight" in name and ("encoder" in name or "decoder" in name):
+                l2_pen += torch.sum(p**2)
+
         loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-               - 0.0001*minus_batch_Dkl_mask_proportions
+               - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
+
         if train:
             print("Mask", mask_weights)
             print("RMSD:", nll)
