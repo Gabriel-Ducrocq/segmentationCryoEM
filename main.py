@@ -59,7 +59,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         for idx, batch_indexes in enumerate(next(data_loader)):
             start = time.time()
             print("epoch:", epoch)
-            print(i/5000)
+            print(idx/5000)
             #batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
