@@ -56,7 +56,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
         #for i in range(100):
-        for idx, batch_indexes in enumerate(next(data_loader)):
+        for idx, batch_indexes in enumerate(data_loader):
             start = time.time()
             print("epoch:", epoch)
             print(idx/5000)
