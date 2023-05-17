@@ -15,7 +15,9 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 10
+NUM_ACCUMULATION_STEP = 50
+
+batch_size = 2
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 240*240
@@ -50,14 +52,15 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
-        epoch_loss = torch.empty(1000)
+        epoch_loss = torch.empty(5000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
-        for i in range(1000):
+        #for i in range(100):
+        for idx, batch_indexes in enumerate(next(data_loader)):
             start = time.time()
             print("epoch:", epoch)
-            print(i/1000)
-            batch_indexes = next(data_loader)
+            print(i/5000)
+            #batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
             deformed_images = deformed_images.to(device)
@@ -74,10 +77,16 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                 new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
             optimizer.zero_grad()
+            loss = loss/NUM_ACCUMULATION_STEP
             loss.backward()
-            optimizer.step()
+            #optimizer.step()
+            if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
+                optimizer.zero_grad()
+                # Update Optimizer
+                optimizer.step()
+
             k = np.random.randint(0, 6000)
-            epoch_loss[i] = loss
+            epoch_loss[idx] = loss
             #print("Translation network:", translations[k, :, :])
             #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
             #print("Mask weights:",network.multiply_windows_weights())
