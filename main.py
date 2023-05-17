@@ -155,7 +155,7 @@ def experiment(graph_file="data/features.npy"):
 
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
     #encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
-    encoder_mlp = MLP(N_pixels, latent_dim * 2, [10000, 2048, 1024, 512, 512], device, num_hidden_layers=4)
+    encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 10000, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     #pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
