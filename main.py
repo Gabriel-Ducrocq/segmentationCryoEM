@@ -15,7 +15,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-batch_size = 50
+batch_size = 10
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 240*240
@@ -50,13 +50,13 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
-        epoch_loss = torch.empty(200)
+        epoch_loss = torch.empty(1000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
-        for i in range(200):
+        for i in range(1000):
             start = time.time()
             print("epoch:", epoch)
-            print(i/200)
+            print(i/1000)
             batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
