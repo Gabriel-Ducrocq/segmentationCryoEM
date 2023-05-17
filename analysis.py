@@ -5,7 +5,7 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vae2Conformations/"
+dataset_path="data/vaeContinuousNoisyNoCTF/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -36,15 +36,15 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vae2Conformations/full_model"
+model_path = "data/vaeContinuousNoisyNoCTF/full_model"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
-training_set = torch.load(dataset_path + "training_set.npy", map_location=torch.device(device)).to(device)
-training_rotations_angles = torch.load(dataset_path + "training_rotations_angles.npy", map_location=torch.device(device)).to(device)
-training_rotations_axis = torch.load(dataset_path + "training_rotations_axis.npy", map_location=torch.device(device)).to(device)
-training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices.npy", map_location=torch.device(device)).to(device)
-training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices.npy", map_location=torch.device(device))
+training_set = torch.load(dataset_path + "training_set", map_location=torch.device(device)).to(device)
+training_rotations_angles = torch.load(dataset_path + "training_rotations_angles", map_location=torch.device(device)).to(device)
+training_rotations_axis = torch.load(dataset_path + "training_rotations_axis", map_location=torch.device(device)).to(device)
+training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices", map_location=torch.device(device)).to(device)
+training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices", map_location=torch.device(device))
 
 print("SHOULD WE USE ENCODER:", model.use_encoder)
 training_indexes = torch.tensor(np.array(range(10000)))
