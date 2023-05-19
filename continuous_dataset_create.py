@@ -11,7 +11,8 @@ from os import getcwd
 
 
 noise_var = 0.7
-dataset_path = "data/vaeContinuousNoisyNoCTFBiggerResolution/"
+#dataset_path = "data/vaeContinuousNoisyNoCTFBiggerResolution/"
+dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 4
 batch_size=100
@@ -119,8 +120,8 @@ for epoch in range(0,1):
         deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_var)
         #print(torch.mean(torch.var(deformed_images, dim=(1,2))))
         print("\n\n")
-        #plt.imshow(deformed_images[0], cmap="gray")
-        #plt.show()
+        plt.imshow(deformed_images[0], cmap="gray")
+        plt.show()
         all_images.append(deformed_images)
 
 

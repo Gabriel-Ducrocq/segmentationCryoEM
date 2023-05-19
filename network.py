@@ -30,7 +30,9 @@ class Net(torch.nn.Module):
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
         self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
-        self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
+        #self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
+        self.latent_std = torch.ones((10000, self.latent_dim), device=device)*0.01
+        self.prior_std = self.latent_std
         self.tau = 0.05
         self.annealing_tau = 1
         self.use_encoder = use_encoder
@@ -240,9 +242,15 @@ class Net(torch.nn.Module):
                                                    - latent_mean ** 2 \
                                                    - latent_std ** 2, dim=1)
         else:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
-                                         - self.latent_mean[distrib_parameters] ** 2 \
-                                         - self.latent_std[distrib_parameters] ** 2, dim=1)
+            #minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
+            #                             - self.latent_mean[distrib_parameters] ** 2 \
+            #                             - self.latent_std[distrib_parameters] ** 2, dim=1)
+
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 - torch.log(self.prior_std[distrib_parameters]**2) +
+                                                   torch.log(self.latent_std[distrib_parameters] ** 2)\
+                                         - self.latent_mean[distrib_parameters] ** 2/ self.prior_std[distrib_parameters]**2 \
+                                         - self.latent_std[distrib_parameters] ** 2/self.prior_std[distrib_parameters]**2, dim=1)
+
 
         minus_batch_Dkl_mask_mean = -self.compute_Dkl_mask("means")
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
@@ -254,13 +262,19 @@ class Net(torch.nn.Module):
 
         total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
         #total_loss_per_batch = -batch_ll - 0.1*minus_batch_Dkl_loss
-        l2_pen = 0
-        for name,p in self.named_parameters():
-            if "weight" in name and ("encoder" in name or "decoder" in name):
-                l2_pen += torch.sum(p**2)
 
-        loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-               - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
+        if self.use_encoder:
+            l2_pen = 0
+            for name,p in self.named_parameters():
+                if "weight" in name and ("encoder" in name or "decoder" in name):
+                    l2_pen += torch.sum(p**2)
+
+            loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+                   - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
+        else:
+            loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+                   - 0.0001*minus_batch_Dkl_mask_proportions
+
 
         if train:
             print("Mask", mask_weights)
