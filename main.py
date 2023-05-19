@@ -171,7 +171,10 @@ def experiment(graph_file="data/features.npy"):
     pixels_y = np.linspace(-120, 120, num=240).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=False)
 
-    net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
+    #net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
+    #          absolute_positions, batch_size, device, use_encoder=False)
+
+    net = Net(num_nodes, N_input_domains, latent_dim, None, translation_mlp, renderer, local_frame,
               absolute_positions, batch_size, device, use_encoder=False)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)
