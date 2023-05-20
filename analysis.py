@@ -5,12 +5,12 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vaeContinuousNoisyNoCTF/"
+dataset_path="data/vaeContinuousNoisyNoCTFBiggerResolution/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
 N_domains = 3
-N_pixels = 64*64
+N_pixels = 240*240
 #This represents the number of domain we think there are
 N_input_domains = 4
 latent_dim = 9
@@ -36,7 +36,7 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vaeContinuousNoisyNoCTF/full_model"
+model_path = "data/vaeContinuousNoisyNoCTFBiggerResolution/full_model"
 model = torch.load(model_path, map_location=torch.device(device))
 
 

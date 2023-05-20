@@ -260,8 +260,8 @@ class Net(torch.nn.Module):
         #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
         #       - 0.0001*minus_batch_Dkl_mask_proportions
 
-        total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
-        #total_loss_per_batch = -batch_ll - 0.1*minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
 
         if self.use_encoder:
             l2_pen = 0
