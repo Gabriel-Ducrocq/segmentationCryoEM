@@ -15,9 +15,9 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-NUM_ACCUMULATION_STEP = 10
+NUM_ACCUMULATION_STEP = 1
 
-batch_size = 10
+batch_size = 100
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 240*240
@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousNoisyNoCTFBiggerResolutionLowerDkl/"):
+               dataset_path="data/vaeContinuousNoNoiseNoCTF/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -166,8 +166,8 @@ def experiment(graph_file="data/features.npy"):
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     #pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-    pixels_x = np.linspace(-120, 120, num=240).reshape(1, -1)
-    pixels_y = np.linspace(-120, 120, num=240).reshape(1, -1)
+    pixels_x = np.linspace(-120, 120, num=64).reshape(1, -1)
+    pixels_y = np.linspace(-120, 120, num=64).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=False)
 
     #net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,

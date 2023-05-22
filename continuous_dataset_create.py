@@ -11,8 +11,8 @@ from os import getcwd
 
 
 noise_var = 0.7
-#dataset_path = "data/vaeContinuousNoisyNoCTFBiggerResolution/"
-dataset_path = "data/test/"
+dataset_path = "data/vaeContinuousNoNoiseNoCTF/"
+#dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 4
 batch_size=100
@@ -28,8 +28,8 @@ absolute_positions = absolute_positions.to(device)
 local_frame = torch.tensor(features["local_frame"])
 local_frame = local_frame.to(device)
 
-pixels_x = np.linspace(-120, 120, num=240).reshape(1, -1)
-pixels_y = np.linspace(-120, 120, num=240).reshape(1, -1)
+pixels_x = np.linspace(-120, 120, num=64).reshape(1, -1)
+pixels_y = np.linspace(-120, 120, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=False)
 
 relative_positions = torch.matmul(absolute_positions, local_frame)
@@ -116,12 +116,12 @@ for epoch in range(0,1):
         print("Deformed")
         ## We then rotate the structure and project them on the x-y plane.
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
-        print(torch.mean(torch.var(deformed_images, dim=(1, 2))))
-        deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_var)
+        #print(torch.mean(torch.var(deformed_images, dim=(1, 2))))
+        #deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_var)
         #print(torch.mean(torch.var(deformed_images, dim=(1,2))))
         print("\n\n")
-        plt.imshow(deformed_images[0], cmap="gray")
-        plt.show()
+        #plt.imshow(deformed_images[0], cmap="gray")
+        #plt.show()
         all_images.append(deformed_images)
 
 
