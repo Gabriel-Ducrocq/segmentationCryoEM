@@ -36,7 +36,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuous/"):
+               dataset_path="data/vaeContinuousCTFOnlyNoEncoder/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -245,8 +245,8 @@ def experiment(graph_file="data/features.npy"):
     pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
     renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 
-    net = Net(num_nodes, N_input_domains, latent_dim, B, S, encoder_mlp, translation_mlp, renderer, local_frame,
-              absolute_positions, batch_size, cutoff1, cutoff2, device)
+    net = Net(num_nodes, N_input_domains, latent_dim, B, S, None, translation_mlp, renderer, local_frame,
+              absolute_positions, batch_size, cutoff1, cutoff2, device, use_encoder=False)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)
 
