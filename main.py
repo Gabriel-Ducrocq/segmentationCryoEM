@@ -110,7 +110,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        scheduler.step(torch.mean(epoch_loss))
+        #scheduler.step(torch.mean(epoch_loss))
         #scheduler.step()
 
         #if (epoch+1)%50 == 0:
