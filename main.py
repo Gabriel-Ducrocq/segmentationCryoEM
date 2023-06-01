@@ -52,6 +52,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     training_indexes = torch.tensor(np.array(range(10000)))
     network = torch.load(dataset_path + "full_model")
+    network.batch_size = 10
     for epoch in range(1963,5000):
         epoch_loss = torch.empty(1000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
