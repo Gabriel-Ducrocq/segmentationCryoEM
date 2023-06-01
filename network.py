@@ -45,23 +45,24 @@ class Net(torch.nn.Module):
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
 
+        ##Disabling gradient on mask !!!
         self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
-                                                requires_grad=True)
+                                                requires_grad=False)
 
         self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
+                                              requires_grad=False)
 
         self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
+                                              requires_grad=False)
 
         self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=True)
+                                              requires_grad=False)
 
         self.cluster_proportions_mean = torch.nn.Parameter(torch.zeros(4, dtype=torch.float32, device=device)[None, :],
-                                                      requires_grad=True)
+                                                      requires_grad=False)
 
         self.cluster_proportions_std = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
-                           requires_grad=True)
+                           requires_grad=False)
 
 
         self.cluster_parameters = {"means":{"mean":self.cluster_means_mean, "std":self.cluster_means_std},

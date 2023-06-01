@@ -17,7 +17,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_ACCUMULATION_STEP = 1
 
-batch_size = 100
+batch_size = 10
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 240*240
@@ -34,7 +34,7 @@ print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
-    optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
+    optimizer = torch.optim.Adam(network.parameters(), lr=0.00005)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
@@ -51,7 +51,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices").to(device)
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     training_indexes = torch.tensor(np.array(range(10000)))
-    for epoch in range(0,5000):
+    network = torch.load(dataset_path + "full_model")
+    for epoch in range(1963,5000):
         epoch_loss = torch.empty(1000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))

@@ -18,7 +18,7 @@ num_edges = num_nodes*K_nearest_neighbors
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-dataset_path = "data/vaeContinuousCTFNoisy/"
+dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle/"
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=True)
@@ -49,8 +49,9 @@ mask[:1353, 0] = 1.0
 
 axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0]]]), dtype=torch.float32)
 angle_rotation = torch.zeros(size=(1000, 4), dtype=torch.float32)
+##We rotate only the 4th domain to see
 angle_rotation[:, 3] = 1.0
-ang = torch.tensor(np.linspace(0, -2*np.pi, 1000), dtype=torch.float32)[:, None]
+ang = torch.tensor(np.linspace(-np.pi, np.pi, 1000), dtype=torch.float32)[:, None]
 angle_rotation *= ang
 print(angle_rotation)
 
@@ -63,8 +64,8 @@ net.batch_size = 1000
 rotation_per_residue = net.compute_rotations(quaternion, mask)
 deformed_structures, _ = net.deform_structure(mask, torch.zeros(size=(1000, 4, 3)), rotation_per_residue)
 
-image = training_images[9011]
-rotation_matrices = training_rotations_matrices[9011]
+image = training_images[9000]
+rotation_matrices = training_rotations_matrices[9000]
 
 plt.imshow(training_images[0], cmap="gray")
 plt.show()
@@ -82,7 +83,7 @@ all_losses = np.array(all_losses)
 np.save("all_losses.npy", all_losses)
 
 training_rotations_angles = torch.load(dataset_path + "training_rotations_angles").to(device)
-print(angl[9010])
+print(angl[9000])
 
 plt.plot(ang.detach().numpy(), all_losses)
 plt.axvline(x=-2*np.pi/3)
