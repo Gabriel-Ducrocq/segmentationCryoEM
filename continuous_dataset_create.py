@@ -93,7 +93,7 @@ training_rotations_matrices = torch.load(dataset_path + "training_rotations_matr
 training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices")
 print("Creating dataset")
 print("Done creating dataset")
-training_indexes = torch.tensor(np.array(range(10000)))
+training_indexes = torch.tensor(np.array(range(N_images)))
 all_images = []
 for epoch in range(0,1):
     data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
