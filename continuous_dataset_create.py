@@ -11,7 +11,7 @@ from os import getcwd
 
 
 noise_var = 0.22
-dataset_path = "data/vaeContinuousCTFNoisy/"
+dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle/"
 #dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 4
@@ -53,7 +53,7 @@ conformation2_rotation_angle = torch.zeros((5000, 4), dtype=torch.float32)
 conformation2_rotation_angle[:, 2] = torch.randn(size=(5000,))*0.1 -2*np.pi/3
 #conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
 conformation2_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (5000, 4, 3))\
-                                    * conformation1_rotation_angle[:, :, None]
+                                    * conformation2_rotation_angle[:, :, None]
 conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
 
 #conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))

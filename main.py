@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousCTFNoisy/"):
+               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -161,7 +161,7 @@ def experiment(graph_file="data/features.npy"):
     local_frame = local_frame.to(device)
 
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
+    #encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)

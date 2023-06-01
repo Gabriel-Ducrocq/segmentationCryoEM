@@ -216,3 +216,8 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
     return deformed_images
 
 
+
+
+
+
+
