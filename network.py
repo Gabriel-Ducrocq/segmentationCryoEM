@@ -29,9 +29,9 @@ class Net(torch.nn.Module):
         self.device = device
         self.SLICE_MU = slice(0,self.latent_dim)
         self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim), device=device), requires_grad=True)
         #self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
-        self.latent_std = torch.ones((10000, self.latent_dim), device=device)*0.01
+        self.latent_std = torch.ones((100000, self.latent_dim), device=device)*0.01
         self.prior_std = self.latent_std
         self.tau = 0.05
         self.annealing_tau = 1
@@ -44,25 +44,23 @@ class Net(torch.nn.Module):
         #                                              requires_grad=True)
         self.residues = torch.arange(0, 1510, 1, dtype=torch.float32, device=device)[:, None]
 
-
-        ##Disabling gradient on mask !!!
         self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
-                                                requires_grad=False)
+                                                requires_grad=True)
 
         self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=False)
+                                              requires_grad=True)
 
         self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=False)
+                                              requires_grad=True)
 
         self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
-                                              requires_grad=False)
+                                              requires_grad=True)
 
         self.cluster_proportions_mean = torch.nn.Parameter(torch.zeros(4, dtype=torch.float32, device=device)[None, :],
-                                                      requires_grad=False)
+                                                      requires_grad=True)
 
         self.cluster_proportions_std = torch.nn.Parameter(torch.ones(4, dtype=torch.float32, device=device)[None, :],
-                           requires_grad=False)
+                           requires_grad=True)
 
 
         self.cluster_parameters = {"means":{"mean":self.cluster_means_mean, "std":self.cluster_means_std},
