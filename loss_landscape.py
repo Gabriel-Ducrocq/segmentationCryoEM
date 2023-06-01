@@ -47,7 +47,7 @@ mask = torch.zeros(size = (num_nodes, N_input_domains), dtype=torch.float32)
 mask[1353:, -1] = 1.0
 mask[:1353, 0] = 1.0
 
-axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0, 1, 0]]]), dtype=torch.float32)
+axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0,  -1,  0]]]), dtype=torch.float32)
 angle_rotation = torch.zeros(size=(1000, 4), dtype=torch.float32)
 ##We rotate only the 4th domain to see
 angle_rotation[:, 3] = 1.0
