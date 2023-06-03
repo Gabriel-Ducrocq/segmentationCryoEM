@@ -47,10 +47,10 @@ mask = torch.zeros(size = (num_nodes, N_input_domains), dtype=torch.float32)
 mask[1353:, -1] = 1.0
 mask[:1353, 0] = 1.0
 
-axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0,  -1,  0]]]), dtype=torch.float32)
+axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0,  1,  0]]]), dtype=torch.float32)
 angle_rotation = torch.zeros(size=(1000, 4), dtype=torch.float32)
 ##We rotate only the 4th domain to see
-angle_rotation[:, 3] = 1.0
+angle_rotation[:, 0] = 1.0
 ang = torch.tensor(np.linspace(-np.pi, np.pi, 1000), dtype=torch.float32)[:, None]
 angle_rotation *= ang
 print(angle_rotation)
@@ -85,7 +85,7 @@ np.save("all_losses.npy", all_losses)
 training_rotations_angles = torch.load(dataset_path + "training_rotations_angles").to(device)
 print(angl[9000])
 
-plt.plot(ang.detach().numpy(), all_losses)
+plt.plot(ang.detach().numpy(), np.exp(-0.0000005*all_losses))
 plt.axvline(x=-2*np.pi/3)
 plt.axvline(x=-np.pi/3)
 plt.show()
