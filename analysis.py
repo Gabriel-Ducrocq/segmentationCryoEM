@@ -47,6 +47,7 @@ training_rotations_matrices = torch.load(dataset_path + "training_rotations_matr
 training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices", map_location=torch.device(device))
 
 print("SHOULD WE USE ENCODER:", model.use_encoder)
+print("DATASET SIZE:", training_set.shape)
 training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
 all_indexes = []
@@ -57,7 +58,7 @@ for epoch in range(0, 1):
     for i in range(1000):
         start = time.time()
         print("epoch:", epoch)
-        print(i / 100)
+        print(i / 1000)
         # batch_data = next(iter(data_loader))
         batch_indexes = next(data_loader)
         print(batch_indexes)
