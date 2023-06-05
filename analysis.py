@@ -78,8 +78,8 @@ for epoch in range(0, 1):
         ## We then rotate the structure and project them on the x-y plane.
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
         latent_distrib = model.encode(deformed_images)
-        all_latent_distrib.append(latent_distrib.detach().numpy())
-        all_indexes.append(batch_indexes.detach().numpy())
+        all_latent_distrib.append(latent_distrib.detach().cpu().numpy())
+        all_indexes.append(batch_indexes.detach().cpu().numpy())
 
 
 np.save(dataset_path + "latent_distrib.npy", np.array(all_latent_distrib))
