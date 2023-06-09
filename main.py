@@ -20,7 +20,7 @@ NUM_ACCUMULATION_STEP = 1
 batch_size = 100
 #This represent the number of true domains
 N_domains = 3
-N_pixels = 240*240
+N_pixels = 64*64
 #This represents the number of domain we think there are
 N_input_domains = 4
 latent_dim = 1
