@@ -2,6 +2,7 @@ import torch
 from network import Net
 import numpy as np
 from imageRenderer import Renderer
+import torchvision
 from pytorch3d.transforms import axis_angle_to_quaternion, matrix_to_axis_angle
 import matplotlib.pyplot as plt
 
@@ -50,37 +51,106 @@ mask[:1353, 0] = 1.0
 axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0,  1,  0]]]), dtype=torch.float32)
 angle_rotation = torch.zeros(size=(1000, 4), dtype=torch.float32)
 ##We rotate only the 4th domain to see
-angle_rotation[:, 0] = 1.0
-ang = torch.tensor(np.linspace(-np.pi, np.pi, 1000), dtype=torch.float32)[:, None]
+angle_rotation[:, 3] = 1.0
+ang = torch.tensor(np.linspace(-np.pi, 0, 1000), dtype=torch.float32)[:, None]
 angle_rotation *= ang
-print(angle_rotation)
 
-print(axis_rotation.shape)
-print(angle_rotation.shape)
-
-axis_angle = axis_rotation*angle_rotation[:, :, None]
-quaternion = axis_angle_to_quaternion(axis_angle)
-net.batch_size = 1000
-rotation_per_residue = net.compute_rotations(quaternion, mask)
-deformed_structures, _ = net.deform_structure(mask, torch.zeros(size=(1000, 4, 3)), rotation_per_residue)
-
-image = training_images[9000]
+phi = torch.tensor(np.linspace(0, np.pi/2, 100), dtype=torch.float32)[:, None]
+z = torch.cos(phi)
+y = torch.sin(phi)
+axis_rotation = axis_rotation.repeat(100, 1, 1)
+axis_rotation[:, -1, :] = torch.concat([torch.zeros((100, 1)), y, z], dim = -1)
+"""
+print("Axis rot", axis_rotation)
+print("ANGLE ROATION", angle_rotation)
+net.batch_size = 100
 rotation_matrices = training_rotations_matrices[9000]
+all_new_images = []
+image = training_images[9000:9001]
+all_losses = torch.zeros((1000, 100), dtype=torch.float32)
+for i in range(1000):
+    print(i)
+    angle_rot = angle_rotation[i, -1]
+    ax_ang = axis_rotation*angle_rot
+    print(axis_rotation)
+    ax_ang[:, :-1, 1] = 1
 
-plt.imshow(training_images[0], cmap="gray")
+
+    quaternion = axis_angle_to_quaternion(ax_ang)
+    rotation_per_residue = net.compute_rotations(quaternion, mask)
+    deformed_structures, _ = net.deform_structure(mask, torch.zeros(size=(100, 4, 3)), rotation_per_residue)
+    new_images = renderer.compute_x_y_values_all_atoms(deformed_structures, rotation_matrices)
+    all_losses[i, :] = torch.sum((new_images - image) ** 2, dim=(-1, -2))
+
+all_losses = all_losses.detach().cpu().numpy()
+print(all_losses.shape)
+np.save("all_losses.npy", all_losses)
+"""
+all_losses=np.load("all_losses.npy")
+plt.imshow(all_losses)
+#plt.xticks(np.linspace(-np.pi, 0, 100))
+#plt.yticks(np.linspace(0, np.pi/2, 100))
+plt.axhline(y=2/3 * 1000)
+plt.axvline(x=99)
+#plt.axhline()
 plt.show()
-print(image.shape)
-print(rotation_matrices.shape)
-print(deformed_structures.shape)
-new_images = renderer.compute_x_y_values_all_atoms(deformed_structures, rotation_matrices)
+"""
+new_images = torch.concat(all_new_images)
+#axis_angle = axis_rotation*angle_rotation[:, :, None]
+#quaternion = axis_angle_to_quaternion(axis_angle)
+#net.batch_size = 100
+#rotation_per_residue = net.compute_rotations(quaternion, mask)
+#deformed_structures, _ = net.deform_structure(mask, torch.zeros(size=(100, 4, 3)), rotation_per_residue)
+
+
+image = training_images[9000:9001]
+#image_resized = torchvision.transforms.Resize(25)(image)
+#print("IMAGE RESIZED SHAPE:", image_resized.shape)
+#fourier_image = torch.fft.rfft2(image)
+#fourier_image[:, -5:] = 0
+#fourier_image[-5:, :] = 0
+#fourier_image[:5, :] = 0
+
+#print("Fourier image", fourier_image.shape)
+#corrupted_image = torch.fft.irfft2(fourier_image)
+#rotation_matrices = training_rotations_matrices[9000]
+
+plt.imshow(training_images[9000], cmap="gray")
+plt.show()
+#plt.imshow(image_resized[0], cmap="gray")
+#plt.show()
+#print(image.shape)
+#print(rotation_matrices.shape)
+#print(deformed_structures.shape)
+#new_images = renderer.compute_x_y_values_all_atoms(deformed_structures, rotation_matrices)
+#new_images_resize = torchvision.transforms.Resize(25)(new_images)
+#print("IMAGES RESIZED SHAPE:", new_images_resize.shape)
+#fourier_new_images = torch.fft.rfft2(new_images)
+#fourier_new_images[:, :, -5:] = 0
+#fourier_new_images[:, -5:, :] = 0
+#fourier_new_images[:, :5, :] = 0
+
+#print("Fourier image", fourier_image.shape)
+#corrupted_new_images = torch.fft.irfft2(fourier_new_images)
 print("New images shape", new_images.shape)
+
 all_losses = []
+all_losses = torch.zeros((100, 100), dtype=torch.float32)
 for i in range(1000):
     print(i)
     all_losses.append(torch.sum((new_images[i] - image)**2).detach().numpy())
+    
+"""
+"""
 
-all_losses = np.array(all_losses)
-np.save("all_losses.npy", all_losses)
+all_losses = []
+for i in range(10000):
+    print(i)
+    all_losses.append(torch.sum((new_images_resize[i] - image_resized)**2).detach().numpy())
+"""
+"""
+#all_losses = np.array(all_losses)
+#np.save("all_losses.npy", all_losses)
 
 training_rotations_angles = torch.load(dataset_path + "training_rotations_angles").to(device)
 print(angl[9000])
@@ -89,6 +159,7 @@ plt.plot(ang.detach().numpy(), all_losses)
 plt.axvline(x=-2*np.pi/3)
 plt.axvline(x=-np.pi/3)
 plt.show()
+"""
 
 
 

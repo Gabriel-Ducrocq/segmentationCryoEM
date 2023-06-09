@@ -11,7 +11,7 @@ from os import getcwd
 
 
 noise_var = 0.22
-dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
+dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/"
 #dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 4
@@ -38,34 +38,34 @@ conformation1 = torch.tensor(np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]), d
 conformation2 = torch.tensor(np.array([0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0]), dtype=torch.float32)
 conformation1_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
 #conformation1_rotation_angle = torch.tensor(np.array([-np.pi / 4, 0, np.pi/2, 0]), dtype=torch.float32)
-conformation1_rotation_angle = torch.zeros((50000, 4), dtype=torch.float32)
+conformation1_rotation_angle = torch.zeros((5000, 4), dtype=torch.float32)
 #conformation1_rotation_angle[:, 2] = -torch.rand(size=(5000,))*torch.pi
-conformation1_rotation_angle[:, 2] = torch.randn(size=(50000,))*0.1 -np.pi/3
+conformation1_rotation_angle[:, 2] = torch.randn(size=(5000,))*0.1 -np.pi/3
 #conformation1_rotation_axis_angle = conformation1_rotation_axis*conformation1_rotation_angle[:, None]
-conformation1_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (50000, 4, 3))\
+conformation1_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (5000, 4, 3))\
                                     * conformation1_rotation_angle[:, :, None]
 
 conformation1_rotation_matrix = axis_angle_to_matrix(conformation1_rotation_axis_angle)
 
 #conformation2_rotation_axis = torch.tensor(np.array([[0, 0, 1], [0, 1, 0], [0, 1, 0], [0, 1, 0]]), dtype=torch.float32)
 #conformation2_rotation_angle = torch.tensor(np.array([0, 0, -np.pi/2, 0]), dtype=torch.float32)
-conformation2_rotation_angle = torch.zeros((50000, 4), dtype=torch.float32)
+conformation2_rotation_angle = torch.zeros((5000, 4), dtype=torch.float32)
 #conformation2_rotation_angle[:, 2] = -torch.rand(size=(5000,))*torch.pi
-conformation2_rotation_angle[:, 2] = torch.randn(size=(50000,))*0.1 -2*np.pi/3
+conformation2_rotation_angle[:, 2] = torch.randn(size=(5000,))*0.1 -2*np.pi/3
 #conformation2_rotation_axis_angle = conformation2_rotation_axis * conformation2_rotation_angle[:, None]
-conformation2_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (50000, 4, 3))\
+conformation2_rotation_axis_angle = torch.broadcast_to(conformation1_rotation_axis[None, :, :], (5000, 4, 3))\
                                     * conformation2_rotation_angle[:, :, None]
 conformation2_rotation_matrix = axis_angle_to_matrix(conformation2_rotation_axis_angle)
 
 #conformation1_rotation_matrix = torch.broadcast_to(conformation1_rotation_matrix, (5000, 4, 3, 3))
 #conformation2_rotation_matrix = torch.broadcast_to(conformation2_rotation_matrix, (5000, 4, 3, 3))
 conformation_rotation_matrix = torch.cat([conformation1_rotation_matrix, conformation2_rotation_matrix], dim=0)
-conformation1 = torch.broadcast_to(conformation1, (50000, 12))
-conformation2 = torch.broadcast_to(conformation2, (50000, 12))
+conformation1 = torch.broadcast_to(conformation1, (5000, 12))
+conformation2 = torch.broadcast_to(conformation2, (5000, 12))
 true_deformations = torch.cat([conformation1, conformation2], dim=0)
-rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(100000,1)), dtype=torch.float32, device=device)
+rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000,1)), dtype=torch.float32, device=device)
 #rotation_angles = torch.tensor(np.random.uniform(0, 2*np.pi, size=(10000)), dtype=torch.float32, device=device)
-rotation_axis = torch.randn(size=(100000, 3), device=device)
+rotation_axis = torch.randn(size=(10000, 3), device=device)
 rotation_axis = rotation_axis/torch.sqrt(torch.sum(rotation_axis**2, dim=1))[:, None]
 axis_angle_format = rotation_axis*rotation_angles
 rotation_matrices = axis_angle_to_matrix(axis_angle_format)
@@ -97,10 +97,10 @@ training_indexes = torch.tensor(np.array(range(N_images)))
 all_images = []
 for epoch in range(0,1):
     data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
-    for i in range(1000):
+    for i in range(100):
         start = time.time()
         print("epoch:", epoch)
-        print(i/1000)
+        print(i/100)
         #batch_data = next(iter(data_loader))
         batch_indexes = next(iter(data_loader))
         ##Getting the batch translations, rotations and corresponding rotation matrices
