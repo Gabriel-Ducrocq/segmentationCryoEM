@@ -50,6 +50,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
 
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices").to(device)
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
+    print("TRAINING IMAGES SHAPE", training_images.shape)
     training_indexes = torch.tensor(np.array(range(100000)))
     for epoch in range(0,5000):
         epoch_loss = torch.empty(1000)
