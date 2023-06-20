@@ -11,7 +11,7 @@ from os import getcwd
 
 
 noise_var = 0.22
-dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/"
+dataset_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoderNoKLLoss/"
 #dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 4

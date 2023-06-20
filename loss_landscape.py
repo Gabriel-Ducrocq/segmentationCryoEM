@@ -49,10 +49,10 @@ mask[1353:, -1] = 1.0
 mask[:1353, 0] = 1.0
 
 axis_rotation = torch.tensor(np.array([[[0, 1, 0], [0, 1, 0], [0, 1, 0], [0,  1,  0]]]), dtype=torch.float32)
-angle_rotation = torch.zeros(size=(1000, 4), dtype=torch.float32)
+angle_rotation = torch.zeros(size=(100, 4), dtype=torch.float32)
 ##We rotate only the 4th domain to see
 angle_rotation[:, 3] = 1.0
-ang = torch.tensor(np.linspace(-np.pi, 0, 1000), dtype=torch.float32)[:, None]
+ang = torch.tensor(np.linspace(-np.pi, 0, 100), dtype=torch.float32)[:, None]
 angle_rotation *= ang
 
 phi = torch.tensor(np.linspace(0, np.pi/2, 100), dtype=torch.float32)[:, None]
@@ -60,15 +60,16 @@ z = torch.cos(phi)
 y = torch.sin(phi)
 axis_rotation = axis_rotation.repeat(100, 1, 1)
 axis_rotation[:, -1, :] = torch.concat([torch.zeros((100, 1)), y, z], dim = -1)
-"""
+
 print("Axis rot", axis_rotation)
 print("ANGLE ROATION", angle_rotation)
 net.batch_size = 100
-rotation_matrices = training_rotations_matrices[9000]
+rotation_matrices = training_rotations_matrices[1]
 all_new_images = []
-image = training_images[9000:9001]
-all_losses = torch.zeros((1000, 100), dtype=torch.float32)
-for i in range(1000):
+#image = training_images[1:2]
+image = training_images[4:5]
+all_losses = torch.zeros((100, 100), dtype=torch.float32)
+for i in range(100):
     print(i)
     angle_rot = angle_rotation[i, -1]
     ax_ang = axis_rotation*angle_rot
@@ -84,14 +85,20 @@ for i in range(1000):
 
 all_losses = all_losses.detach().cpu().numpy()
 print(all_losses.shape)
-np.save("all_losses.npy", all_losses)
-"""
-all_losses=np.load("all_losses.npy")
-plt.imshow(all_losses)
+np.save("all_losses2nd.npy", all_losses)
+
+fig, axs = plt.subplots(2)
+all_losses = np.load("all_losses.npy")
+all_losses2 = np.load("all_losses2nd.npy")
+axs[0].imshow(-all_losses)
+axs[0].axhline(y=2/3 * 100)
+axs[0].axvline(x=99)
+axs[0].set(xlabel="phi", ylabel="rotation angle")
+axs[1].imshow(-all_losses2)
 #plt.xticks(np.linspace(-np.pi, 0, 100))
 #plt.yticks(np.linspace(0, np.pi/2, 100))
-plt.axhline(y=2/3 * 1000)
-plt.axvline(x=99)
+axs[1].axhline(y=2/3 * 100)
+axs[1].axvline(x=99)
 #plt.axhline()
 plt.show()
 """

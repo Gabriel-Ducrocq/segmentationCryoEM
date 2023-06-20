@@ -240,6 +240,7 @@ class Net(torch.nn.Module):
             minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
                                                    - latent_mean ** 2 \
                                                    - latent_std ** 2, dim=1)
+
         else:
             #minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
             #                             - self.latent_mean[distrib_parameters] ** 2 \
@@ -262,7 +263,8 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
         #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
         ##Trying with even lower weight on DKL:
-        total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
+        #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll #- 0.0000001 * minus_batch_Dkl_loss
 
         if self.use_encoder:
             l2_pen = 0

@@ -5,7 +5,8 @@ import time
 import utils
 from imageRenderer import Renderer
 
-dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
+#dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
+dataset_path="data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -36,7 +37,8 @@ relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
-model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
+#model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
+model_path = "data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/full_model"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -55,10 +57,10 @@ for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
     data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
-    for i in range(1000):
+    for i in range(100):
         start = time.time()
         print("epoch:", epoch)
-        print(i / 1000)
+        print(i / 100)
         # batch_data = next(iter(data_loader))
         batch_indexes = next(data_loader)
         print(batch_indexes)
