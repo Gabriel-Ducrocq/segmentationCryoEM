@@ -160,7 +160,7 @@ class Net(torch.nn.Module):
         weighted by the mask value of the corresponding domain.
         :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
         :param mask: tensor (N_residues, N_input_domains)
-        :return: tensor (N_batch, N_residues, N_input_domain, 3, 3) rotation matrix for each residue
+        :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
         """
         #NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
         rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)

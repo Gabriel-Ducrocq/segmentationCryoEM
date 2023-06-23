@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoderNoKLLoss/"):
+               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -51,7 +51,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices").to(device)
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     print("TRAINING IMAGES SHAPE", training_images.shape)
-    training_indexes = torch.tensor(np.array(range(100000)))
+    training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
         epoch_loss = torch.empty(1000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
@@ -154,6 +154,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     features = np.load(graph_file, allow_pickle=True)
     features = features.item()
     absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
@@ -161,6 +162,7 @@ def experiment(graph_file="data/features.npy"):
     local_frame = torch.tensor(features["local_frame"])
     local_frame = local_frame.to(device)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
     encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
