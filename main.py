@@ -75,7 +75,6 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.show()
             print("images")
             transforms, mask, latent_variables, latent_mean, latent_std = network.forward(batch_indexes, deformed_images)
-            network.process_structure(transforms, mask)
             new_structures = utils.process_structure(transforms, atom_relative_positions,mask, local_frame_in_rows,
                                                      local_frame_in_columns, device)
 

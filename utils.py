@@ -285,9 +285,9 @@ def loss(vae, new_images, mask_weights, images, distrib_parameters, latent_mean=
     #                                 - self.latent_std[distrib_parameters] ** 2/self.prior_std[distrib_parameters]**2, dim=1)
 
 
-    minus_batch_Dkl_mask_mean = -compute_Dkl_mask(vae.encoder, "means")
-    minus_batch_Dkl_mask_std = -compute_Dkl_mask(vae.encoder, "stds")
-    minus_batch_Dkl_mask_proportions = -compute_Dkl_mask(vae.encoder, "proportions")
+    minus_batch_Dkl_mask_mean = -compute_Dkl_mask(vae, "means")
+    minus_batch_Dkl_mask_std = -compute_Dkl_mask(vae, "stds")
+    minus_batch_Dkl_mask_proportions = -compute_Dkl_mask(vae, "proportions")
     Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
     #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
     #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
