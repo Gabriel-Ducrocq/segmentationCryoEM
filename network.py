@@ -200,10 +200,7 @@ class Net(torch.nn.Module):
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
-        if self.use_encoder:
-            return new_structure, weights
-        else:
-            return new_structure, weights
+        return new_structure
 
     def forward(self, indexes, images=None):
         """
