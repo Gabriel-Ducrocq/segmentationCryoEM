@@ -50,7 +50,7 @@ training_conformation_rotation_matrix = torch.load(dataset_path + "training_conf
 
 print("SHOULD WE USE ENCODER:", model.use_encoder)
 print("DATASET SIZE:", training_set.shape)
-training_indexes = torch.tensor(np.array(range(100000)))
+training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
 all_indexes = []
 for epoch in range(0, 1):
