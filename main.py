@@ -36,12 +36,15 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngle10kEncoderOldFashioned/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
+    atom_relative_positions = torch.matmul(absolute_positions, local_frame)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
     #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=500, T_mult=1, eta_min=0.00003)
     all_losses = []
     all_rmsd = []
     all_dkl_losses = []
     all_tau = []
+    local_frame_in_rows = torch.transpose(local_frame, 0, 1)
+    local_frame_in_columns = local_frame
 
     all_cluster_means_loss = []
     all_cluster_std_loss = []
@@ -73,7 +76,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("images")
             transforms, mask, latent_variables, latent_mean, latent_std = network.forward(batch_indexes, deformed_images)
             network.process_structure(transforms, mask)
-            new_structures = network.process_structure(transforms, mask)
+            new_structures = utils.process_structure(transforms, atom_relative_positions,mask, local_frame_in_rows,
+                                                     local_frame_in_columns, device)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                 new_structures, mask,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)

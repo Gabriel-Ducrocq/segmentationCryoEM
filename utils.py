@@ -2,6 +2,7 @@ import numpy as np
 import Bio.PDB as bpdb
 import torch
 import scipy
+from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 restype_1to3 = {
     'A': 'ALA',
@@ -164,56 +165,86 @@ def get_positions(residue, name):
     z = residue["C"].get_coord()
     return x,y,z
 
-def deform_structure(base_structure, cutoff1, cutoff2, true_deformation, rotation_matrices_per_domain,
-                     local_frame_in_columns, relative_positions, N_residues, device):
-    """
 
-    :param base_structure: tensor (N_atoms, 3) of absolute positions
-    :param cutoff1: integer, frst cutoff
-    :param cutoff2: integer, second cutoff
-    :param true_deformation: (N_batch, N_domains, 3) translation per domain
-    :param rotation_matrices_per_domain:  (N_batch, N_domains, 3, 3) rotation matrices per domain
-    :param local_frame_in_columns: tensor (3, 3) basis vectors of the local frame in columns
-    :param relative_positions: tensor (N_atoms, 3) of the positions im the local frame
-    :param N_residues: integer, number of residues
-    :param device: string, device to use
-    :return:
+def compute_rotations(quaternions, mask, device):
     """
-    list_cutoffs = [0, cutoff1, cutoff2, N_residues]
-    batch_size = true_deformation.shape[0]
-    N_domains = true_deformation.shape[1]
-    #This tensor will contain the rotated vectors of the local frame in columns
-    new_local_frame_per_domain_in_column = torch.empty((batch_size, N_domains, 3, 3), device=device)
+    Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
+    weighted by the mask value of the corresponding domain.
+    :param quaternions: tensor (N_batch, N_domains, 4) of non normalized quaternions defining rotations
+    :param mask: tensor (N_residues, N_input_domains)
+    :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
+    """
+    batch_size = quaternions.shape[0]
+    N_residues = mask.shape[0]
+    N_domains = mask.shape[1]
+    #NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
+    rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
+    mask_rotation_per_domains_axis_angle = mask[None, :, :, None]*rotation_per_domains_axis_angle[:, None, :, :]
+
+    mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
+    #Transposed here because pytorch3d has right matrix multiplication convention.
+    #mask_rotation_matrix_per_domain_per_residue = torch.transpose(mask_rotation_matrix_per_domain_per_residue, dim0=-2, dim1=-1)
+    overall_rotation_matrices = torch.zeros((batch_size, N_residues,3,3), device=device)
+    overall_rotation_matrices[:, :, 0, 0] = 1
+    overall_rotation_matrices[:, :, 1, 1] = 1
+    overall_rotation_matrices[:, :, 2, 2] = 1
     for i in range(N_domains):
-        new_local_frame_per_domain_in_column[:, i, :,:] = torch.matmul(rotation_matrices_per_domain[:, i, :, :], local_frame_in_columns)
+        overall_rotation_matrices = torch.matmul(mask_rotation_matrix_per_domain_per_residue[:, :, i, :, :],
+                                                 overall_rotation_matrices)
 
-    new_local_frame_per_domain_in_rows = torch.transpose(new_local_frame_per_domain_in_column, dim0=-2, dim1=-1)
+    return overall_rotation_matrices
 
-    new_global_rotated_positions = torch.empty((batch_size, 3*N_residues, 3), device=device)
-    true_deformed_structure = torch.empty((batch_size, 3 * N_residues, 3), device=device)
-    for i in range(N_domains-1):
-        start_residue_domain = list_cutoffs[i]
-        end_residue_domain = list_cutoffs[i+1]
-        relative_position_domain = relative_positions[3*start_residue_domain:3*end_residue_domain]
-        new_local_frame_domain = new_local_frame_per_domain_in_rows[:, i, :, :]
-        new_global_rotated_positions[:,3*start_residue_domain:3*end_residue_domain,:] = \
-                    torch.matmul(relative_position_domain, new_local_frame_domain)
-        true_deformed_structure[:, 3*start_residue_domain:3 * end_residue_domain, :] = \
-            new_global_rotated_positions[:, 3*start_residue_domain:3 * end_residue_domain,
-                                                       :] + true_deformation[:, i:i+1, :]
+def deform_structure(atom_relative_positions, mask, translation_scalars, rotations_per_residue, local_frame,
+                     local_frame_in_colums):
+    """
+    Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
+     otherwise the rotation will NOT be approximately rigid !!!
+    :param weights: weights of the attention mask tensor (N_residues, N_domains)
+    :param translation_scalars: translations scalars used to compute translation vectors:
+            tensor (Batch_size, N_domains, 3)
+    :param rotations_per_residue: tensor (N_batch, N_res, 3, 3) of rotation matrices per residue
+    :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
+            of translation vectors
 
-    return true_deformed_structure
+    Note that self.local_frame is a tensor of shape (3,3) with orthonormal vectors as rows.
+    """
+    batch_size = translation_scalars.shape[0]
+    N_residues = mask.shape[0]
+    ## Weighted sum of the local frame vectors, torch boracasts local_frame.
+    ## Translation_vectors is (Batch_size, N_domains, 3)
+    translation_vectors = torch.matmul(translation_scalars, local_frame)
+    ## Weighted sum of the translation vectors using the mask. Outputs a translation vector per residue.
+    ## translation_per_residue is (Batch_size, N_residues, 3)
+    translation_per_residue = torch.matmul(mask, translation_vectors)
+    ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
+    ## residue.
+    ##We compute the rotated frame for each residues, still set at the origin.
+    rotated_frame_per_residue = torch.matmul(rotations_per_residue, local_frame_in_colums)
+    rotated_frame_per_residue = torch.transpose(rotated_frame_per_residue, dim0=-2, dim1=-1)
+    ##Given the rotated frames and the atom positions in these frames, we recover the transformed absolute positions
+    ##### I think I should transpose the rotated frame before computing the new positions.
+    transformed_absolute_positions = torch.matmul(torch.broadcast_to(atom_relative_positions,
+                                                                     (batch_size, N_residues * 3, 3))[:, :,
+                                                  None, :],
+                                                  torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
+    new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue,
+                                                                                              3, 1)
+    return new_atom_positions, translation_per_residue
 
 
 
-def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matrices, data_for_deform,
-                                                         conformation_rotation_matrices, local_frame, relative_positions,
-                                                         N_residues, device, renderer):
-    deformed_structures = deform_structure(absolute_positions, cutoff1, cutoff2, data_for_deform, conformation_rotation_matrices,
-                                           local_frame, relative_positions, N_residues, device)
 
-    deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, rotation_matrices)
-    return deformed_images
+def process_structure(transform, atom_relative_positions, mask, local_frame, local_frame_in_colums, device):
+    N_domains = mask.shape[1]
+    batch_size = transform.shape[0]
+    transform = torch.reshape(transform, (batch_size, N_domains,2*3))
+    scalars_per_domain = transform[:, :, :3]
+    ones = torch.ones(size=(batch_size, N_domains, 1), device=device)
+    quaternions_per_domain = torch.cat([ones,transform[:, :, 3:]], dim=-1)
+    rotations_per_residue = compute_rotations(quaternions_per_domain, mask, device)
+    new_structure, translations = deform_structure(atom_relative_positions, mask, scalars_per_domain, rotations_per_residue,
+                                                   local_frame, local_frame_in_colums)
+    return new_structure
 
 
 
