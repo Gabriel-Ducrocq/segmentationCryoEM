@@ -86,10 +86,6 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 optimizer.zero_grad()
 
             epoch_loss[idx] = loss.cpu().detach()
-            #print("Translation network:", translations[k, :, :])
-            #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
-            #print("Mask weights:",network.multiply_windows_weights())
-            #print("Total loss:",loss)
             print("Printing metrics")
             all_losses.append(loss.cpu().detach())
             all_dkl_losses.append(Dkl_loss.cpu().detach())
@@ -111,30 +107,10 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
             #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        #scheduler.step(torch.mean(epoch_loss))
-        #scheduler.step()
-
-        #if (epoch+1)%50 == 0:
-        #    network.weights.requires_grad = not network.weights.requires_grad
-        #    network.latent_std.requires_grad = not network.latent_std.requires_grad
-        #    network.latent_mean.requires_grad = not network.latent_mean.requires_grad
 
         if (epoch+1)%100 == 0:
             network.tau = network.annealing_tau * network.tau
 
-        #if epoch+1 == 30:
-        #    for g in optimizer.param_groups:
-        #        g['lr'] = 0.001
-
-        #test_set_normed = (test_set - avg)/std
-
-        #test_set_normed = test_set
-        #new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
-        #                                                            test_set_normed)
-        #true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
-        #loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
-        #losses_test.append(loss_test.to("cpu").detach())
-        #print("Loss test:", loss_test)
         print("\n\n\n\n")
         np.save(dataset_path + "losses_train.npy", np.array(all_losses))
         np.save(dataset_path +"losses_dkl.npy", np.array(all_dkl_losses))

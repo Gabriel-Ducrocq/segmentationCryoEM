@@ -101,14 +101,14 @@ class Net(torch.nn.Module):
         distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
 
-    def sample_latent(self, distrib_parameters, images=None):
+    def reparameterize(self, distrib_parameters, images=None):
         """
         Sample from the approximate posterior over the latent space
         :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
         :return: (N_batch, latent_dim) actual samples.
         """
         if self.use_encoder:
-            batch_size = images.shape[0]
+            batch_size = distrib_parameters.shape[0]
             latent_mean_std = self.encode(images)
             latent_mean = latent_mean_std[:, :self.latent_dim]
             latent_std = latent_mean_std[:, self.latent_dim:]
@@ -209,15 +209,16 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
+        flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
+        distrib_parameters = self.encoder.forward(flattened_images)
         weights = self.compute_mask()
         if self.use_encoder:
-            latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
+            latent_variables, latent_mean, latent_std = self.reparameterize(distrib_parameters, images)
         else:
-            latent_variables = self.sample_latent(indexes, images)
+            latent_variables = self.reparameterize(distrib_parameters, images)
 
         #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        features = latent_variables
-        output = self.decoder.forward(features)
+        output = self.decoder.forward(latent_variables)
         if self.use_encoder:
             return output, weights, latent_variables, latent_mean, latent_std
         else:
