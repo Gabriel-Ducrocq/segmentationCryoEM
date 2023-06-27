@@ -80,7 +80,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                                                      local_frame_in_columns, device)
 
             new_images = renderer.compute_x_y_values_all_atoms(new_structures, batch_rotation_matrices)
-            loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
+            loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = utils.loss(network,
                 new_images, mask,deformed_images, batch_indexes, latent_mean, latent_std)
             loss = loss/NUM_ACCUMULATION_STEP
             loss.backward()
