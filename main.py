@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
+               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngle10kEncoderOldFashioned/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -71,9 +71,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.imshow(deformed_images[0], cmap="gray")
             #plt.show()
             print("images")
-            #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
-                = network.forward(batch_indexes, deformed_images)
+            output, weights, latent_variables, latent_mean, latent_std = network.forward(batch_indexes, deformed_images)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                 new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)

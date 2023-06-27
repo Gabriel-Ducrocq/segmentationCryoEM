@@ -179,6 +179,7 @@ class Net(torch.nn.Module):
 
         return overall_rotation_matrices
 
+
     def compute_Dkl_mask(self, variable):
         """
         Compute the Dkl loss between the prior and the approximated posterior distribution
@@ -191,6 +192,18 @@ class Net(torch.nn.Module):
         (self.cluster_prior[variable]["mean"] - self.cluster_parameters[variable]["mean"])**2)/self.cluster_prior[variable]["std"]**2)
 
 
+    def process_structure(self, output, weights):
+        batch_size = output.shape[0]
+        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
+        scalars_per_domain = output[:, :, :3]
+        ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
+        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
+        rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
+        new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
+        if self.use_encoder:
+            return new_structure, weights
+        else:
+            return new_structure, weights
 
     def forward(self, indexes, images=None):
         """
@@ -199,7 +212,6 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = indexes.shape[0]
         weights = self.compute_mask()
         if self.use_encoder:
             latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
@@ -209,17 +221,10 @@ class Net(torch.nn.Module):
         #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         features = latent_variables
         output = self.decoder.forward(features)
-        ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
-        scalars_per_domain = output[:, :, :3]
-        ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
-        rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
-        new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         if self.use_encoder:
-            return new_structure, weights, translations, latent_variables, latent_mean, latent_std
+            return output, weights, latent_variables, latent_mean, latent_std
         else:
-            return new_structure, weights, translations, latent_variables, None, None
+            return output, weights, latent_variables, None, None
 
 
     def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_mean=None, latent_std=None
