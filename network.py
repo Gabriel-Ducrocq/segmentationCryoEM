@@ -101,23 +101,21 @@ class Net(torch.nn.Module):
         distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
 
-    def reparameterize(self, distrib_parameters, images=None):
+    def reparameterize(self, distrib_parameters, indexes=None):
         """
         Sample from the approximate posterior over the latent space
         :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
         :return: (N_batch, latent_dim) actual samples.
         """
+        batch_size = distrib_parameters.shape[0]
         if self.use_encoder:
-            batch_size = distrib_parameters.shape[0]
-            latent_mean_std = self.encode(images)
-            latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_std = latent_mean_std[:, self.latent_dim:]
+            latent_mean = distrib_parameters[:, :self.latent_dim]
+            latent_std = distrib_parameters[:, self.latent_dim:]
             latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
             return latent_vars, latent_mean, latent_std
 
-        batch_size = distrib_parameters.shape[0]
-        latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
-                      + self.latent_mean[distrib_parameters]
+        latent_vars = self.latent_std[indexes]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
+                      + self.latent_mean[indexes]
 
         return latent_vars
 
@@ -213,11 +211,10 @@ class Net(torch.nn.Module):
         distrib_parameters = self.encoder.forward(flattened_images)
         weights = self.compute_mask()
         if self.use_encoder:
-            latent_variables, latent_mean, latent_std = self.reparameterize(distrib_parameters, images)
+            latent_variables, latent_mean, latent_std = self.reparameterize(distrib_parameters, None)
         else:
-            latent_variables = self.reparameterize(distrib_parameters, images)
+            latent_variables = self.reparameterize(None, indexes)
 
-        #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         output = self.decoder.forward(latent_variables)
         if self.use_encoder:
             return output, weights, latent_variables, latent_mean, latent_std
