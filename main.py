@@ -73,7 +73,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             print("images")
             transforms, mask, latent_variables, latent_mean, latent_std = network.forward(batch_indexes, deformed_images)
             network.process_structure(transforms, mask)
-            new_structures = network.process(transforms, mask)
+            new_structures = network.process_structure(transforms, mask)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                 new_structures, mask,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
