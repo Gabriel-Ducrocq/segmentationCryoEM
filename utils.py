@@ -248,7 +248,77 @@ def process_structure(transform, atom_relative_positions, mask, local_frame, loc
 
 
 
+def compute_Dkl_mask(network,variable):
+    """
+    Compute the Dkl loss between the prior and the approximated posterior distribution
+    :param variable: string, either "proportions", "means" or "std"
+    :return: Dkl loss
+    """
+    assert variable in ["means", "stds", "proportions"]
+    return torch.sum(-1/2 + torch.log(network.cluster_prior[variable]["std"]/network.cluster_parameters[variable]["std"]) \
+    + (1/2)*(network.cluster_parameters[variable]["std"]**2 +
+    (network.cluster_prior[variable]["mean"] - network.cluster_parameters[variable]["mean"])**2)/network.cluster_prior[variable]["std"]**2)
 
+
+def loss(vae, new_images, mask_weights, images, distrib_parameters, latent_mean=None, latent_std=None
+         , train=True):
+    """
+
+    :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
+    :images: tensor (N_batch, N_pix_x, N_pix_y) of cryoEM images
+    :distrib_parameters: tensor (N_batch, 2*latent_dim) containing the mean and std of the distrib that
+                        the encoder outputs.
+    :return: the RMSD loss and the entropy loss
+    """
+    batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
+    nll = -torch.mean(batch_ll)
+
+    #if use_encoder:
+    minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+                                           - latent_mean ** 2 \
+                                           - latent_std ** 2, dim=1)
+
+    #else:
+    #    minus_batch_Dkl_loss = 0.5 * torch.sum(1 - torch.log(self.prior_std[distrib_parameters]**2) +
+    #                                           torch.log(self.latent_std[distrib_parameters] ** 2)\
+    #                                 - self.latent_mean[distrib_parameters] ** 2/ self.prior_std[distrib_parameters]**2 \
+    #                                 - self.latent_std[distrib_parameters] ** 2/self.prior_std[distrib_parameters]**2, dim=1)
+
+
+    minus_batch_Dkl_mask_mean = -compute_Dkl_mask(vae.encoder, "means")
+    minus_batch_Dkl_mask_std = -compute_Dkl_mask(vae.encoder, "stds")
+    minus_batch_Dkl_mask_proportions = -compute_Dkl_mask(vae.encoder, "proportions")
+    Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
+    #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
+    #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+    #       - 0.0001*minus_batch_Dkl_mask_proportions
+
+    #total_loss_per_batch = -batch_ll - 0.01*minus_batch_Dkl_loss
+    #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
+    ##Trying with even lower weight on DKL:
+    #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
+    total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss
+
+    l2_pen = 0
+    for name,p in vae.encoder.named_parameters():
+        if "weight" in name and ("encoder" in name or "decoder" in name):
+            l2_pen += torch.sum(p**2)
+
+    loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+           - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
+    #else:
+    #    loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+    #           - 0.0001*minus_batch_Dkl_mask_proportions
+
+
+    if train:
+        print("Mask", mask_weights)
+        print("RMSD:", nll)
+        print("Dkl:", Dkl_loss)
+        print("DKLS:", minus_batch_Dkl_mask_mean, minus_batch_Dkl_mask_proportions, minus_batch_Dkl_mask_std)
+        return loss, nll, Dkl_loss, -minus_batch_Dkl_mask_mean, -minus_batch_Dkl_mask_std, -minus_batch_Dkl_mask_proportions
+
+    return nll
 
 
 
