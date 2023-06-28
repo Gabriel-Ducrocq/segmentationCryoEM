@@ -234,7 +234,7 @@ def deform_structure(atom_relative_positions, mask, translation_scalars, rotatio
 
 
 
-def process_structure(transform, atom_relative_positions, mask, local_frame, local_frame_in_colums, device):
+def process_structure(transform, atom_relative_positions, mask, local_frame, local_frame_in_colums, device, vae):
     N_domains = mask.shape[1]
     batch_size = transform.shape[0]
     transform = torch.reshape(transform, (batch_size, N_domains,2*3))
@@ -242,8 +242,9 @@ def process_structure(transform, atom_relative_positions, mask, local_frame, loc
     ones = torch.ones(size=(batch_size, N_domains, 1), device=device)
     quaternions_per_domain = torch.cat([ones,transform[:, :, 3:]], dim=-1)
     rotations_per_residue = compute_rotations(quaternions_per_domain, mask, device)
-    new_structure, translations = deform_structure(atom_relative_positions, mask, scalars_per_domain, rotations_per_residue,
-                                                   local_frame, local_frame_in_colums)
+    #new_structure, translations = deform_structure(atom_relative_positions, mask, scalars_per_domain, rotations_per_residue,
+    #                                               local_frame, local_frame_in_colums)
+    new_structure, _ = vae.deform_structure(mask, scalars_per_domain, rotations_per_residue)
     return new_structure
 
 
