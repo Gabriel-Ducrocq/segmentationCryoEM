@@ -6,7 +6,7 @@ import utils
 from imageRenderer import Renderer
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/"
+dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngle10kEncoderOldFashioned/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -38,7 +38,7 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "data/vaeContinuousCTFNoisyBiModalAngle10kEncoder/full_model"
+model_path = "../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngle10kEncoderOldFashioned/network"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -48,9 +48,9 @@ training_rotations_axis = torch.load(dataset_path + "training_rotations_axis", m
 training_rotations_matrices = torch.load(dataset_path + "training_rotations_matrices", map_location=torch.device(device)).to(device)
 training_conformation_rotation_matrix = torch.load(dataset_path + "training_conformation_rotation_matrices", map_location=torch.device(device))
 
-print("SHOULD WE USE ENCODER:", model.use_encoder)
+#print("SHOULD WE USE ENCODER:", model.use_encoder)
 print("DATASET SIZE:", training_set.shape)
-training_indexes = torch.tensor(np.array(range(100000)))
+training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
 all_indexes = []
 for epoch in range(0, 1):
@@ -80,7 +80,7 @@ for epoch in range(0, 1):
         print("Deformed")
         ## We then rotate the structure and project them on the x-y plane.
         deformed_images = renderer.compute_x_y_values_all_atoms(deformed_structures, batch_rotation_matrices)
-        latent_distrib = model.encode(deformed_images)
+        latent_distrib = model.encoder.forward(deformed_images)
         all_latent_distrib.append(latent_distrib.detach().cpu().numpy())
         all_indexes.append(batch_indexes.detach().cpu().numpy())
 

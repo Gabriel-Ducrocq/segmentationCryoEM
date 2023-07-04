@@ -67,7 +67,7 @@ net.batch_size = 100
 rotation_matrices = training_rotations_matrices[1]
 all_new_images = []
 #image = training_images[1:2]
-image = training_images[4:5]
+image = training_images[500:501]
 all_losses = torch.zeros((100, 100), dtype=torch.float32)
 for i in range(100):
     print(i)
