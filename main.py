@@ -20,20 +20,18 @@ NUM_ACCUMULATION_STEP = 1
 batch_size = 100
 #This represent the number of true domains
 N_domains = 3
-N_pixels = 64*64
+N_pixels = 140*140
 #This represents the number of domain we think there are
-N_input_domains = 4
-latent_dim = 1
-num_nodes = 1510
-K_nearest_neighbors = 30
-num_edges = num_nodes*K_nearest_neighbors
+N_input_domains = 6
+latent_dim = 5
+num_nodes = 1006
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
+               dataset_path="../VAEProtein/data/vaeContinuousMD/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -169,9 +167,9 @@ def experiment(graph_file="data/features.npy"):
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
     #pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-    pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
-    pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
-    renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=True)
+    pixels_x = np.linspace(-70, 70, num=140).reshape(1, -1)
+    pixels_y = np.linspace(-70, 70, num=140).reshape(1, -1)
+    renderer = Renderer(pixels_x, pixels_y, std=1, device=device, use_ctf=True, N_heavy=3*1006)
 
     #net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
     #          absolute_positions, batch_size, device, use_encoder=False)
@@ -184,4 +182,4 @@ def experiment(graph_file="data/features.npy"):
 
 if __name__ == '__main__':
     print("Is cuda available ?", torch.cuda.is_available())
-    experiment()
+    experiment("../VAEProtein/data/vaeContinuousMD/features.npy")
