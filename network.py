@@ -264,7 +264,7 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
         ##Trying with even lower weight on DKL:
         #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
-        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - 0.01 * minus_batch_Dkl_loss
 
         if self.use_encoder:
             l2_pen = 0
