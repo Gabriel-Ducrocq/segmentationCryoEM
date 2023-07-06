@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="data/vaeContinuousCTFNoisyBiModalAngle/"):
+               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransition/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -150,7 +150,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
         np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
         #scheduler.step(loss_test)
         torch.save(network.state_dict(), dataset_path +"model")
-        torch.save(network, dataset_path +"full_model")
+        torch.save(network, dataset_path +"full_model" + str(epoch))
         #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
