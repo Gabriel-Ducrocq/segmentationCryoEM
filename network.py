@@ -276,7 +276,7 @@ class Net(torch.nn.Module):
                    - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
         else:
             loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-                   - 0.0001*minus_batch_Dkl_mask_proportions
+                    - 0.0001*minus_batch_Dkl_mask_proportions
 
 
         if train:
