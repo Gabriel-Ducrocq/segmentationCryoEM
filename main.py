@@ -54,14 +54,14 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("TRAINING IMAGES SHAPE", training_images.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
-        epoch_loss = torch.empty(100)
+        epoch_loss = torch.empty(1000)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
         #for i in range(100):
         for idx, batch_indexes in enumerate(data_loader):
             start = time.time()
             print("epoch:", epoch)
-            print(idx/100)
+            print(idx/1000)
             #batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
