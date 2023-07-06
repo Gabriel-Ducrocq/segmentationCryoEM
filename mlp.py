@@ -3,9 +3,11 @@ from torch import nn
 
 
 class MLP(nn.Module):
-    def __init__(self, in_dim, out_dim, intermediate_dim, device, num_hidden_layers = 1):
+    def __init__(self, in_dim, out_dim, intermediate_dim, device, num_hidden_layers = 1, network_type="decoder"):
         super(MLP, self).__init__()
         self.flatten = nn.Flatten()
+        self.type=network_type
+        self.output_dim = out_dim
         if type(intermediate_dim) == type([]):
             self.num_hidden_layers = len(intermediate_dim)
             self.input_layer = nn.Sequential(nn.Linear(in_dim, intermediate_dim[0], device=device), nn.LeakyReLU())
@@ -24,5 +26,11 @@ class MLP(nn.Module):
         #x = self.flatten(x)
         x = self.input_layer(x)
         hidden = self.linear_relu_stack(x)
-        logits = self.output_layer(hidden)
-        return logits
+        output = self.output_layer(hidden)
+        if self.type == "encoder":
+            latent_mean = output[:, :int(self.out_dim/2)]
+            latent_std = self.output_ELU(output[:, int(self.out_dim/2):]) + 1
+            output_with_std = torch.cat([latent_mean, latent_std], dim=-1)
+            return output_with_std
+
+        return output

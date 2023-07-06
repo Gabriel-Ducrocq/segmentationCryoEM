@@ -163,8 +163,8 @@ def experiment(graph_file="data/features.npy"):
     local_frame = local_frame.to(device)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2)
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4)
+    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2, network_type="decoder")
+    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
