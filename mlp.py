@@ -8,6 +8,7 @@ class MLP(nn.Module):
         self.flatten = nn.Flatten()
         self.type=network_type
         self.out_dim = out_dim
+        self.output_ELU = torch.nn.ELU()
         if type(intermediate_dim) == type([]):
             self.num_hidden_layers = len(intermediate_dim)
             self.input_layer = nn.Sequential(nn.Linear(in_dim, intermediate_dim[0], device=device), nn.LeakyReLU())
