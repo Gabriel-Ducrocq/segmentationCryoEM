@@ -15,9 +15,9 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-NUM_ACCUMULATION_STEP = 1
+NUM_ACCUMULATION_STEP = 2
 
-batch_size = 100
+batch_size = 50
 #This represent the number of true domains
 N_domains = 3
 N_pixels = 64*64
@@ -29,11 +29,12 @@ K_nearest_neighbors = 30
 num_edges = num_nodes*K_nearest_neighbors
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
+L = 50
 
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionDeepMindLoss/"):
+               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleDeepMind/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -53,14 +54,14 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     print("TRAINING IMAGES SHAPE", training_images.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
     for epoch in range(0,5000):
-        epoch_loss = torch.empty(1000)
+        epoch_loss = torch.empty(100)
         #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
         data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
         #for i in range(100):
         for idx, batch_indexes in enumerate(data_loader):
             start = time.time()
             print("epoch:", epoch)
-            print(idx/1000)
+            print(idx/100)
             #batch_indexes = next(data_loader)
             deformed_images = training_images[batch_indexes]
             batch_rotation_matrices = training_rotations_matrices[batch_indexes]
@@ -177,7 +178,7 @@ def experiment(graph_file="data/features.npy"):
     #          absolute_positions, batch_size, device, use_encoder=False)
 
     net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
-              absolute_positions, batch_size, device, use_encoder=True)
+              absolute_positions, batch_size, device, use_encoder=True, L=L)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)
 

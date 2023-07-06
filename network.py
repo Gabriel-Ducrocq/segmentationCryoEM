@@ -214,9 +214,9 @@ class Net(torch.nn.Module):
         features = latent_variables
         output = self.decoder.forward(features)
         ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
+        output = torch.reshape(output, (batch_size*self.L, self.N_domains,2*3))
         scalars_per_domain = output[:, :, :3]
-        ones = torch.ones(size=(batch_size, self.N_domains, 1), device=self.device)
+        ones = torch.ones(size=(batch_size*self.L, self.N_domains, 1), device=self.device)
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
@@ -242,9 +242,9 @@ class Net(torch.nn.Module):
         images = torch.repeat_interleave(images[:, None, :, :], repeats=self.L, dim=1)
         ##Batch_ll is tensor of shape (batch_size, L)
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
-        exp_batch_ll = torch.exp(batch_ll)
-        print("Exp batch_ll", exp_batch_ll)
-        deepmind_loss = torch.log(torch.mean(exp_batch_ll, dim=-1))
+        minimums_loss, _ = torch.min(batch_ll, dim=-1)
+        exp_batch_ll = torch.exp(batch_ll - minimums_loss[:, None])
+        deepmind_loss = torch.log(torch.mean(exp_batch_ll, dim=-1)) + minimums_loss
         nll = -torch.mean(deepmind_loss)
 
         if self.use_encoder:
@@ -275,7 +275,7 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
         ##Trying with even lower weight on DKL:
         #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
-        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss
+        total_loss_per_batch = -deepmind_loss - 0.001 * minus_batch_Dkl_loss
 
         if self.use_encoder:
             l2_pen = 0
