@@ -3,10 +3,10 @@ from torch import nn
 
 
 class MLP(nn.Module):
-    def __init__(self, in_dim, out_dim, intermediate_dim, device, num_hidden_layers = 1, type="decoder"):
+    def __init__(self, in_dim, out_dim, intermediate_dim, device, num_hidden_layers = 1, network_type="decoder"):
         super(MLP, self).__init__()
         self.flatten = nn.Flatten()
-        self.type=type
+        self.type=network_type
         self.out_dim = out_dim
         self.output_ELU = torch.nn.ELU()
         if type(intermediate_dim) == type([]):
