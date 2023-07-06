@@ -32,6 +32,7 @@ class MLP(nn.Module):
             latent_mean = output[:, :int(self.out_dim/2)]
             latent_std = self.output_ELU(output[:, int(self.out_dim/2):]) + 1
             output_with_std = torch.cat([latent_mean, latent_std], dim=-1)
+            print("OUTPUT STD", output_with_std)
             return output_with_std
 
         return output
