@@ -14,7 +14,7 @@ class Net(torch.nn.Module):
         self.N_residues = N_residues
         self.N_domains = N_domains
         self.latent_dim = latent_dim
-        self.epsilon_mask_loss = 1e-10
+        self.epsilon_loss = 1e-10
         self.encoder = encoder
         self.decoder = decoder
         self.renderer = renderer
@@ -237,7 +237,7 @@ class Net(torch.nn.Module):
         nll = -torch.mean(batch_ll)
 
         if self.use_encoder:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2) \
+            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2 + self.epsilon_loss) \
                                                    - latent_mean ** 2 \
                                                    - latent_std ** 2, dim=1)
 
