@@ -5,6 +5,7 @@ import time
 import utils
 from imageRenderer import Renderer
 from pytorch3d.transforms import quaternion_to_axis_angle
+import protein
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
 dataset_path="../VAEProtein/data/vaeContinuousMD/"
@@ -12,10 +13,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
 N_domains = 6
-N_pixels = 240*240
+N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim =
+latent_dim = 5
 num_nodes = 1006
 cutoff1 = 300
 cutoff2 = 1353
@@ -55,6 +56,7 @@ training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
 all_indexes = []
 all_rot = []
+model.device = "cpu"
 all_translations = []
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
@@ -79,13 +81,21 @@ for epoch in range(0, 1):
         rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions_per_domain)
         translation_vectors = torch.matmul(scalars_per_domain, local_frame)
 
+        weights = np.array(model.compute_mask())
+        rotations_per_residue = model.compute_rotations(quaternions_per_domain, weights)
+        print(rotations_per_residue.shape)
+
         all_rot.append(rotation_per_domains_axis_angle.detach().cpu().numpy())
         all_translations.append(translation_vectors.detach().cpu().numpy())
         all_latent_distrib.append(latent_distrib.detach().cpu().numpy())
         all_indexes.append(batch_indexes.detach().cpu().numpy())
 
-np.save(dataset_path + "latent_distrib.npy", np.array(all_latent_distrib))
-np.save(dataset_path + "indexes.npy", np.array(all_indexes))
+np.save(dataset_path + "latent_distrib.npy", np.concatenate(all_latent_distrib))
+np.save(dataset_path + "indexes.npy", np.concatenate(all_indexes))
 
-np.save(dataset_path + "all_rotations.npy", np.array(all_rot))
-np.save(dataset_path + "all_translations", np.array(all_translations))
+np.save(dataset_path + "all_rotations.npy", np.concatenate(all_rot))
+np.save(dataset_path + "all_translations", np.concatenate(all_translations))
+
+rotations_per_domain = np.load(dataset_path + "all_rotations.npy")
+translations_per_domain = np.load(dataset_path + "all_translations.npy")
+
