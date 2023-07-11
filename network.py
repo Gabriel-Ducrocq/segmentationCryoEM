@@ -82,6 +82,7 @@ class Net(torch.nn.Module):
 
 
     def compute_mask(self):
+        """
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
         cluster_std = torch.randn(4, device=self.device)*self.cluster_std_std + self.cluster_std_mean
@@ -90,6 +91,11 @@ class Net(torch.nn.Module):
               torch.log(proportions)
 
         mask = torch.softmax(log_num/self.tau, dim=1)
+        """
+        mask = torch.zeros((self.N_residues, 4), dtype=torch.float32, device=self.device)
+        mask[:383, 0] = 1.0
+        mask[383:383+974, 2] = 1.0
+        mask[383+974:383+974+153] = 1.0
         return mask
 
     def encode(self, images):
