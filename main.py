@@ -22,7 +22,7 @@ batch_size = 100
 N_domains = 3
 N_pixels = 140*140
 #This represents the number of domain we think there are
-N_input_domains = 6
+N_input_domains = 3
 latent_dim = 5
 num_nodes = 1006
 dataset_size = 10000
