@@ -75,6 +75,7 @@ class Net(torch.nn.Module):
         self.cluster_prior_proportions_mean = torch.zeros(4, dtype=torch.float32, device=device)[None, :]
         self.cluster_prior_proportions_std = torch.ones(4, dtype=torch.float32, device=device)[None, :]
 
+
         self.cluster_prior = {"means":{"mean":self.cluster_prior_means_mean, "std": self.cluster_prior_means_std},
                                    "stds":{"mean":self.cluster_prior_std_mean, "std": self.cluster_prior_std_std},
                                    "proportions":{"mean":self.cluster_prior_proportions_mean,"std":self.cluster_prior_proportions_std}}
