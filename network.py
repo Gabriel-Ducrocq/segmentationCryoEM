@@ -95,7 +95,7 @@ class Net(torch.nn.Module):
         mask = torch.zeros((self.N_residues, 4), dtype=torch.float32, device=self.device)
         mask[:383, 0] = 1.0
         mask[383:383+974, 2] = 1.0
-        mask[383+974:383+974+153] = 1.0
+        mask[383+974:383+974+153, 3] = 1.0
         return mask
 
     def encode(self, images):
