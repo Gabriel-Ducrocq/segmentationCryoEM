@@ -1,6 +1,7 @@
 import numpy as np
 import Bio.PDB as bpdb
 import torch
+import math
 import scipy
 
 restype_1to3 = {
@@ -218,6 +219,9 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
 
 
 
-
+def compute_entropy_power_spherical(concentration, alpha, beta):
+    return np.log(2) * (alpha + beta) + torch.log(torch.lgamma(alpha)) - torch.log(torch.lgamma(alpha + beta)) \
+           + beta * math.log(math.pi) - concentration * (math.log(2) + torch.digamma(alpha) - torch.digamma(
+                                      alpha + beta))
 
 

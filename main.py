@@ -33,7 +33,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionFixedMask/"):
+               dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionNoDecoder/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -72,11 +72,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.show()
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
+            new_structure, mask_weights, translations, latent_variables, latent_parameters\
                 = network.forward(batch_indexes, deformed_images)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
-                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
+                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_parameters)
             loss = loss/NUM_ACCUMULATION_STEP
             loss.backward()
             #optimizer.step()
@@ -164,7 +164,7 @@ def experiment(graph_file="data/features.npy"):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2, network_type="decoder")
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+    encoder_mlp = MLP(N_pixels, N_input_domains*13, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)

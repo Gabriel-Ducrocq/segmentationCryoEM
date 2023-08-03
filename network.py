@@ -3,8 +3,12 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
+
+import utils
 from mlp import MLP
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
+from power_spherical import PowerSpherical
+import math
 
 
 class Net(torch.nn.Module):
@@ -36,6 +40,7 @@ class Net(torch.nn.Module):
         self.tau = 0.05
         self.annealing_tau = 1
         self.use_encoder = use_encoder
+        self.elu_function = torch.nn.ELU()
         #self.cluster_means = torch.nn.Parameter(data=torch.tensor([160, 550, 800, 1300], dtype=torch.float32,device=device)[None, :],
         #                                        requires_grad=True)
         #self.cluster_std = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
@@ -82,7 +87,6 @@ class Net(torch.nn.Module):
 
 
     def compute_mask(self):
-        """
         cluster_proportions = torch.randn(4, device=self.device)*self.cluster_proportions_std + self.cluster_proportions_mean
         cluster_means = torch.randn(4, device=self.device)*self.cluster_means_std + self.cluster_means_mean
         cluster_std = torch.randn(4, device=self.device)*self.cluster_std_std + self.cluster_std_mean
@@ -91,11 +95,6 @@ class Net(torch.nn.Module):
               torch.log(proportions)
 
         mask = torch.softmax(log_num/self.tau, dim=1)
-        """
-        mask = torch.zeros((self.N_residues, 4), dtype=torch.float32, device=self.device)
-        mask[:383, 0] = 1.0
-        mask[383:383+974, 2] = 1.0
-        mask[383+974:383+974+153, 3] = 1.0
         return mask
 
     def encode(self, images):
@@ -116,17 +115,53 @@ class Net(torch.nn.Module):
         """
         if self.use_encoder:
             batch_size = images.shape[0]
-            latent_mean_std = self.encode(images)
-            latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_std = latent_mean_std[:, self.latent_dim:]
-            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
-            return latent_vars, latent_mean, latent_std
+            latent_parameters = self.encode(images)
+            latent_parameters = torch.reshape(latent_parameters, (batch_size, self.N_domains, 13))
+            latent_mu_axis = latent_parameters[:, :, :3]
+            latent_concentration_axis = self.elu_function(latent_parameters[:, :, 3:4]) + 1
+            latent_mu_angle = latent_parameters[:, :, 4:6]
+            latent_concentration_angle = self.elu_function(latent_parameters[:, :, 6:7]) + 1
+            latent_translations_mean = latent_parameters[:, :, 7:10]
+            latent_translations_std = latent_parameters[:, :, 10:13]
+            translations_scalars = torch.reshape(latent_translations_mean + torch.randn_like(latent_translations_std)\
+                                                 *latent_translations_std, (batch_size, self.N_domains, 3))
 
-        batch_size = distrib_parameters.shape[0]
-        latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
-                      + self.latent_mean[distrib_parameters]
+            all_latent_axis = torch.zeros(size=(batch_size,self.N_domains, 3), dtype=torch.float32)
+            for i, loc_scale in enumerate(zip(latent_mu_axis, latent_concentration_axis)):
+                all_domains_loc = loc_scale[0]
+                all_domains_scale = loc_scale[1]
+                for k in range(self.N_domains):
+                    loc = all_domains_loc[k]
+                    scale = all_domains_scale[k]
+                    powSphDist = PowerSpherical(loc, scale)
+                    all_latent_axis[i, k, :] = powSphDist.sample()
 
-        return latent_vars
+            #all_latent_axis = torch.reshape(all_latent_axis, (batch_size, self.N_domains, 3))
+            ##At first, we sample a direction, so the angle is given by 2 numbers, from which we deduce an angle next
+            all_latent_angle_powSphForm = torch.zeros(size=(batch_size,  self.N_domains, 2), dtype=torch.float32)
+            for i, loc_scale in enumerate(zip(latent_mu_angle, latent_concentration_angle)):
+                all_domains_loc = loc_scale[0]
+                all_domains_scale = loc_scale[1]
+                for k in range(self.N_domains):
+                    loc = all_domains_loc[k]
+                    scale = all_domains_scale[k]
+                    powSphDist = PowerSpherical(loc, scale)
+                    all_latent_angle_powSphForm[i, k, :] = powSphDist.sample()
+
+            ##Latent angle is now of shape (batch_size*N_domains, 1)
+            all_latent_angle = torch.arccos(all_latent_angle_powSphForm[:, :, 0])*torch.sign(all_latent_angle_powSphForm[:, :, 1])
+            all_latent_angle = torch.reshape(all_latent_angle, (batch_size, self.N_domains, 1))
+
+            all_latent_axis_angle = all_latent_axis*all_latent_angle
+
+
+            return {"translation_scalars":translations_scalars,
+                    "all_latent_axis_angle":all_latent_axis_angle}, \
+                   {"translations":{"mu":latent_translations_mean, "std":latent_translations_std},
+                    "axis": {"mu":latent_mu_axis, "concentration":latent_concentration_axis},
+                    "angle": {"mu":latent_mu_angle, "concentration":latent_concentration_angle}}
+
+        return None
 
 
     def deform_structure(self, weights, translation_scalars, rotations_per_residue):
@@ -161,7 +196,7 @@ class Net(torch.nn.Module):
         new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
-    def compute_rotations(self, quaternions, mask):
+    def compute_rotations(self, rotation_per_domains_axis_angle, mask):
         """
         Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
         weighted by the mask value of the corresponding domain.
@@ -169,8 +204,6 @@ class Net(torch.nn.Module):
         :param mask: tensor (N_residues, N_input_domains)
         :return: tensor (N_batch, N_residues, 3, 3) rotation matrix for each residue
         """
-        #NOTE: no need to normalize the quaternions, quaternion_to_axis does it already.
-        rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions)
         mask_rotation_per_domains_axis_angle = mask[None, :, :, None]*rotation_per_domains_axis_angle[:, None, :, :]
 
         mask_rotation_matrix_per_domain_per_residue = axis_angle_to_matrix(mask_rotation_per_domains_axis_angle)
@@ -206,31 +239,25 @@ class Net(torch.nn.Module):
         :return: tensors: a new structure (N_batch, N_residues, 3), the attention mask (N_residues, N_domains),
                 translation vectors for each residue (N_batch, N_residues, 3) leading to the new structure.
         """
-        batch_size = indexes.shape[0]
         weights = self.compute_mask()
         if self.use_encoder:
-            latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
+            latent_variables, latent_parameters= self.sample_latent(indexes, images)
         else:
             latent_variables = self.sample_latent(indexes, images)
 
-        #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        features = latent_variables
-        output = self.decoder.forward(features)
-        ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
-        scalars_per_domain = output[:, :, :3]
-        ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
-        quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
-        rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
+        scalars_per_domain = latent_variables["translation_scalars"]
+        rot_axis_angle = latent_variables["all_latent_axis_angle"]
+
+        rotations_per_residue = self.compute_rotations(rot_axis_angle, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         if self.use_encoder:
-            return new_structure, weights, translations, latent_variables, latent_mean, latent_std
+            return new_structure, weights, translations, latent_variables, latent_parameters
         else:
             return new_structure, weights, translations, latent_variables, None, None
 
 
-    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_mean=None, latent_std=None
-             , train=True):
+    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_parameters,
+             train=True):
         """
 
         :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
@@ -244,9 +271,30 @@ class Net(torch.nn.Module):
         nll = -torch.mean(batch_ll)
 
         if self.use_encoder:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2 + self.epsilon_loss) \
-                                                   - latent_mean ** 2 \
-                                                   - latent_std ** 2, dim=1)
+            translation_mu = latent_parameters["translations"]["mu"]
+            translation_std = latent_parameters["translations"]["std"]
+            minus_batch_Dkl_loss_translation = 0.5 * torch.sum(1 + torch.log(translation_std ** 2 + self.epsilon_loss) \
+                                                   - translation_mu ** 2 \
+                                                   - translation_std ** 2, dim=(1, 2))
+
+            concentration_axis = latent_parameters["axis"]["concentration"]
+            alpha_spherical_axis = 1 + concentration_axis
+            beta_spherical_axis = 1
+            entropy_spherical_axis = utils.compute_entropy_power_spherical(concentration_axis, alpha_spherical_axis,
+                                                                            beta_spherical_axis)
+
+            entropy_uniform_axis = np.log(4*np.pi)
+            batch_Dkl_spherical_axis = torch.sum(-entropy_spherical_axis + entropy_uniform_axis, dim=1)
+
+
+            concentration_angle = latent_parameters["angle"]["concentration"]
+            alpha_spherical_angle = 0.5 + concentration_angle
+            beta_spherical_angle = 0.5
+            entropy_spherical_angle = utils.compute_entropy_power_spherical(concentration_angle, alpha_spherical_angle, beta_spherical_angle)
+
+            entropy_uniform_angle = np.log(2*np.pi)
+
+            batch_Dkl_spherical_angle = torch.sum(-entropy_spherical_angle + entropy_uniform_angle, axis=1)
 
         else:
             #minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
@@ -262,7 +310,7 @@ class Net(torch.nn.Module):
         minus_batch_Dkl_mask_mean = -self.compute_Dkl_mask("means")
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
-        Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
+        Dkl_loss = -torch.mean(minus_batch_Dkl_loss_translation)
         #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
         #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
         #       - 0.0001*minus_batch_Dkl_mask_proportions
@@ -271,7 +319,8 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
         ##Trying with even lower weight on DKL:
         #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
-        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss_translation + 0.001*batch_Dkl_spherical_angle \
+                               + 0.001*batch_Dkl_spherical_axis
 
         if self.use_encoder:
             l2_pen = 0

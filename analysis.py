@@ -8,16 +8,16 @@ from pytorch3d.transforms import quaternion_to_axis_angle
 import protein
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="../VAEProtein/data/vaeContinuousMD/"
+dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionFixedMask/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
-N_domains = 6
-N_pixels = 140*140
+N_domains = 4
+N_pixels = 64*64
 #This represents the number of domain we think there are
-N_input_domains = 6
-latent_dim = 5
-num_nodes = 1006
+N_input_domains = 4
+latent_dim = 1
+num_nodes = 1350
 cutoff1 = 300
 cutoff2 = 1353
 K_nearest_neighbors = 30
@@ -40,7 +40,7 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "../VAEProtein/data/vaeContinuousMD/full_model2141"
+model_path = "../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionFixedMask/full_model3228"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -72,6 +72,8 @@ for epoch in range(0, 1):
         ##Getting the batch translations, rotations and corresponding rotation matrices
         batch_images = torch.flatten(images[batch_indexes], start_dim=1, end_dim=2)
         latent_distrib = model.encoder.forward(batch_images)
+        print("Latent distrib")
+        print(latent_distrib)
         transforms = model.decoder.forward(latent_distrib[:, :latent_dim])
         transforms = torch.reshape(transforms, (batch_size, N_input_domains, 2 * 3))
         scalars_per_domain = transforms[:, :, :3]
@@ -81,9 +83,8 @@ for epoch in range(0, 1):
         rotation_per_domains_axis_angle = quaternion_to_axis_angle(quaternions_per_domain)
         translation_vectors = torch.matmul(scalars_per_domain, local_frame)
 
-        weights = np.array(model.compute_mask())
+        weights = model.compute_mask()
         rotations_per_residue = model.compute_rotations(quaternions_per_domain, weights)
-        print(rotations_per_residue.shape)
 
         all_rot.append(rotation_per_domains_axis_angle.detach().cpu().numpy())
         all_translations.append(translation_vectors.detach().cpu().numpy())
