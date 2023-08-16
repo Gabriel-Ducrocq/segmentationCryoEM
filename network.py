@@ -126,7 +126,7 @@ class Net(torch.nn.Module):
             translations_scalars = torch.reshape(latent_translations_mean + torch.randn_like(latent_translations_std)\
                                                  *latent_translations_std, (batch_size, self.N_domains, 3))
 
-            all_latent_axis = torch.zeros(size=(batch_size,self.N_domains, 3), dtype=torch.float32)
+            all_latent_axis = torch.zeros(size=(batch_size,self.N_domains, 3), dtype=torch.float32, device=self.device)
             for i, loc_scale in enumerate(zip(latent_mu_axis, latent_concentration_axis)):
                 all_domains_loc = loc_scale[0]
                 all_domains_scale = loc_scale[1]
@@ -138,7 +138,7 @@ class Net(torch.nn.Module):
 
             #all_latent_axis = torch.reshape(all_latent_axis, (batch_size, self.N_domains, 3))
             ##At first, we sample a direction, so the angle is given by 2 numbers, from which we deduce an angle next
-            all_latent_angle_powSphForm = torch.zeros(size=(batch_size,  self.N_domains, 2), dtype=torch.float32)
+            all_latent_angle_powSphForm = torch.zeros(size=(batch_size,  self.N_domains, 2), dtype=torch.float32, device=self.device)
             for i, loc_scale in enumerate(zip(latent_mu_angle, latent_concentration_angle)):
                 all_domains_loc = loc_scale[0]
                 all_domains_scale = loc_scale[1]
