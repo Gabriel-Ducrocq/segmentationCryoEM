@@ -135,10 +135,6 @@ class Net(torch.nn.Module):
                 for k in range(self.N_domains):
                     loc = all_domains_loc[k]
                     scale = all_domains_scale[k]
-                    print("Loc")
-                    print(loc)
-                    print("scale")
-                    print(scale)
                     powSphDist = PowerSpherical(loc, scale)
                     all_latent_axis[i, k, :] = powSphDist.sample()
 
