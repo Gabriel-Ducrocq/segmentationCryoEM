@@ -220,12 +220,8 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
 
 
 def compute_entropy_power_spherical(concentration, alpha, beta):
-    print("Digamma alpha", torch.digamma(alpha))
-    print("Digamma beta", torch.digamma(
-                                      alpha + beta))
-    print("lgamma alpha", torch.lgamma(alpha))
-    print("lgamma beta", torch.lgamma(alpha + beta))
-    return np.log(2) * (alpha + beta) + torch.log(torch.lgamma(alpha)) - torch.log(torch.lgamma(alpha + beta)) \
+    ##Remove the log around lgamma, since lgamma is already log
+    return np.log(2) * (alpha + beta) + torch.lgamma(alpha) - torch.lgamma(alpha + beta) \
            + beta * math.log(math.pi) - concentration * (math.log(2) + torch.digamma(alpha) - torch.digamma(
                                       alpha + beta))
 
