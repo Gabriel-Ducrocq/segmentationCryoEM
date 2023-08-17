@@ -293,6 +293,7 @@ class Net(torch.nn.Module):
             alpha_spherical_angle = 0.5 + concentration_angle
             beta_spherical_angle = 0.5
             entropy_spherical_angle = utils.compute_entropy_power_spherical(concentration_angle, alpha_spherical_angle, beta_spherical_angle)
+            print("Entropy spherical angle", entropy_spherical_angle)
 
             entropy_uniform_angle = np.log(2*np.pi)
 
