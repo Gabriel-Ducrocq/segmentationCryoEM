@@ -80,14 +80,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
                     new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_parameters)
                 loss = loss/NUM_ACCUMULATION_STEP
-                print("LOSS MAIN")
-                print(loss)
                 loss.backward()
-                print("Gradients")
-                print(network.encoder.weight.grad)
                 #optimizer.step()
                 if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
                     # Update Optimizer
+                    print("STEP")
                     optimizer.step()
                     optimizer.zero_grad()
 
