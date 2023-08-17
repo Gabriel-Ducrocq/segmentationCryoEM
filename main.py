@@ -84,7 +84,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 print(loss)
                 loss.backward()
                 print("Gradients")
-                print(network.weight.grad)
+                print(network.encoder.weight.grad)
                 #optimizer.step()
                 if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
                     # Update Optimizer
