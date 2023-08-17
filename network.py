@@ -293,11 +293,6 @@ class Net(torch.nn.Module):
             alpha_spherical_angle = 0.5 + concentration_angle
             beta_spherical_angle = 0.5
             entropy_spherical_angle = utils.compute_entropy_power_spherical(concentration_angle, alpha_spherical_angle, beta_spherical_angle)
-            print("Concentration angle", concentration_angle)
-            print("Alpha spherical:", alpha_spherical_angle)
-            print("Beta spherical:", beta_spherical_angle)
-            print("Entropy spherical angle", entropy_spherical_angle)
-
             entropy_uniform_angle = np.log(2*np.pi)
 
             batch_Dkl_spherical_angle = torch.sum(-entropy_spherical_angle + entropy_uniform_angle, axis=1)
@@ -333,15 +328,6 @@ class Net(torch.nn.Module):
             for name,p in self.named_parameters():
                 if "weight" in name and ("encoder" in name or "decoder" in name):
                     l2_pen += torch.sum(p**2)
-
-            print("DEBUGG")
-            print("batch ll", torch.mean(-batch_ll))
-            print("Minus batch dkl loss translation", torch.mean(minus_batch_Dkl_loss_translation ))
-            print("batch dkl spherical angle", torch.mean(batch_Dkl_spherical_angle))
-            print("Batch dkl spherical axis", torch.mean(batch_Dkl_spherical_axis))
-            print("Minus batch Dkl mask mean", minus_batch_Dkl_mask_mean)
-            print("Minus batch Dkl mask mean", minus_batch_Dkl_mask_std)
-            print("Minus batch dkl mask proportions", minus_batch_Dkl_mask_proportions)
 
             loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
                    - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
