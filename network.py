@@ -3,7 +3,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
-
+import time
 import utils
 from mlp import MLP
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
@@ -243,7 +243,10 @@ class Net(torch.nn.Module):
         """
         weights = self.compute_mask()
         if self.use_encoder:
+            start = time.time()
             latent_variables, latent_parameters= self.sample_latent(indexes, images)
+            end = time.time()
+            print("Time latent:", end - start)
         else:
             latent_variables = self.sample_latent(indexes, images)
 
