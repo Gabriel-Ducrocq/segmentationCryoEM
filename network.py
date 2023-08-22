@@ -128,28 +128,31 @@ class Net(torch.nn.Module):
             translations_scalars = torch.reshape(latent_translations_mean + torch.randn_like(latent_translations_std)\
                                                  *latent_translations_std, (batch_size, self.N_domains, 3))
 
-            all_latent_axis = torch.zeros(size=(batch_size,self.N_domains, 3), dtype=torch.float32, device=self.device)
-            for i, loc_scale in enumerate(zip(latent_mu_axis, latent_concentration_axis)):
-                all_domains_loc = loc_scale[0]
-                all_domains_scale = loc_scale[1]
-                for k in range(self.N_domains):
-                    loc = all_domains_loc[k]
-                    scale = all_domains_scale[k]
-                    powSphDist = PowerSpherical(loc, scale)
-                    all_latent_axis[i, k, :] = powSphDist.sample()
 
+            #all_latent_axis = torch.zeros(size=(batch_size,self.N_domains, 3), dtype=torch.float32, device=self.device)
+            #for i, loc_scale in enumerate(zip(latent_mu_axis, latent_concentration_axis)):
+            #    all_domains_loc = loc_scale[0]
+            #    all_domains_scale = loc_scale[1]
+            #    for k in range(self.N_domains):
+            #        loc = all_domains_loc[k]
+            #        scale = all_domains_scale[k]
+            #        powSphDist = PowerSpherical(loc, scale)
+            #        all_latent_axis[i, k, :] = powSphDist.sample()
+
+            all_latent_axis = utils.sample_power_spherical(3, latent_mu_axis, latent_concentration_axis)
             #all_latent_axis = torch.reshape(all_latent_axis, (batch_size, self.N_domains, 3))
             ##At first, we sample a direction, so the angle is given by 2 numbers, from which we deduce an angle next
-            all_latent_angle_powSphForm = torch.zeros(size=(batch_size,  self.N_domains, 2), dtype=torch.float32, device=self.device)
-            for i, loc_scale in enumerate(zip(latent_mu_angle, latent_concentration_angle)):
-                all_domains_loc = loc_scale[0]
-                all_domains_scale = loc_scale[1]
-                for k in range(self.N_domains):
-                    loc = all_domains_loc[k]
-                    scale = all_domains_scale[k]
-                    powSphDist = PowerSpherical(loc, scale)
-                    all_latent_angle_powSphForm[i, k, :] = powSphDist.sample()
+            #all_latent_angle_powSphForm = torch.zeros(size=(batch_size,  self.N_domains, 2), dtype=torch.float32, device=self.device)
+            #for i, loc_scale in enumerate(zip(latent_mu_angle, latent_concentration_angle)):
+            #    all_domains_loc = loc_scale[0]
+            #    all_domains_scale = loc_scale[1]
+            #    for k in range(self.N_domains):
+            #        loc = all_domains_loc[k]
+            #        scale = all_domains_scale[k]
+            #        powSphDist = PowerSpherical(loc, scale)
+            #        all_latent_angle_powSphForm[i, k, :] = powSphDist.sample()
 
+            all_latent_angle_powSphForm = utils.sample_power_spherical(2, latent_mu_angle, latent_concentration_angle)
             ##Latent angle is now of shape (batch_size*N_domains, 1)
             all_latent_angle = torch.arccos(all_latent_angle_powSphForm[:, :, 0])*torch.sign(all_latent_angle_powSphForm[:, :, 1])
             all_latent_angle = torch.reshape(all_latent_angle, (batch_size, self.N_domains, 1))

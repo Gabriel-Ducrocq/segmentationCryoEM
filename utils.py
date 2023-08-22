@@ -2,6 +2,8 @@ import numpy as np
 import Bio.PDB as bpdb
 import torch
 import math
+import matplotlib.pyplot as plt
+from power_spherical import PowerSpherical
 import scipy
 
 restype_1to3 = {
@@ -219,9 +221,41 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
 
 
 
+def sample_power_spherical(dimension, direction, concentration):
+    """
+
+    :param dimension: integer, dimension of the problem
+    :param direction: tensor (Batch_size, N_domains, dimension)
+    :param concentration: tensor (Batch_size, N_domains, 1)
+    :return:
+    """
+    batch_size = direction.shape[0]
+    N_domains = direction.shape[1]
+    alpha = (dimension - 1)/2 + concentration
+    beta = (dimension - 1)/2
+
+    beta_distrib = torch.distributions.beta.Beta(alpha, beta)
+    z = beta_distrib.sample()
+    #t is of shape (Batch_size, N_domains, 1)
+    t = 2*z - 1
+    v = torch.randn((batch_size, N_domains, dimension-1))
+    #v is of shape (Batch_size, N_domains, dimension -1)
+    v /= torch.sqrt(torch.sum(v**2, dim = -1))[:, :, None]
+    #y has shape (Batch_size, N_domains, dimension)
+    y = torch.concat([t, torch.sqrt(1-t**2)*v], dim=-1)
+    e1 = torch.zeros((batch_size, N_domains, dimension))
+    e1[:, :, 0] = 1
+
+    u_hat = e1 - direction
+    u = u_hat / torch.sqrt(torch.sum(u_hat**2, dim=-1))[:, :, None]
+    reflection_matrix = torch.eye(dimension)[None, None, :, :] - 2*torch.einsum("ijk,ijl->ijkl", [u, u])
+    power_spherical_variable = torch.einsum("ijkl,ijl->ijk", [reflection_matrix, y])
+    return power_spherical_variable
+
+
+
+
 def compute_entropy_power_spherical(concentration, alpha, beta):
     return np.log(2) * (alpha + beta) + torch.lgamma(alpha) - torch.lgamma(alpha + beta) \
            + beta * math.log(math.pi) - concentration * (math.log(2) + torch.digamma(alpha) - torch.digamma(
                                       alpha + beta))
-
-
