@@ -83,6 +83,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 print("LOSS", loss)
                 loss.backward()
                 print("LOSS GRAD", loss.grad)
+                for params in network.encoder.parameters():
+                    print(torch.sum(params.grad**2))
                 #optimizer.step()
                 if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
                     # Update Optimizer
