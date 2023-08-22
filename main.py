@@ -81,6 +81,8 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                     new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_parameters)
                 loss = loss/NUM_ACCUMULATION_STEP
                 print("LOSS", loss)
+                for params in network.encoder.parameters():
+                    print(torch.sum(params ** 2))
                 loss.backward()
                 print("LOSS GRAD", loss.grad)
                 for params in network.encoder.parameters():
