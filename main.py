@@ -53,7 +53,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     print("TRAINING IMAGES SHAPE", training_images.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
-    with autograd.detect_anomaly():
+    with autograd.detect_anomaly(check_nan=False):
         for epoch in range(0,5000):
             epoch_loss = torch.empty(1000)
             #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
