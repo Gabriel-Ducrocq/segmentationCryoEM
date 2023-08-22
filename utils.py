@@ -221,7 +221,7 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
 
 
 
-def sample_power_spherical(dimension, direction, concentration):
+def sample_power_spherical(dimension, direction, concentration, device="cpu"):
     """
 
     :param dimension: integer, dimension of the problem
@@ -234,21 +234,21 @@ def sample_power_spherical(dimension, direction, concentration):
     alpha = (dimension - 1)/2 + concentration
     beta = (dimension - 1)/2
 
-    beta_distrib = torch.distributions.beta.Beta(alpha, beta)
-    z = beta_distrib.sample()
+    beta_distrib = torch.distributions.beta.Beta(alpha, beta, device)
+    z = beta_distrib.sample().to(device)
     #t is of shape (Batch_size, N_domains, 1)
     t = 2*z - 1
-    v = torch.randn((batch_size, N_domains, dimension-1))
+    v = torch.randn((batch_size, N_domains, dimension-1),  device=device)
     #v is of shape (Batch_size, N_domains, dimension -1)
     v /= torch.sqrt(torch.sum(v**2, dim = -1))[:, :, None]
     #y has shape (Batch_size, N_domains, dimension)
     y = torch.concat([t, torch.sqrt(1-t**2)*v], dim=-1)
-    e1 = torch.zeros((batch_size, N_domains, dimension))
+    e1 = torch.zeros((batch_size, N_domains, dimension), device=device)
     e1[:, :, 0] = 1
 
     u_hat = e1 - direction
     u = u_hat / torch.sqrt(torch.sum(u_hat**2, dim=-1))[:, :, None]
-    reflection_matrix = torch.eye(dimension)[None, None, :, :] - 2*torch.einsum("ijk,ijl->ijkl", [u, u])
+    reflection_matrix = torch.eye(dimension, device=device)[None, None, :, :] - 2*torch.einsum("ijk,ijl->ijkl", [u, u])
     power_spherical_variable = torch.einsum("ijkl,ijl->ijk", [reflection_matrix, y])
     return power_spherical_variable
 
