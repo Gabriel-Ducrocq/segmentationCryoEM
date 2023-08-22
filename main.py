@@ -62,7 +62,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             for idx, batch_indexes in enumerate(data_loader):
                 start = time.time()
                 print("epoch:", epoch)
-                print(idx/1000)
+                print(idx/100)
                 #batch_indexes = next(data_loader)
                 deformed_images = training_images[batch_indexes]
                 batch_rotation_matrices = training_rotations_matrices[batch_indexes]
@@ -81,6 +81,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                     new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_parameters)
                 loss = loss/NUM_ACCUMULATION_STEP
                 print("LOSS", loss)
+                print("LOSS GRAD", loss.grad())
                 loss.backward()
                 #optimizer.step()
                 if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
