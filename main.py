@@ -12,9 +12,12 @@ from torch.utils.data import DataLoader
 import time
 from imageRenderer import Renderer
 from torch import autograd
+import wandb
 from pytorch3d.transforms import axis_angle_to_matrix
 
 
+
+wandb.login()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_ACCUMULATION_STEP = 1
 
@@ -32,6 +35,16 @@ dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
+
+wandb.init(
+    # Set the project where this run will be logged
+    project="segmentation_protein",
+    # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+    name="debug",
+    # Track hyperparameters and run metadata
+    config={
+        "learning_rate": 0.0001,
+    })
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionNoDecoder/"):
@@ -81,8 +94,10 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                     new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_parameters)
                 loss = loss/NUM_ACCUMULATION_STEP
                 print("LOSS", loss)
-                for params in network.encoder.parameters():
-                    print(torch.sum(params ** 2))
+                for i, params in enumerate(network.encoder.parameters()):
+                    gradient_norm = torch.sqrt(torch.sum(params ** 2))
+                    wandb.log({str(i): gradient_norm})
+                    
                 loss.backward()
                 print("LOSS GRAD", loss.grad)
                 for params in network.encoder.parameters():
