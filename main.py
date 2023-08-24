@@ -97,7 +97,7 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 for i, params in enumerate(network.encoder.parameters()):
                     gradient_norm = torch.sqrt(torch.sum(params ** 2))
                     wandb.log({str(i): gradient_norm})
-                    
+
                 loss.backward()
                 print("LOSS GRAD", loss.grad)
                 for params in network.encoder.parameters():

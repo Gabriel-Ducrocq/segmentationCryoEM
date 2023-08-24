@@ -117,9 +117,8 @@ class Net(torch.nn.Module):
             batch_size = images.shape[0]
             latent_parameters = self.encode(images)
             latent_parameters = torch.reshape(latent_parameters, (batch_size, self.N_domains, 13))
-            print("Latent parameters:")
-            print(latent_parameters)
             latent_mu_axis = latent_parameters[:, :, :3]
+            latent_mu_axis = latent_mu_axis/(torch.sqrt(torch.sum(latent_mu_axis**2, dim=-1))[:,:, None] + 1e-5)
             latent_concentration_axis = self.elu_function(latent_parameters[:, :, 3:4]) + 1
             latent_mu_angle = latent_parameters[:, :, 4:6]
             latent_concentration_angle = self.elu_function(latent_parameters[:, :, 6:7]) + 1

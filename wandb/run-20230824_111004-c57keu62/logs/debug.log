@@ -1,0 +1,26 @@
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Current SDK version is 0.15.8
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Configure stats pid to 90871
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Loading settings from /Users/gabdu45/.config/wandb/settings
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Loading settings from /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/settings
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'main.py', 'program': '/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py'}
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:_log_setup():507] Logging user logs to /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_111004-c57keu62/logs/debug.log
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:_log_setup():508] Logging internal logs to /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_111004-c57keu62/logs/debug-internal.log
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:init():547] calling init triggers
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:init():554] wandb.init called with sweep_config: {}
+config: {'learning_rate': 0.0001}
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:init():596] starting backend
+2023-08-24 11:10:04,768 INFO    MainThread:90871 [wandb_init.py:init():600] setting up manager
+2023-08-24 11:10:04,771 INFO    MainThread:90871 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=spawn,fork,forkserver, using: spawn
+2023-08-24 11:10:04,776 INFO    MainThread:90871 [wandb_init.py:init():606] backend started and connected
+2023-08-24 11:10:04,779 INFO    MainThread:90871 [wandb_init.py:init():697] updated telemetry
+2023-08-24 11:10:04,819 INFO    MainThread:90871 [wandb_init.py:init():730] communicating run to backend with 60.0 second timeout
+2023-08-24 11:10:05,383 INFO    MainThread:90871 [wandb_run.py:_on_init():2180] communicating current version
+2023-08-24 11:10:05,556 INFO    MainThread:90871 [wandb_run.py:_on_init():2189] got version response 
+2023-08-24 11:10:05,557 INFO    MainThread:90871 [wandb_init.py:init():781] starting run threads in backend
+2023-08-24 11:10:09,873 INFO    MainThread:90871 [wandb_run.py:_console_start():2159] atexit reg
+2023-08-24 11:10:09,873 INFO    MainThread:90871 [wandb_run.py:_redirect():2014] redirect: wrap_raw
+2023-08-24 11:10:09,873 INFO    MainThread:90871 [wandb_run.py:_redirect():2079] Wrapping output streams.
+2023-08-24 11:10:09,873 INFO    MainThread:90871 [wandb_run.py:_redirect():2104] Redirects installed.
+2023-08-24 11:10:09,874 INFO    MainThread:90871 [wandb_init.py:init():822] run started, returning control to user process
+2023-08-24 11:13:30,459 WARNING MsgRouterThr:90871 [router.py:message_loop():77] message_loop has been closed
