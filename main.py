@@ -17,7 +17,7 @@ from pytorch3d.transforms import axis_angle_to_matrix
 
 
 
-wandb.login()
+#wandb.login()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_ACCUMULATION_STEP = 1
 
@@ -36,15 +36,15 @@ test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
-wandb.init(
-    # Set the project where this run will be logged
-    project="segmentation_protein",
-    # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-    name="debug",
-    # Track hyperparameters and run metadata
-    config={
-        "learning_rate": 0.0001,
-    })
+#wandb.init(
+#    # Set the project where this run will be logged
+#    project="segmentation_protein",
+#    # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+#    name="debug",
+#    # Track hyperparameters and run metadata
+#    config={
+#        "learning_rate": 0.0001,
+#    })
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
                dataset_path="../VAEProtein/data/vaeContinuousCTFNoisyBiModalAngleTransitionNoDecoder/"):
@@ -95,13 +95,16 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
                 loss = loss/NUM_ACCUMULATION_STEP
                 print("LOSS", loss)
                 for i, params in enumerate(network.encoder.parameters()):
-                    gradient_norm = torch.sqrt(torch.sum(params ** 2))
-                    wandb.log({str(i): gradient_norm})
+                    norm = torch.sqrt(torch.sum(params ** 2))
+                    print(norm)
+                    #wandb.log({"Norm_"+str(i): norm})
 
                 loss.backward()
                 print("LOSS GRAD", loss.grad)
-                for params in network.encoder.parameters():
+                for i, params in enumerate(network.encoder.parameters()):
                     print(torch.sum(params.grad**2))
+                    grad_norm = torch.sqrt(torch.sum(params.grad ** 2))
+                    #wandb.log({"Grad_"+str(i): grad_norm})
                 #optimizer.step()
                 if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
                     # Update Optimizer
@@ -188,7 +191,8 @@ def experiment(graph_file="data/features.npy"):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2, network_type="decoder")
-    encoder_mlp = MLP(N_pixels, N_input_domains*13, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+    #encoder_mlp = MLP(N_pixels, N_input_domains*13, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+    encoder_mlp = MLP(N_pixels, N_input_domains*13, [2048, 1024, 512], device, num_hidden_layers=4, network_type="encoder")
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)

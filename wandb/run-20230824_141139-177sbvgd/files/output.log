@@ -1,0 +1,699 @@
+Is cuda available ? False
+TRAINING IMAGES SHAPE torch.Size([10000, 64, 64])
+epoch: 0
+0.0
+images
+Time latent: 0.09645318984985352
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/imageRenderer.py:73: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  ctf = torch.sqrt(torch.tensor(1 - w ** 2, device=self.device)) * torch.sin(torch.tensor(gamma, device=self.device))\
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/imageRenderer.py:74: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  - w * torch.cos(torch.tensor(gamma, device=self.device))
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py:69: UserWarning: Anomaly Detection has been enabled. This mode will increase the runtime and should only be enabled for debugging.
+  with autograd.detect_anomaly(check_nan=False):
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.2944, grad_fn=<NegBackward0>)
+Dkl: tensor(21.2677, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>)
+LOSS tensor(501.2944, grad_fn=<DivBackward0>)
+tensor(18.4806, grad_fn=<SqrtBackward0>)
+tensor(0.2914, grad_fn=<SqrtBackward0>)
+tensor(4.1596, grad_fn=<SqrtBackward0>)
+tensor(0.1884, grad_fn=<SqrtBackward0>)
+tensor(13.0688, grad_fn=<SqrtBackward0>)
+tensor(0.4098, grad_fn=<SqrtBackward0>)
+tensor(13.0727, grad_fn=<SqrtBackward0>)
+tensor(0.5893, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(420657.4062)
+tensor(359.9880)
+tensor(27832.2051)
+tensor(12802.9268)
+tensor(92151.5234)
+tensor(1572.6737)
+tensor(39152.4180)
+tensor(6362.1802)
+STEP
+Printing metrics
+Running time one iteration: 14.468921899795532
+epoch: 0
+0.01
+images
+Time latent: 0.03191494941711426
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py:103: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/build/aten/src/ATen/core/TensorBody.h:485.)
+  print("LOSS GRAD", loss.grad)
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(496.4075, grad_fn=<NegBackward0>)
+Dkl: tensor(21.4685, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(496.4075, grad_fn=<DivBackward0>)
+tensor(18.4817, grad_fn=<SqrtBackward0>)
+tensor(0.2914, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1883, grad_fn=<SqrtBackward0>)
+tensor(13.0689, grad_fn=<SqrtBackward0>)
+tensor(0.4100, grad_fn=<SqrtBackward0>)
+tensor(13.0729, grad_fn=<SqrtBackward0>)
+tensor(0.5892, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(2560103.2500)
+tensor(2730.9956)
+tensor(445547.3125)
+tensor(596029.7500)
+tensor(634937.1250)
+tensor(16460.4590)
+tensor(392738.8438)
+tensor(112812.4531)
+STEP
+Printing metrics
+Running time one iteration: 9.105714082717896
+epoch: 0
+0.02
+images
+Time latent: 0.01959991455078125
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.9453, grad_fn=<NegBackward0>)
+Dkl: tensor(21.1483, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-2.0862e-07, grad_fn=<NegBackward0>) tensor(-1.7881e-07, grad_fn=<NegBackward0>)
+LOSS tensor(501.9453, grad_fn=<DivBackward0>)
+tensor(18.4830, grad_fn=<SqrtBackward0>)
+tensor(0.2913, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1883, grad_fn=<SqrtBackward0>)
+tensor(13.0691, grad_fn=<SqrtBackward0>)
+tensor(0.4101, grad_fn=<SqrtBackward0>)
+tensor(13.0731, grad_fn=<SqrtBackward0>)
+tensor(0.5891, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(2753247.7500)
+tensor(2980.7280)
+tensor(469794.8750)
+tensor(724613.5625)
+tensor(753698.3125)
+tensor(19058.1562)
+tensor(421067.9062)
+tensor(126222.5078)
+STEP
+Printing metrics
+Running time one iteration: 10.321324825286865
+epoch: 0
+0.03
+images
+Time latent: 0.01687908172607422
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(499.6600, grad_fn=<NegBackward0>)
+Dkl: tensor(21.0577, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-4.1723e-07, grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(499.6600, grad_fn=<DivBackward0>)
+tensor(18.4845, grad_fn=<SqrtBackward0>)
+tensor(0.2913, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1882, grad_fn=<SqrtBackward0>)
+tensor(13.0693, grad_fn=<SqrtBackward0>)
+tensor(0.4102, grad_fn=<SqrtBackward0>)
+tensor(13.0732, grad_fn=<SqrtBackward0>)
+tensor(0.5890, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(33564224.)
+tensor(31819.6465)
+tensor(4219782.5000)
+tensor(3787334.2500)
+tensor(8537229.)
+tensor(176937.7969)
+tensor(4278599.5000)
+tensor(875071.3125)
+STEP
+Printing metrics
+Running time one iteration: 9.189280986785889
+epoch: 0
+0.04
+images
+Time latent: 0.01802229881286621
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(502.6431, grad_fn=<NegBackward0>)
+Dkl: tensor(20.8465, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-5.9605e-07, grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.6431, grad_fn=<DivBackward0>)
+tensor(18.4856, grad_fn=<SqrtBackward0>)
+tensor(0.2913, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1881, grad_fn=<SqrtBackward0>)
+tensor(13.0695, grad_fn=<SqrtBackward0>)
+tensor(0.4102, grad_fn=<SqrtBackward0>)
+tensor(13.0733, grad_fn=<SqrtBackward0>)
+tensor(0.5890, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(3961201.)
+tensor(3977.6387)
+tensor(400494.3750)
+tensor(404782.)
+tensor(948949.3125)
+tensor(19456.6523)
+tensor(455053.3125)
+tensor(103022.9219)
+STEP
+Printing metrics
+Running time one iteration: 8.969149827957153
+epoch: 0
+0.05
+images
+Time latent: 0.018553972244262695
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(502.3192, grad_fn=<NegBackward0>)
+Dkl: tensor(21.5011, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-8.9407e-07, grad_fn=<NegBackward0>) tensor(2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.3192, grad_fn=<DivBackward0>)
+tensor(18.4870, grad_fn=<SqrtBackward0>)
+tensor(0.2913, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1880, grad_fn=<SqrtBackward0>)
+tensor(13.0698, grad_fn=<SqrtBackward0>)
+tensor(0.4103, grad_fn=<SqrtBackward0>)
+tensor(13.0733, grad_fn=<SqrtBackward0>)
+tensor(0.5890, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(5905148.5000)
+tensor(7781.8135)
+tensor(1588763.8750)
+tensor(2857150.)
+tensor(1650277.)
+tensor(57526.9844)
+tensor(1088837.1250)
+tensor(402221.0625)
+STEP
+Printing metrics
+Running time one iteration: 9.555765151977539
+epoch: 0
+0.06
+images
+Time latent: 0.02172064781188965
+NEW IMAGES
+torch.Size([100, 64, 64])
+torch.Size([100, 64, 64])
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.4235, grad_fn=<NegBackward0>)
+Dkl: tensor(21.0811, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.2219e-06, grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(500.4235, grad_fn=<DivBackward0>)
+tensor(18.4885, grad_fn=<SqrtBackward0>)
+tensor(0.2913, grad_fn=<SqrtBackward0>)
+tensor(4.1594, grad_fn=<SqrtBackward0>)
+tensor(0.1880, grad_fn=<SqrtBackward0>)
+tensor(13.0700, grad_fn=<SqrtBackward0>)
+tensor(0.4103, grad_fn=<SqrtBackward0>)
+tensor(13.0734, grad_fn=<SqrtBackward0>)
+tensor(0.5890, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+STEP
+Printing metrics
+Running time one iteration: 9.941956996917725
+epoch: 0
+0.07
+images
+Traceback (most recent call last):
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 215, in <module>
+    experiment()
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 210, in experiment
+    train_loop(net, absolute_positions, renderer, local_frame)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 91, in train_loop
+    = network.forward(batch_indexes, deformed_images)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/network.py", line 249, in forward
+    latent_variables, latent_parameters= self.sample_latent(indexes, images)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/network.py", line 141, in sample_latent
+    all_latent_axis = utils.sample_power_spherical(3, latent_mu_axis, latent_concentration_axis, device=self.device)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/utils.py", line 237, in sample_power_spherical
+    beta_distrib = torch.distributions.beta.Beta(alpha, beta, device)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/beta.py", line 38, in __init__
+    self._dirichlet = Dirichlet(concentration1_concentration0, validate_args=validate_args)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/dirichlet.py", line 54, in __init__
+    super(Dirichlet, self).__init__(batch_shape, event_shape, validate_args=validate_args)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/distribution.py", line 56, in __init__
+    raise ValueError(
+ValueError: Expected parameter concentration (Tensor of shape (100, 4, 1, 2)) of distribution Dirichlet(concentration: torch.Size([100, 4, 1, 2])) to satisfy the constraint IndependentConstraint(GreaterThan(lower_bound=0.0), 1), but found invalid values:
+tensor([[[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]]], grad_fn=<StackBackward0>)

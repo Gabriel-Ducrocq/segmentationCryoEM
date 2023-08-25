@@ -1,0 +1,24 @@
+2023-08-24 14:21:50,346 INFO    StreamThr :4177 [internal.py:wandb_internal():86] W&B internal server running at pid: 4177, started at: 2023-08-24 14:21:50.344971
+2023-08-24 14:21:50,348 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: status
+2023-08-24 14:21:50,352 INFO    WriterThread:4177 [datastore.py:open_for_write():85] open: /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_142150-ydpyydpr/run-ydpyydpr.wandb
+2023-08-24 14:21:50,353 DEBUG   SenderThread:4177 [sender.py:send():379] send: header
+2023-08-24 14:21:50,418 DEBUG   SenderThread:4177 [sender.py:send():379] send: run
+2023-08-24 14:21:55,444 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:00,464 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:05,487 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:10,502 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:15,528 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:20,554 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:25,580 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:30,607 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:35,635 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:40,664 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:45,685 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: keepalive
+2023-08-24 14:22:50,714 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: cancel
+2023-08-24 14:22:50,714 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: cancel
+2023-08-24 14:22:50,714 DEBUG   SenderThread:4177 [sender.py:send():388] Record cancelled: run
+2023-08-24 14:22:50,715 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: status_report
+2023-08-24 14:22:52,738 DEBUG   HandlerThread:4177 [handler.py:handle_request():144] handle_request: shutdown
+2023-08-24 14:22:52,738 INFO    HandlerThread:4177 [handler.py:finish():857] shutting down handler
+2023-08-24 14:22:53,726 INFO    WriterThread:4177 [datastore.py:close():294] close: /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_142150-ydpyydpr/run-ydpyydpr.wandb
+2023-08-24 14:22:53,727 INFO    SenderThread:4177 [sender.py:finish():1552] shutting down sender

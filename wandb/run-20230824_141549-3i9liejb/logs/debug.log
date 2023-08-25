@@ -1,0 +1,86 @@
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Current SDK version is 0.15.8
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Configure stats pid to 3720
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Loading settings from /Users/gabdu45/.config/wandb/settings
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Loading settings from /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/settings
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2023-08-24 14:15:49,309 INFO    MainThread:3720 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'main.py', 'program': '/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py'}
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:_log_setup():507] Logging user logs to /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_141549-3i9liejb/logs/debug.log
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:_log_setup():508] Logging internal logs to /Users/gabdu45/PycharmProjects/segmentationCryoEM/wandb/run-20230824_141549-3i9liejb/logs/debug-internal.log
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:init():547] calling init triggers
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:init():554] wandb.init called with sweep_config: {}
+config: {'learning_rate': 0.0001}
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:init():596] starting backend
+2023-08-24 14:15:49,310 INFO    MainThread:3720 [wandb_init.py:init():600] setting up manager
+2023-08-24 14:15:49,313 INFO    MainThread:3720 [backend.py:_multiprocessing_setup():106] multiprocessing start_methods=spawn,fork,forkserver, using: spawn
+2023-08-24 14:15:49,315 INFO    MainThread:3720 [wandb_init.py:init():606] backend started and connected
+2023-08-24 14:15:49,317 INFO    MainThread:3720 [wandb_init.py:init():697] updated telemetry
+2023-08-24 14:15:49,355 INFO    MainThread:3720 [wandb_init.py:init():730] communicating run to backend with 60.0 second timeout
+2023-08-24 14:16:16,493 INFO    MainThread:3720 [wandb_run.py:_on_init():2180] communicating current version
+2023-08-24 14:16:21,506 INFO    MainThread:3720 [wandb_run.py:_on_init():2189] got version response 
+2023-08-24 14:16:21,506 INFO    MainThread:3720 [wandb_init.py:init():781] starting run threads in backend
+2023-08-24 14:16:23,669 INFO    MainThread:3720 [wandb_run.py:_console_start():2159] atexit reg
+2023-08-24 14:16:23,669 INFO    MainThread:3720 [wandb_run.py:_redirect():2014] redirect: wrap_raw
+2023-08-24 14:16:23,669 INFO    MainThread:3720 [wandb_run.py:_redirect():2079] Wrapping output streams.
+2023-08-24 14:16:23,669 INFO    MainThread:3720 [wandb_run.py:_redirect():2104] Redirects installed.
+2023-08-24 14:16:23,669 INFO    MainThread:3720 [wandb_init.py:init():822] run started, returning control to user process
+2023-08-24 14:16:26,975 INFO    Thread-1 (wrapped_target):3720 [retry.py:__call__():172] Retry attempt failed:
+Traceback (most recent call last):
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 386, in _make_request
+    self._validate_conn(conn)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1042, in _validate_conn
+    conn.connect()
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connection.py", line 414, in connect
+    self.sock = ssl_wrap_socket(
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/util/ssl_.py", line 449, in ssl_wrap_socket
+    ssl_sock = _ssl_wrap_socket_impl(
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/util/ssl_.py", line 493, in _ssl_wrap_socket_impl
+    return ssl_context.wrap_socket(sock, server_hostname=server_hostname)
+  File "/Users/Shared/anaconda3/envs/conformationalLatent/lib/python3.10/ssl.py", line 512, in wrap_socket
+    return self.sslsocket_class._create(
+  File "/Users/Shared/anaconda3/envs/conformationalLatent/lib/python3.10/ssl.py", line 1070, in _create
+    self.do_handshake()
+  File "/Users/Shared/anaconda3/envs/conformationalLatent/lib/python3.10/ssl.py", line 1341, in do_handshake
+    self._sslobj.do_handshake()
+TimeoutError: _ssl.c:980: The handshake operation timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/requests/adapters.py", line 489, in send
+    resp = conn.urlopen(
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    retries = retries.increment(
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/util/retry.py", line 550, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 703, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 389, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=conn.timeout)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/urllib3/connectionpool.py", line 340, in _raise_timeout
+    raise ReadTimeoutError(
+urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='api.wandb.ai', port=443): Read timed out. (read timeout=10)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/wandb/sdk/lib/retry.py", line 131, in __call__
+    result = self._call_fn(*args, **kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/wandb/sdk/internal/internal_api.py", line 323, in execute
+    return self.client.execute(*args, **kwargs)  # type: ignore
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/wandb/vendor/gql-0.2.0/wandb_gql/client.py", line 52, in execute
+    result = self._get_result(document, *args, **kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/wandb/vendor/gql-0.2.0/wandb_gql/client.py", line 60, in _get_result
+    return self.transport.execute(document, *args, **kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/wandb/sdk/lib/gql_request.py", line 55, in execute
+    request = self.session.post(self.url, **post_args)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/requests/sessions.py", line 635, in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/requests/sessions.py", line 587, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/requests/sessions.py", line 701, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/requests/adapters.py", line 578, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.wandb.ai', port=443): Read timed out. (read timeout=10)

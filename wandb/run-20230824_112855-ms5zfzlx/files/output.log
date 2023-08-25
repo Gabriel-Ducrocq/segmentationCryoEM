@@ -1,0 +1,1369 @@
+Is cuda available ? False
+TRAINING IMAGES SHAPE torch.Size([10000, 64, 64])
+epoch: 0
+0.0
+images
+Time latent: 0.12061095237731934
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/imageRenderer.py:73: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  ctf = torch.sqrt(torch.tensor(1 - w ** 2, device=self.device)) * torch.sin(torch.tensor(gamma, device=self.device))\
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/imageRenderer.py:74: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  - w * torch.cos(torch.tensor(gamma, device=self.device))
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py:69: UserWarning: Anomaly Detection has been enabled. This mode will increase the runtime and should only be enabled for debugging.
+  with autograd.detect_anomaly(check_nan=False):
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.0166, grad_fn=<NegBackward0>)
+Dkl: tensor(24.4001, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>)
+LOSS tensor(501.7537, grad_fn=<DivBackward0>)
+tensor(26.1225, grad_fn=<SqrtBackward0>)
+tensor(0.4142, grad_fn=<SqrtBackward0>)
+tensor(4.1781, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4728, grad_fn=<SqrtBackward0>)
+tensor(0.3982, grad_fn=<SqrtBackward0>)
+tensor(13.0646, grad_fn=<SqrtBackward0>)
+tensor(0.4164, grad_fn=<SqrtBackward0>)
+tensor(13.0449, grad_fn=<SqrtBackward0>)
+tensor(0.5669, grad_fn=<SqrtBackward0>)
+/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py:103: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/build/aten/src/ATen/core/TensorBody.h:485.)
+  print("LOSS GRAD", loss.grad)
+LOSS GRAD None
+tensor(22055.6777)
+tensor(25.0906)
+tensor(10558.4150)
+tensor(38580.9922)
+tensor(11944.9277)
+tensor(161.4044)
+tensor(6713.1377)
+tensor(1031.6873)
+tensor(4207.5454)
+tensor(5933.9746)
+STEP
+Printing metrics
+Running time one iteration: 15.629872798919678
+epoch: 0
+0.01
+images
+Time latent: 0.02897500991821289
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(498.1195, grad_fn=<NegBackward0>)
+Dkl: tensor(24.7083, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(499.8553, grad_fn=<DivBackward0>)
+tensor(26.1243, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1740, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4733, grad_fn=<SqrtBackward0>)
+tensor(0.3983, grad_fn=<SqrtBackward0>)
+tensor(13.0646, grad_fn=<SqrtBackward0>)
+tensor(0.4165, grad_fn=<SqrtBackward0>)
+tensor(13.0437, grad_fn=<SqrtBackward0>)
+tensor(0.5668, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(17184.1504)
+tensor(15.6577)
+tensor(4657.7188)
+tensor(14555.4492)
+tensor(8159.9023)
+tensor(88.2745)
+tensor(3987.0581)
+tensor(472.0424)
+tensor(2291.4805)
+tensor(2447.9519)
+STEP
+Printing metrics
+Running time one iteration: 10.78136396408081
+epoch: 0
+0.02
+images
+Time latent: 0.07407593727111816
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.9908, grad_fn=<NegBackward0>)
+Dkl: tensor(24.6558, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>) tensor(5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.7253, grad_fn=<DivBackward0>)
+tensor(26.1265, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1700, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4741, grad_fn=<SqrtBackward0>)
+tensor(0.3984, grad_fn=<SqrtBackward0>)
+tensor(13.0647, grad_fn=<SqrtBackward0>)
+tensor(0.4165, grad_fn=<SqrtBackward0>)
+tensor(13.0426, grad_fn=<SqrtBackward0>)
+tensor(0.5669, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(25164.9727)
+tensor(33.0509)
+tensor(26060.4668)
+tensor(81435.2812)
+tensor(15302.7646)
+tensor(248.7408)
+tensor(11725.8066)
+tensor(2045.7043)
+tensor(10433.9951)
+tensor(13137.5625)
+STEP
+Printing metrics
+Running time one iteration: 9.798135995864868
+epoch: 0
+0.03
+images
+Time latent: 0.02867412567138672
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.2715, grad_fn=<NegBackward0>)
+Dkl: tensor(24.4352, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.7881e-07, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.0047, grad_fn=<DivBackward0>)
+tensor(26.1287, grad_fn=<SqrtBackward0>)
+tensor(0.4140, grad_fn=<SqrtBackward0>)
+tensor(4.1661, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4748, grad_fn=<SqrtBackward0>)
+tensor(0.3985, grad_fn=<SqrtBackward0>)
+tensor(13.0648, grad_fn=<SqrtBackward0>)
+tensor(0.4165, grad_fn=<SqrtBackward0>)
+tensor(13.0415, grad_fn=<SqrtBackward0>)
+tensor(0.5670, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(24974.1387)
+tensor(27.5957)
+tensor(13886.7656)
+tensor(41260.3516)
+tensor(12963.0547)
+tensor(165.2863)
+tensor(8113.8223)
+tensor(1135.3499)
+tensor(5955.4175)
+tensor(6917.8760)
+STEP
+Printing metrics
+Running time one iteration: 9.573875904083252
+epoch: 0
+0.04
+images
+Time latent: 0.030057907104492188
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(499.1099, grad_fn=<NegBackward0>)
+Dkl: tensor(24.4728, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-2.3842e-07, grad_fn=<NegBackward0>) tensor(-5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(500.8419, grad_fn=<DivBackward0>)
+tensor(26.1311, grad_fn=<SqrtBackward0>)
+tensor(0.4140, grad_fn=<SqrtBackward0>)
+tensor(4.1623, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4756, grad_fn=<SqrtBackward0>)
+tensor(0.3986, grad_fn=<SqrtBackward0>)
+tensor(13.0649, grad_fn=<SqrtBackward0>)
+tensor(0.4166, grad_fn=<SqrtBackward0>)
+tensor(13.0406, grad_fn=<SqrtBackward0>)
+tensor(0.5671, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(18239.3555)
+tensor(15.1450)
+tensor(4415.9238)
+tensor(10544.1152)
+tensor(8304.6123)
+tensor(82.1138)
+tensor(4327.3423)
+tensor(430.9188)
+tensor(2749.6223)
+tensor(2170.8066)
+STEP
+Printing metrics
+Running time one iteration: 9.047217845916748
+epoch: 0
+0.05
+images
+Time latent: 0.02314019203186035
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.9280, grad_fn=<NegBackward0>)
+Dkl: tensor(24.8085, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-3.5763e-07, grad_fn=<NegBackward0>) tensor(-8.9407e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.6587, grad_fn=<DivBackward0>)
+tensor(26.1335, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1585, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4765, grad_fn=<SqrtBackward0>)
+tensor(0.3988, grad_fn=<SqrtBackward0>)
+tensor(13.0650, grad_fn=<SqrtBackward0>)
+tensor(0.4166, grad_fn=<SqrtBackward0>)
+tensor(13.0396, grad_fn=<SqrtBackward0>)
+tensor(0.5672, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(24313.2773)
+tensor(21.8588)
+tensor(6825.5718)
+tensor(14705.4580)
+tensor(11087.5322)
+tensor(114.0644)
+tensor(6225.8315)
+tensor(668.7157)
+tensor(4277.0967)
+tensor(3235.5862)
+STEP
+Printing metrics
+Running time one iteration: 9.128226041793823
+epoch: 0
+0.06
+images
+Time latent: 0.03250598907470703
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.3710, grad_fn=<NegBackward0>)
+Dkl: tensor(24.6894, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-3.5763e-07, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>)
+LOSS tensor(502.1004, grad_fn=<DivBackward0>)
+tensor(26.1359, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1547, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4774, grad_fn=<SqrtBackward0>)
+tensor(0.3989, grad_fn=<SqrtBackward0>)
+tensor(13.0652, grad_fn=<SqrtBackward0>)
+tensor(0.4167, grad_fn=<SqrtBackward0>)
+tensor(13.0388, grad_fn=<SqrtBackward0>)
+tensor(0.5673, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(10927.2500)
+tensor(8.9947)
+tensor(2415.5774)
+tensor(3987.7412)
+tensor(4681.6626)
+tensor(39.7850)
+tensor(2338.8989)
+tensor(187.7659)
+tensor(1527.8373)
+tensor(854.7554)
+STEP
+Printing metrics
+Running time one iteration: 10.676623106002808
+epoch: 0
+0.07
+images
+Time latent: 0.02829885482788086
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.8559, grad_fn=<NegBackward0>)
+Dkl: tensor(24.1757, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-4.1723e-07, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.5840, grad_fn=<DivBackward0>)
+tensor(26.1383, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1509, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4783, grad_fn=<SqrtBackward0>)
+tensor(0.3989, grad_fn=<SqrtBackward0>)
+tensor(13.0653, grad_fn=<SqrtBackward0>)
+tensor(0.4168, grad_fn=<SqrtBackward0>)
+tensor(13.0379, grad_fn=<SqrtBackward0>)
+tensor(0.5673, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(24886.8438)
+tensor(28.2980)
+tensor(20396.8438)
+tensor(44614.7930)
+tensor(12690.7627)
+tensor(170.4293)
+tensor(8729.9092)
+tensor(1069.6337)
+tensor(8388.0840)
+tensor(6679.4370)
+STEP
+Printing metrics
+Running time one iteration: 9.905063152313232
+epoch: 0
+0.08
+images
+Time latent: 0.02779102325439453
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.4170, grad_fn=<NegBackward0>)
+Dkl: tensor(24.0754, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-4.1723e-07, grad_fn=<NegBackward0>) tensor(-8.9407e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.1439, grad_fn=<DivBackward0>)
+tensor(26.1406, grad_fn=<SqrtBackward0>)
+tensor(0.4141, grad_fn=<SqrtBackward0>)
+tensor(4.1472, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4792, grad_fn=<SqrtBackward0>)
+tensor(0.3990, grad_fn=<SqrtBackward0>)
+tensor(13.0654, grad_fn=<SqrtBackward0>)
+tensor(0.4168, grad_fn=<SqrtBackward0>)
+tensor(13.0370, grad_fn=<SqrtBackward0>)
+tensor(0.5674, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(13612.2803)
+tensor(13.4487)
+tensor(8091.9204)
+tensor(17051.1348)
+tensor(6411.8418)
+tensor(76.3766)
+tensor(4047.2222)
+tensor(438.3574)
+tensor(3536.5842)
+tensor(2607.5107)
+STEP
+Printing metrics
+Running time one iteration: 10.000874280929565
+epoch: 0
+0.09
+images
+Time latent: 0.0392301082611084
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.5936, grad_fn=<NegBackward0>)
+Dkl: tensor(23.9724, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-5.9605e-07, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.3192, grad_fn=<DivBackward0>)
+tensor(26.1429, grad_fn=<SqrtBackward0>)
+tensor(0.4142, grad_fn=<SqrtBackward0>)
+tensor(4.1435, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4800, grad_fn=<SqrtBackward0>)
+tensor(0.3991, grad_fn=<SqrtBackward0>)
+tensor(13.0656, grad_fn=<SqrtBackward0>)
+tensor(0.4168, grad_fn=<SqrtBackward0>)
+tensor(13.0361, grad_fn=<SqrtBackward0>)
+tensor(0.5674, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(8313.3359)
+tensor(6.4666)
+tensor(2325.9551)
+tensor(3976.8943)
+tensor(3550.8533)
+tensor(32.8579)
+tensor(1912.0601)
+tensor(164.5565)
+tensor(1410.8798)
+tensor(823.9402)
+STEP
+Printing metrics
+Running time one iteration: 9.092100143432617
+epoch: 0
+0.1
+images
+Time latent: 0.024946928024291992
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(502.1143, grad_fn=<NegBackward0>)
+Dkl: tensor(23.8952, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-5.9605e-07, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.8387, grad_fn=<DivBackward0>)
+tensor(26.1452, grad_fn=<SqrtBackward0>)
+tensor(0.4142, grad_fn=<SqrtBackward0>)
+tensor(4.1398, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4808, grad_fn=<SqrtBackward0>)
+tensor(0.3992, grad_fn=<SqrtBackward0>)
+tensor(13.0657, grad_fn=<SqrtBackward0>)
+tensor(0.4169, grad_fn=<SqrtBackward0>)
+tensor(13.0353, grad_fn=<SqrtBackward0>)
+tensor(0.5675, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(9679.2070)
+tensor(7.9674)
+tensor(2841.8550)
+tensor(4396.9492)
+tensor(4287.5024)
+tensor(38.5591)
+tensor(2434.4260)
+tensor(184.8753)
+tensor(1558.5330)
+tensor(811.8915)
+STEP
+Printing metrics
+Running time one iteration: 9.034343957901001
+epoch: 0
+0.11
+images
+Time latent: 0.02963709831237793
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(498.8185, grad_fn=<NegBackward0>)
+Dkl: tensor(23.8595, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-8.3447e-07, grad_fn=<NegBackward0>) tensor(-1.1921e-07, grad_fn=<NegBackward0>)
+LOSS tensor(500.5417, grad_fn=<DivBackward0>)
+tensor(26.1474, grad_fn=<SqrtBackward0>)
+tensor(0.4142, grad_fn=<SqrtBackward0>)
+tensor(4.1362, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4816, grad_fn=<SqrtBackward0>)
+tensor(0.3992, grad_fn=<SqrtBackward0>)
+tensor(13.0658, grad_fn=<SqrtBackward0>)
+tensor(0.4169, grad_fn=<SqrtBackward0>)
+tensor(13.0344, grad_fn=<SqrtBackward0>)
+tensor(0.5676, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(11457.5098)
+tensor(10.5238)
+tensor(6887.8467)
+tensor(12333.1592)
+tensor(5271.9219)
+tensor(57.4267)
+tensor(3368.6521)
+tensor(336.8979)
+tensor(3044.1016)
+tensor(1885.4290)
+STEP
+Printing metrics
+Running time one iteration: 8.788677215576172
+epoch: 0
+0.12
+images
+Time latent: 0.031556129455566406
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(496.5930, grad_fn=<NegBackward0>)
+Dkl: tensor(23.6539, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-7.1526e-07, grad_fn=<NegBackward0>) tensor(-1.1921e-07, grad_fn=<NegBackward0>)
+LOSS tensor(498.3149, grad_fn=<DivBackward0>)
+tensor(26.1496, grad_fn=<SqrtBackward0>)
+tensor(0.4143, grad_fn=<SqrtBackward0>)
+tensor(4.1325, grad_fn=<SqrtBackward0>)
+tensor(0.2034, grad_fn=<SqrtBackward0>)
+tensor(18.4824, grad_fn=<SqrtBackward0>)
+tensor(0.3993, grad_fn=<SqrtBackward0>)
+tensor(13.0659, grad_fn=<SqrtBackward0>)
+tensor(0.4170, grad_fn=<SqrtBackward0>)
+tensor(13.0335, grad_fn=<SqrtBackward0>)
+tensor(0.5676, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(10361.7910)
+tensor(13.4085)
+tensor(13311.5029)
+tensor(23819.9805)
+tensor(5637.2334)
+tensor(86.2038)
+tensor(4794.3535)
+tensor(575.3772)
+tensor(5103.0244)
+tensor(3345.1543)
+STEP
+Printing metrics
+Running time one iteration: 8.909439086914062
+epoch: 0
+0.13
+images
+Time latent: 0.02537393569946289
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(499.5634, grad_fn=<NegBackward0>)
+Dkl: tensor(23.6764, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-8.9407e-07, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(501.2841, grad_fn=<DivBackward0>)
+tensor(26.1519, grad_fn=<SqrtBackward0>)
+tensor(0.4143, grad_fn=<SqrtBackward0>)
+tensor(4.1289, grad_fn=<SqrtBackward0>)
+tensor(0.2035, grad_fn=<SqrtBackward0>)
+tensor(18.4832, grad_fn=<SqrtBackward0>)
+tensor(0.3994, grad_fn=<SqrtBackward0>)
+tensor(13.0660, grad_fn=<SqrtBackward0>)
+tensor(0.4170, grad_fn=<SqrtBackward0>)
+tensor(13.0326, grad_fn=<SqrtBackward0>)
+tensor(0.5677, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(12140.9121)
+tensor(17.2806)
+tensor(20008.6250)
+tensor(31533.7070)
+tensor(7275.7080)
+tensor(117.0942)
+tensor(6834.0845)
+tensor(770.5707)
+tensor(8455.2695)
+tensor(4808.4707)
+STEP
+Printing metrics
+Running time one iteration: 9.774726867675781
+epoch: 0
+0.14
+images
+Time latent: 0.02547287940979004
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(502.0218, grad_fn=<NegBackward0>)
+Dkl: tensor(23.4211, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-9.8348e-07, grad_fn=<NegBackward0>) tensor(5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.7413, grad_fn=<DivBackward0>)
+tensor(26.1540, grad_fn=<SqrtBackward0>)
+tensor(0.4143, grad_fn=<SqrtBackward0>)
+tensor(4.1253, grad_fn=<SqrtBackward0>)
+tensor(0.2035, grad_fn=<SqrtBackward0>)
+tensor(18.4840, grad_fn=<SqrtBackward0>)
+tensor(0.3994, grad_fn=<SqrtBackward0>)
+tensor(13.0661, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0318, grad_fn=<SqrtBackward0>)
+tensor(0.5677, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(6329.2197)
+tensor(5.4886)
+tensor(4605.6592)
+tensor(6612.9507)
+tensor(2814.9497)
+tensor(27.1690)
+tensor(1975.8130)
+tensor(166.1930)
+tensor(1995.3987)
+tensor(984.1619)
+STEP
+Printing metrics
+Running time one iteration: 8.791388034820557
+epoch: 0
+0.15
+images
+Time latent: 0.03582882881164551
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.5918, grad_fn=<NegBackward0>)
+Dkl: tensor(23.5475, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.2815e-06, grad_fn=<NegBackward0>) tensor(-1.1921e-07, grad_fn=<NegBackward0>)
+LOSS tensor(502.3101, grad_fn=<DivBackward0>)
+tensor(26.1561, grad_fn=<SqrtBackward0>)
+tensor(0.4143, grad_fn=<SqrtBackward0>)
+tensor(4.1217, grad_fn=<SqrtBackward0>)
+tensor(0.2035, grad_fn=<SqrtBackward0>)
+tensor(18.4847, grad_fn=<SqrtBackward0>)
+tensor(0.3994, grad_fn=<SqrtBackward0>)
+tensor(13.0662, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0309, grad_fn=<SqrtBackward0>)
+tensor(0.5677, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(10706.2969)
+tensor(11.2021)
+tensor(7508.7837)
+tensor(11604.9922)
+tensor(5298.7622)
+tensor(63.4319)
+tensor(3798.5474)
+tensor(345.1118)
+tensor(3752.6145)
+tensor(1879.9250)
+STEP
+Printing metrics
+Running time one iteration: 8.954060077667236
+epoch: 0
+0.16
+images
+Time latent: 0.068115234375
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(500.7704, grad_fn=<NegBackward0>)
+Dkl: tensor(23.1467, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.3411e-06, grad_fn=<NegBackward0>) tensor(-2.0862e-07, grad_fn=<NegBackward0>)
+LOSS tensor(502.4874, grad_fn=<DivBackward0>)
+tensor(26.1581, grad_fn=<SqrtBackward0>)
+tensor(0.4144, grad_fn=<SqrtBackward0>)
+tensor(4.1181, grad_fn=<SqrtBackward0>)
+tensor(0.2035, grad_fn=<SqrtBackward0>)
+tensor(18.4854, grad_fn=<SqrtBackward0>)
+tensor(0.3995, grad_fn=<SqrtBackward0>)
+tensor(13.0664, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0300, grad_fn=<SqrtBackward0>)
+tensor(0.5677, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(6522.9385)
+tensor(5.8273)
+tensor(4440.0703)
+tensor(5830.3667)
+tensor(2911.8411)
+tensor(29.8215)
+tensor(1923.3037)
+tensor(147.6861)
+tensor(2118.8279)
+tensor(908.3785)
+STEP
+Printing metrics
+Running time one iteration: 9.88462495803833
+epoch: 0
+0.17
+images
+Time latent: 0.031407833099365234
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(502.6148, grad_fn=<NegBackward0>)
+Dkl: tensor(23.5761, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.5795e-06, grad_fn=<NegBackward0>) tensor(2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(504.3307, grad_fn=<DivBackward0>)
+tensor(26.1601, grad_fn=<SqrtBackward0>)
+tensor(0.4144, grad_fn=<SqrtBackward0>)
+tensor(4.1146, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4862, grad_fn=<SqrtBackward0>)
+tensor(0.3995, grad_fn=<SqrtBackward0>)
+tensor(13.0665, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0292, grad_fn=<SqrtBackward0>)
+tensor(0.5677, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(8871.9033)
+tensor(7.4321)
+tensor(3196.6113)
+tensor(4197.3379)
+tensor(3811.8042)
+tensor(33.8801)
+tensor(2308.8152)
+tensor(159.8123)
+tensor(1814.2209)
+tensor(730.1689)
+STEP
+Printing metrics
+Running time one iteration: 9.459861040115356
+epoch: 0
+0.18
+images
+Time latent: 0.03637290000915527
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.2972, grad_fn=<NegBackward0>)
+Dkl: tensor(23.3921, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.6093e-06, grad_fn=<NegBackward0>) tensor(-8.9407e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.0119, grad_fn=<DivBackward0>)
+tensor(26.1620, grad_fn=<SqrtBackward0>)
+tensor(0.4144, grad_fn=<SqrtBackward0>)
+tensor(4.1111, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4868, grad_fn=<SqrtBackward0>)
+tensor(0.3996, grad_fn=<SqrtBackward0>)
+tensor(13.0665, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0283, grad_fn=<SqrtBackward0>)
+tensor(0.5678, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(7556.6460)
+tensor(6.7716)
+tensor(8131.2744)
+tensor(10052.3711)
+tensor(3618.5947)
+tensor(41.2902)
+tensor(2943.0259)
+tensor(245.5115)
+tensor(3334.9722)
+tensor(1376.8801)
+STEP
+Printing metrics
+Running time one iteration: 9.240742206573486
+epoch: 0
+0.19
+images
+Time latent: 0.02541208267211914
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(498.4747, grad_fn=<NegBackward0>)
+Dkl: tensor(23.2387, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.6689e-06, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(500.1882, grad_fn=<DivBackward0>)
+tensor(26.1639, grad_fn=<SqrtBackward0>)
+tensor(0.4144, grad_fn=<SqrtBackward0>)
+tensor(4.1076, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4875, grad_fn=<SqrtBackward0>)
+tensor(0.3996, grad_fn=<SqrtBackward0>)
+tensor(13.0666, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0274, grad_fn=<SqrtBackward0>)
+tensor(0.5678, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(7153.0381)
+tensor(8.4207)
+tensor(9643.2295)
+tensor(13262.2109)
+tensor(3778.7119)
+tensor(55.3083)
+tensor(3223.0752)
+tensor(328.5595)
+tensor(3769.8367)
+tensor(1804.5876)
+STEP
+Printing metrics
+Running time one iteration: 9.22744083404541
+epoch: 0
+0.2
+images
+Time latent: 0.02731800079345703
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(498.8429, grad_fn=<NegBackward0>)
+Dkl: tensor(23.5100, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-1.9372e-06, grad_fn=<NegBackward0>) tensor(-0., grad_fn=<NegBackward0>)
+LOSS tensor(500.5551, grad_fn=<DivBackward0>)
+tensor(26.1656, grad_fn=<SqrtBackward0>)
+tensor(0.4144, grad_fn=<SqrtBackward0>)
+tensor(4.1041, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4881, grad_fn=<SqrtBackward0>)
+tensor(0.3997, grad_fn=<SqrtBackward0>)
+tensor(13.0666, grad_fn=<SqrtBackward0>)
+tensor(0.4171, grad_fn=<SqrtBackward0>)
+tensor(13.0265, grad_fn=<SqrtBackward0>)
+tensor(0.5678, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(5342.1743)
+tensor(4.9411)
+tensor(2748.4783)
+tensor(3368.7742)
+tensor(2439.6323)
+tensor(25.1512)
+tensor(1573.7412)
+tensor(112.6738)
+tensor(1411.8171)
+tensor(546.0164)
+STEP
+Printing metrics
+Running time one iteration: 8.514217853546143
+epoch: 0
+0.21
+images
+Time latent: 0.03177380561828613
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(499.7329, grad_fn=<NegBackward0>)
+Dkl: tensor(23.4431, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2304, grad_fn=<NegBackward0>) tensor(-2.0266e-06, grad_fn=<NegBackward0>) tensor(2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(501.4440, grad_fn=<DivBackward0>)
+tensor(26.1673, grad_fn=<SqrtBackward0>)
+tensor(0.4145, grad_fn=<SqrtBackward0>)
+tensor(4.1007, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4887, grad_fn=<SqrtBackward0>)
+tensor(0.3997, grad_fn=<SqrtBackward0>)
+tensor(13.0667, grad_fn=<SqrtBackward0>)
+tensor(0.4172, grad_fn=<SqrtBackward0>)
+tensor(13.0256, grad_fn=<SqrtBackward0>)
+tensor(0.5678, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(6388.8311)
+tensor(8.2407)
+tensor(9618.2852)
+tensor(12136.4229)
+tensor(3456.5190)
+tensor(49.9653)
+tensor(3577.1812)
+tensor(334.4379)
+tensor(4587.7935)
+tensor(1970.3740)
+STEP
+Printing metrics
+Running time one iteration: 8.67956018447876
+epoch: 0
+0.22
+images
+Time latent: 0.02821183204650879
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.2546, grad_fn=<NegBackward0>)
+Dkl: tensor(23.5397, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-2.2054e-06, grad_fn=<NegBackward0>) tensor(-2.9802e-08, grad_fn=<NegBackward0>)
+LOSS tensor(502.9644, grad_fn=<DivBackward0>)
+tensor(26.1690, grad_fn=<SqrtBackward0>)
+tensor(0.4145, grad_fn=<SqrtBackward0>)
+tensor(4.0973, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4893, grad_fn=<SqrtBackward0>)
+tensor(0.3997, grad_fn=<SqrtBackward0>)
+tensor(13.0667, grad_fn=<SqrtBackward0>)
+tensor(0.4172, grad_fn=<SqrtBackward0>)
+tensor(13.0247, grad_fn=<SqrtBackward0>)
+tensor(0.5679, grad_fn=<SqrtBackward0>)
+LOSS GRAD None
+tensor(8158.4971)
+tensor(7.8838)
+tensor(5665.8896)
+tensor(6226.6787)
+tensor(3771.1592)
+tensor(40.4588)
+tensor(2846.3972)
+tensor(207.4880)
+tensor(2920.9631)
+tensor(1034.8615)
+STEP
+Printing metrics
+Running time one iteration: 8.50388789176941
+epoch: 0
+0.23
+images
+Time latent: 0.031238079071044922
+Mask tensor([[1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        [1., 0., 0., 0.],
+        ...,
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.],
+        [0., 0., 0., 1.]], grad_fn=<SoftmaxBackward0>)
+RMSD: tensor(501.5578, grad_fn=<NegBackward0>)
+Dkl: tensor(23.1926, grad_fn=<NegBackward0>)
+DKLS: tensor(-7.2303, grad_fn=<NegBackward0>) tensor(-2.3544e-06, grad_fn=<NegBackward0>) tensor(5.9605e-08, grad_fn=<NegBackward0>)
+LOSS tensor(503.2664, grad_fn=<DivBackward0>)
+tensor(26.1706, grad_fn=<SqrtBackward0>)
+tensor(0.4145, grad_fn=<SqrtBackward0>)
+tensor(4.0939, grad_fn=<SqrtBackward0>)
+tensor(0.2036, grad_fn=<SqrtBackward0>)
+tensor(18.4898, grad_fn=<SqrtBackward0>)
+tensor(0.3998, grad_fn=<SqrtBackward0>)
+tensor(13.0668, grad_fn=<SqrtBackward0>)
+tensor(0.4172, grad_fn=<SqrtBackward0>)
+tensor(13.0238, grad_fn=<SqrtBackward0>)
+tensor(0.5679, grad_fn=<SqrtBackward0>)
+Traceback (most recent call last):
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 214, in <module>
+    experiment()
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 209, in experiment
+    train_loop(net, absolute_positions, renderer, local_frame)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/main.py", line 91, in train_loop
+    = network.forward(batch_indexes, deformed_images)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/network.py", line 249, in forward
+    latent_variables, latent_parameters= self.sample_latent(indexes, images)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/network.py", line 141, in sample_latent
+    all_latent_axis = utils.sample_power_spherical(3, latent_mu_axis, latent_concentration_axis, device=self.device)
+  File "/Users/gabdu45/PycharmProjects/segmentationCryoEM/utils.py", line 237, in sample_power_spherical
+    beta_distrib = torch.distributions.beta.Beta(alpha, beta, device)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/beta.py", line 38, in __init__
+    self._dirichlet = Dirichlet(concentration1_concentration0, validate_args=validate_args)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/dirichlet.py", line 54, in __init__
+    super(Dirichlet, self).__init__(batch_shape, event_shape, validate_args=validate_args)
+  File "/Users/gabdu45/.local/lib/python3.10/site-packages/torch/distributions/distribution.py", line 56, in __init__
+    raise ValueError(
+ValueError: Expected parameter concentration (Tensor of shape (100, 4, 1, 2)) of distribution Dirichlet(concentration: torch.Size([100, 4, 1, 2])) to satisfy the constraint IndependentConstraint(GreaterThan(lower_bound=0.0), 1), but found invalid values:
+tensor([[[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]],
+        [[[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]],
+         [[nan, 1.]]]], grad_fn=<StackBackward0>)
+LOSS GRAD None
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+tensor(nan)
+STEP
+Printing metrics
+Running time one iteration: 8.841006994247437
+epoch: 0
+0.24
+images
