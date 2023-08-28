@@ -247,7 +247,6 @@ def sample_power_spherical(dimension, direction, concentration, device="cpu"):
     e1[:, :, 0] = 1
 
     u_hat = e1 - direction
-    print("u_hat", torch.min(torch.sqrt(torch.sum(u_hat ** 2, dim=-1))[:, :, None]))
     u = u_hat / (torch.sqrt(torch.sum(u_hat**2, dim=-1))[:, :, None] + 1e-5)
     reflection_matrix = torch.eye(dimension, device=device)[None, None, :, :] - 2*torch.einsum("ijk,ijl->ijkl", [u, u])
     power_spherical_variable = torch.einsum("ijkl,ijl->ijk", [reflection_matrix, y])
