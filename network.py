@@ -153,7 +153,7 @@ class Net(torch.nn.Module):
             #        all_latent_angle_powSphForm[i, k, :] = powSphDist.sample()
 
             all_latent_angle_powSphForm = utils.sample_power_spherical(2, latent_mu_angle, latent_concentration_angle, device=self.device)
-            all_latent_angle_powSphForm = torch.zeros((self.batch_size, self.N_domains, 2))
+            all_latent_angle_powSphForm = torch.zeros((self.batch_size, self.N_domains, 2), device=self.device)
             all_latent_angle_powSphForm[:, :, 1] = 1
             #Latent angle is now of shape (batch_size*N_domains, 1)
             all_latent_angle = torch.arccos(all_latent_angle_powSphForm[:, :, 0])*torch.sign(all_latent_angle_powSphForm[:, :, 1])
