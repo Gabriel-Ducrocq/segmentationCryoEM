@@ -69,6 +69,7 @@ all_new_images = []
 #image = training_images[1:2]
 image = training_images[500:501]
 all_losses = torch.zeros((100, 100), dtype=torch.float32)
+"""
 for i in range(100):
     print(i)
     angle_rot = angle_rotation[i, -1]
@@ -86,7 +87,7 @@ for i in range(100):
 all_losses = all_losses.detach().cpu().numpy()
 print(all_losses.shape)
 np.save("all_losses2nd.npy", all_losses)
-
+"""
 fig, axs = plt.subplots(2)
 all_losses = np.load("all_losses.npy")
 all_losses2 = np.load("all_losses2nd.npy")

@@ -19,14 +19,14 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="../VAEProtein/data/vaeContinuousMD/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
-N_domains = 6
+N_domains = 3
 N_pixels = 140*140
 #This represents the number of domain we think there are
-N_input_domains = 6
+N_input_domains = 3
 latent_dim = 5
 num_nodes = 1006
 cutoff1 = 300
@@ -46,13 +46,13 @@ absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(featu
 absolute_positions = absolute_positions.to(device)
 local_frame = torch.tensor(features["local_frame"])
 local_frame = local_frame.to(device)
-"""
+
 relative_positions = torch.matmul(absolute_positions, local_frame)
 pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "../VAEProtein/data/vaeContinuousMD/full_model2141"
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD/full_model2257"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -117,14 +117,15 @@ np.save(dataset_path + "all_translations_per_residue.npy", np.concatenate(all_tr
 
 rotations_per_domain = np.load(dataset_path + "all_rotations.npy")
 translations_per_domain = np.load(dataset_path + "all_translations.npy")
-"""
+
 all_rotations_per_residues = np.load(dataset_path + "all_rotations_per_residue.npy")
 all_translations_per_residues = np.load(dataset_path + "all_translations_per_residue.npy")
+
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
 saving_path = "../VAEProtein/data/MD_predicted_dataset/"
 
-for i in range(9800, 10001):
+for i in range(1, 10001):
     print(i)
     parser = PDBParser(PERMISSIVE=0)
     translations = all_translations_per_residues[i]
