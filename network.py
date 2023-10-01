@@ -68,10 +68,10 @@ class Net(torch.nn.Module):
                                    "proportions":{"mean":self.cluster_proportions_mean, "std":self.cluster_proportions_std}}
 
 
-        self.cluster_prior_means_mean = torch.tensor([300, 600, 900], dtype=torch.float32,device=device)[None, :]
-        self.cluster_prior_means_std = torch.tensor([100, 100, 100], dtype=torch.float32, device=device)[None, :]
-        self.cluster_prior_std_mean = torch.tensor([100, 100, 100], dtype=torch.float32, device=device)[None, :]
-        self.cluster_prior_std_std = torch.tensor([10, 10, 10], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_means_mean = torch.tensor([50, 100, 300, 500, 700, 900], dtype=torch.float32,device=device)[None, :]
+        self.cluster_prior_means_std = torch.tensor([100, 100, 100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_std_mean = torch.tensor([100, 100, 100, 100, 100, 100], dtype=torch.float32, device=device)[None, :]
+        self.cluster_prior_std_std = torch.tensor([10, 10, 10, 10, 10, 10], dtype=torch.float32, device=device)[None, :]
         self.cluster_prior_proportions_mean = torch.zeros(self.N_domains, dtype=torch.float32, device=device)[None, :]
         self.cluster_prior_proportions_std = torch.ones(self.N_domains, dtype=torch.float32, device=device)[None, :]
 
