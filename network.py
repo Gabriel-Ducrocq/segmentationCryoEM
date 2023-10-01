@@ -44,16 +44,16 @@ class Net(torch.nn.Module):
         #                                              requires_grad=True)
         self.residues = torch.arange(0, self.N_residues, 1, dtype=torch.float32, device=device)[:, None]
 
-        self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([200, 600, 900], dtype=torch.float32,device=device)[None, :],
+        self.cluster_means_mean = torch.nn.Parameter(data=torch.tensor([50, 150, 400, 700, 850, 950], dtype=torch.float32,device=device)[None, :],
                                                 requires_grad=True)
 
-        self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10], dtype=torch.float32, device=device)[None, :],
+        self.cluster_means_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
-        self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100], dtype=torch.float32, device=device)[None, :],
+        self.cluster_std_mean = torch.nn.Parameter(data=torch.tensor([100, 100, 100, 100, 100, 100], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
-        self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10], dtype=torch.float32, device=device)[None, :],
+        self.cluster_std_std = torch.nn.Parameter(data=torch.tensor([10, 10, 10, 10, 10, 10], dtype=torch.float32, device=device)[None, :],
                                               requires_grad=True)
 
         self.cluster_proportions_mean = torch.nn.Parameter(torch.zeros(self.N_domains, dtype=torch.float32, device=device)[None, :],
