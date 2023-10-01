@@ -19,11 +19,11 @@ NUM_ACCUMULATION_STEP = 1
 
 batch_size = 100
 #This represent the number of true domains
-N_domains = 3
+N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
-N_input_domains = 3
-latent_dim = 5
+N_input_domains = 6
+latent_dim = 40
 num_nodes = 1006
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
@@ -31,7 +31,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeContinuousMD/"):
+               dataset_path="../VAEProtein/data/vaeContinuousMD6Domains40Latent/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)

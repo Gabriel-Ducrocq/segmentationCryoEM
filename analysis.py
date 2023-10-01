@@ -19,14 +19,14 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
-N_domains = 3
+N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
-N_input_domains = 3
+N_input_domains = 6
 latent_dim = 5
 num_nodes = 1006
 cutoff1 = 300
@@ -52,7 +52,7 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD/full_model2257"
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains/full_model2141"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -72,6 +72,7 @@ model.device = "cpu"
 all_translations = []
 all_rotations_per_residues = []
 all_translations_per_residues = []
+"""
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
@@ -115,6 +116,7 @@ np.save(dataset_path + "all_translations.npy", np.concatenate(all_translations))
 np.save(dataset_path + "all_rotations_per_residue.npy", np.concatenate(all_rotations_per_residues, axis=0))
 np.save(dataset_path + "all_translations_per_residue.npy", np.concatenate(all_translations_per_residues, axis=0))
 
+"""
 rotations_per_domain = np.load(dataset_path + "all_rotations.npy")
 translations_per_domain = np.load(dataset_path + "all_translations.npy")
 
@@ -123,7 +125,7 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "../VAEProtein/data/MD_predicted_dataset/"
+saving_path = "../VAEProtein/data/MD_predicted_dataset_6Domains/"
 
 for i in range(1, 10001):
     print(i)
