@@ -218,6 +218,28 @@ def create_pictures_dataset(absolute_positions, cutoff1, cutoff2, rotation_matri
 
 
 
+def keep_backbone(structure):
+    """
+    Remove all atoms except for backbone
+    :param structure: BioPDB structure
+    :return: np.array(N_atoms_backbone, 3)
+    """
+    N_residue = 0
+    residues_indexes = []
+    absolute_positions = []
+    for model in structure:
+        for chain in model:
+            for residue in chain:
+                residues_indexes.append(N_residue)
+                name = residue.get_resname()
+                if name != "LBV":
+                    x, y, z = get_positions(residue, name)
+                    absolute_positions.append(x)
+                    absolute_positions.append(y)
+                    absolute_positions.append(z)
 
+                    N_residue += 1
+
+    return np.array(absolute_positions)
 
 
