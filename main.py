@@ -26,13 +26,13 @@ N_input_domains = 6
 latent_dim = 10
 num_nodes = 1006
 dataset_size = 10000
-one_latent_per_domain = True
+one_latent_per_domain = False
 test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeContinuousMD6DomainsDecoupledLatent/"):
+               dataset_path="../VAEProtein/data/vaeTwoClustersMDLatent40/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
