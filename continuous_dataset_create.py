@@ -105,13 +105,16 @@ all_folders = sorted(all_folders)
 all_folders = [str(fold) for fold in all_folders]
 parser = PDBParser(PERMISSIVE=0)
 batch_rotation_matrices = torch.eye(3)[None, :, :].repeat(10, 1, 1)
+all_rotation_matrices = torch.zeros((10000, 3, 3), dtype=torch.float32)
 for epoch in range(0,1):
     data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=False))
     print(all_folders)
     for i,dir in enumerate(all_folders):
         print(dir)
-        list_structures = [dataset_path + dir + "/" + struct for struct in os.listdir(dataset_path + dir) if ".pdb" in struct]
-
+        list_structures = [dataset_path + dir + "/" + struct for struct in sorted(os.listdir(dataset_path + dir)) if ".pdb" in struct]
+        angle_rotation = torch.tensor(np.load(dataset_path + dir + "/angle_rotation.npy"), dtype=torch.float32)
+        axis_rotation = torch.tensor(np.load(dataset_path + dir + "/axis_rotation.npy"), dtype=torch.float32)
+        all_rotation_matrices[i*10:i*10+10, :, :] = axis_angle_to_matrix(axis_rotation*angle_rotation[:, None])
         start = time.time()
         print("epoch:", epoch)
         print(i/1000)
@@ -131,7 +134,7 @@ for epoch in range(0,1):
 
 
         print("Deformed")
-        #list_backbone_structures = [utils.keep_backbone(parser.get_structure("A", file))[None, :, :] for file in list_structures]
+        list_backbone_structures = [utils.keep_backbone(parser.get_structure("A", file))[None, :, :] for file in list_structures]
         batch_backbone_structures = torch.tensor(np.concatenate(list_backbone_structures, axis=0), dtype=torch.float32)
         print("Backbone shape", batch_backbone_structures.shape)
         print("Rot mat:", batch_rotation_matrices.shape)
@@ -139,8 +142,6 @@ for epoch in range(0,1):
         deformed_images = renderer.compute_x_y_values_all_atoms(batch_backbone_structures, batch_rotation_matrices)
         print(torch.mean(torch.var(deformed_images, dim=(1, 2))))
         deformed_images += torch.randn_like(deformed_images)*np.sqrt(noise_var)
-        plt.imshow(deformed_images[0], cmap="gray")
-        plt.show()
         print(torch.mean(torch.var(deformed_images, dim=(1,2))))
         print("\n\n")
         #plt.imshow(deformed_images[0], cmap="gray")
@@ -150,4 +151,5 @@ for epoch in range(0,1):
 
 all_images = torch.concat(all_images, dim=0)
 print(all_images.shape)
-#torch.save(all_images, dataset_path + "continuousConformationDataSet")
+torch.save(all_images, "../VAEProtein/data/vaeTwoClustersMDLatent40/" + "continuousConformationDataSet")
+torch.save(all_rotation_matrices, "../VAEProtein/data/vaeTwoClustersMDLatent40/training_rotations_matrices")

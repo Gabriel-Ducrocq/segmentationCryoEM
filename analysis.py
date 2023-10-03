@@ -6,7 +6,7 @@ import utils
 from imageRenderer import Renderer
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle
-from  protein.main import rotate_residues
+from protein.main import rotate_residues
 from protein.main import translate_residues
 from Bio.PDB.PDBIO import PDBIO
 import Bio.PDB as bpdb
@@ -19,7 +19,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains40Latent/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -27,7 +27,7 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 5
+latent_dim = 40
 num_nodes = 1006
 cutoff1 = 300
 cutoff2 = 1353
@@ -52,10 +52,10 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains/full_model2141"
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains40Latent/full_model2140"
 model = torch.load(model_path, map_location=torch.device(device))
 
-
+"""
 #training_set = torch.load(dataset_path + "training_set", map_location=torch.device(device)).to(device)
 #training_rotations_angles = torch.load(dataset_path + "training_rotations_angles", map_location=torch.device(device)).to(device)
 #training_rotations_axis = torch.load(dataset_path + "training_rotations_axis", map_location=torch.device(device)).to(device)
@@ -72,7 +72,7 @@ model.device = "cpu"
 all_translations = []
 all_rotations_per_residues = []
 all_translations_per_residues = []
-"""
+
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
@@ -125,14 +125,14 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "../VAEProtein/data/MD_predicted_dataset_6Domains/"
+saving_path = "../VAEProtein/data/vaeContinuousMD6Domains40Latent/predicted_dataset/"
 
 for i in range(1, 10001):
     print(i)
     parser = PDBParser(PERMISSIVE=0)
     translations = all_translations_per_residues[i]
     rotations = all_rotations_per_residues[i]
-    structure = parser.get_structure("A", pdb_path + "test_"+str(i)+".pdb")
+    structure = parser.get_structure("A", pdb_path + "test_1.pdb")
     io = bpdb.PDBIO()
     io.set_structure(structure)
     io.save(saving_path + "predicted_test_"+ str(i)+ ".pdb", ResSelect())

@@ -9,8 +9,9 @@ from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 class Net(torch.nn.Module):
     def __init__(self, N_residues, N_domains, latent_dim, encoder, decoder, renderer, local_frame, atom_absolute_positions,
-                 batch_size, device, alpha_entropy = 0.0001, use_encoder = True):
+                 batch_size, device, alpha_entropy = 0.0001, use_encoder = True, one_latent_per_domain=False):
         super(Net, self).__init__()
+        self.one_latent_per_domain = one_latent_per_domain
         self.N_residues = N_residues
         self.N_domains = N_domains
         self.latent_dim = latent_dim
@@ -110,9 +111,15 @@ class Net(torch.nn.Module):
         if self.use_encoder:
             batch_size = images.shape[0]
             latent_mean_std = self.encode(images)
-            latent_mean = latent_mean_std[:, :self.latent_dim]
-            latent_std = latent_mean_std[:, self.latent_dim:]
-            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+            if self.one_latent_per_domain:
+                latent_mean = latent_mean_std[:, :self.latent_dim*self.N_domains]
+                latent_std = latent_mean_std[:, self.latent_dim*self.N_domains:]
+                latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim*self.N_domains), device=self.device) + latent_mean
+            else:
+                latent_mean = latent_mean_std[:, :self.latent_dim]
+                latent_std = latent_mean_std[:, self.latent_dim:]
+                latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+
             return latent_vars, latent_mean, latent_std
 
         batch_size = distrib_parameters.shape[0]
@@ -207,10 +214,19 @@ class Net(torch.nn.Module):
             latent_variables = self.sample_latent(indexes, images)
 
         #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
-        features = latent_variables
-        output = self.decoder.forward(features)
-        ## The translations are the first 3 scalars and quaternions the last 3
-        output = torch.reshape(output, (batch_size, self.N_domains,2*3))
+        if not self.one_latent_per_domain:
+            output = self.decoder.forward(latent_variables)
+            ## The translations are the first 3 scalars and quaternions the last 3
+            output = torch.reshape(output, (batch_size, self.N_domains, 2 * 3))
+        else:
+            output_all_domains = []
+            for k in range(self.N_domains):
+                latent_variable_k = latent_variables[:, self.latent_dim*k:self.latent_dim*(k+1)]
+                output_k = self.decoder.forward(latent_variable_k)
+                output_all_domains.append(output_k[:, None, :])
+
+            output = torch.concat(output_all_domains, dim=1)
+
         scalars_per_domain = output[:, :, :3]
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)

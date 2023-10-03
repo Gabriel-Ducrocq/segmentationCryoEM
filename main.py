@@ -23,15 +23,16 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 40
+latent_dim = 10
 num_nodes = 1006
 dataset_size = 10000
+one_latent_per_domain = True
 test_set_size = int(dataset_size/10)
 
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeContinuousMD6Domains40Latent/"):
+               dataset_path="../VAEProtein/data/vaeContinuousMD6DomainsDecoupledLatent/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -161,8 +162,15 @@ def experiment(graph_file="data/features.npy"):
     local_frame = local_frame.to(device)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    translation_mlp = MLP(latent_dim, 2*3*N_input_domains, 350, device, num_hidden_layers=2, network_type="decoder")
-    encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+    if one_latent_per_domain:
+        translation_mlp = MLP(latent_dim, 2 * 3 , 350, device, num_hidden_layers=2,
+                              network_type="decoder")
+        encoder_mlp = MLP(N_pixels, latent_dim * 2*N_input_domains, [2048, 1024, 512, 512], device, num_hidden_layers=4,
+                          network_type="encoder")
+    else:
+        translation_mlp = MLP(latent_dim, 2 * 3 * N_input_domains, 350, device, num_hidden_layers=2,
+                              network_type="decoder")
+        encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
@@ -175,7 +183,7 @@ def experiment(graph_file="data/features.npy"):
     #          absolute_positions, batch_size, device, use_encoder=False)
 
     net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
-              absolute_positions, batch_size, device, use_encoder=True)
+              absolute_positions, batch_size, device, use_encoder=True, one_latent_per_domain=one_latent_per_domain)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)
 
