@@ -19,7 +19,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains40Latent/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -27,11 +27,12 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 40
+latent_dim = 10
 num_nodes = 1006
 cutoff1 = 300
 cutoff2 = 1353
 K_nearest_neighbors = 30
+one_latent_per_domain = False
 num_edges = num_nodes*K_nearest_neighbors
 #B = 10
 B = 100
@@ -52,10 +53,11 @@ pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
 pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD6Domains40Latent/full_model2140"
+
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/full_model2119"
 model = torch.load(model_path, map_location=torch.device(device))
 
-"""
+
 #training_set = torch.load(dataset_path + "training_set", map_location=torch.device(device)).to(device)
 #training_rotations_angles = torch.load(dataset_path + "training_rotations_angles", map_location=torch.device(device)).to(device)
 #training_rotations_axis = torch.load(dataset_path + "training_rotations_axis", map_location=torch.device(device)).to(device)
@@ -87,8 +89,18 @@ for epoch in range(0, 1):
         ##Getting the batch translations, rotations and corresponding rotation matrices
         batch_images = torch.flatten(images[batch_indexes], start_dim=1, end_dim=2)
         latent_distrib = model.encoder.forward(batch_images)
-        transforms = model.decoder.forward(latent_distrib[:, :latent_dim])
-        transforms = torch.reshape(transforms, (batch_size, N_input_domains, 2 * 3))
+        if not one_latent_per_domain:
+            transforms = model.decoder.forward(latent_distrib[:, :latent_dim])
+            transforms = torch.reshape(transforms, (batch_size, N_input_domains, 2 * 3))
+        else:
+            output_all_domains = []
+            for k in range(N_input_domains):
+                latent_variable_k = latent_distrib[:, latent_dim*k:latent_dim*(k+1)]
+                output_k = model.decoder.forward(latent_variable_k)
+                output_all_domains.append(output_k[:, None, :])
+
+            transforms = torch.concat(output_all_domains, dim=1)
+
         scalars_per_domain = transforms[:, :, :3]
 
         ones = torch.ones(size=(batch_size, N_input_domains, 1), device=device)
@@ -116,7 +128,7 @@ np.save(dataset_path + "all_translations.npy", np.concatenate(all_translations))
 np.save(dataset_path + "all_rotations_per_residue.npy", np.concatenate(all_rotations_per_residues, axis=0))
 np.save(dataset_path + "all_translations_per_residue.npy", np.concatenate(all_translations_per_residues, axis=0))
 
-"""
+
 rotations_per_domain = np.load(dataset_path + "all_rotations.npy")
 translations_per_domain = np.load(dataset_path + "all_translations.npy")
 
@@ -125,9 +137,9 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "../VAEProtein/data/vaeContinuousMD6Domains40Latent/predicted_dataset/"
+saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/predicted_structures/"
 
-for i in range(1, 10001):
+for i in range(0, 10001):
     print(i)
     parser = PDBParser(PERMISSIVE=0)
     translations = all_translations_per_residues[i]

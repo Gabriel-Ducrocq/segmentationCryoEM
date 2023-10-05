@@ -23,7 +23,7 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 10
+latent_dim = 40
 num_nodes = 1006
 dataset_size = 10000
 one_latent_per_domain = False
