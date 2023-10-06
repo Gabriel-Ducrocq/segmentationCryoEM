@@ -243,3 +243,18 @@ def keep_backbone(structure):
     return np.array(absolute_positions)
 
 
+def compute_log_gaussian_pdf(x, parameters, latent_dim):
+    """
+    Compute gaussian pdf given mean and std
+    :param x: torch.tensor(N_batch, latent_dim)
+    :param parameters: torch.tensor(N_batch, N_components, 2*latent_dim)
+    :return: torch.tensor(N_batch, N_components)
+    """
+    avg = parameters[:, :, :latent_dim]
+    std = parameters[:, :, latent_dim:]
+    log_unnormalized_pdf = torch.sum(-0.5*(x[:, None, :] - avg)**2/std**2, dim=-1)
+    log_determinant = torch.sum(torch.log(std), dim=-1)
+    return log_unnormalized_pdf - log_determinant - (latent_dim/2)*np.log(2*np.pi)
+
+
+

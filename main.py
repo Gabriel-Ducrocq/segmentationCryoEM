@@ -23,7 +23,10 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 40
+latent_dim_x = 40
+##Latent of w, see DEEP UNSUPERVISED CLUSTERING WITH GAUSSIAN MIXTURE VARIATIONAL AUTOENCODERS
+latent_dim_w = 40
+N_mixture_components = 4
 num_nodes = 1006
 dataset_size = 10000
 one_latent_per_domain = False
@@ -32,7 +35,7 @@ test_set_size = int(dataset_size/10)
 print("Is cuda available ?", torch.cuda.is_available())
 
 def train_loop(network, absolute_positions, renderer, local_frame, generate_dataset=True,
-               dataset_path="../VAEProtein/data/vaeTwoClustersMDLatent40/"):
+               dataset_path="../VAEProtein/data/vaeTwoClustersMDLatent40GMM/"):
     optimizer = torch.optim.Adam(network.parameters(), lr=0.0003)
     #optimizer = torch.optim.Adam(network.parameters(), lr=0.003)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=300)
@@ -71,11 +74,11 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
             #plt.show()
             print("images")
             #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_distrib_parameters, latent_mean, latent_std\
+            new_structure, mask_weights, translations, latent_variables_w, latent_mean_w, latent_std_w, latent_variables_x, latent_mean_x, latent_std_x\
                 = network.forward(batch_indexes, deformed_images)
 
             loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
-                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean, latent_std)
+                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean_w, latent_std_w, latent_mean_x, latent_std_x)
             loss = loss/NUM_ACCUMULATION_STEP
             loss.backward()
             #optimizer.step()
@@ -163,14 +166,20 @@ def experiment(graph_file="data/features.npy"):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if one_latent_per_domain:
-        translation_mlp = MLP(latent_dim, 2 * 3 , 350, device, num_hidden_layers=2,
+        translation_mlp = MLP(latent_dim_x, 2 * 3 , 350, device, num_hidden_layers=2,
                               network_type="decoder")
-        encoder_mlp = MLP(N_pixels, latent_dim * 2*N_input_domains, [2048, 1024, 512, 512], device, num_hidden_layers=4,
+        encoder_mlp = MLP(N_pixels, latent_dim_x * 2*N_input_domains, [2048, 1024, 512, 512], device, num_hidden_layers=4,
                           network_type="encoder")
     else:
-        translation_mlp = MLP(latent_dim, 2 * 3 * N_input_domains, 350, device, num_hidden_layers=2,
+        translation_mlp = MLP(latent_dim_x, 2 * 3 * N_input_domains, 350, device, num_hidden_layers=2,
                               network_type="decoder")
-        encoder_mlp = MLP(N_pixels, latent_dim*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+        encoder_mlp = MLP(N_pixels, latent_dim_x*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+        encoder_x = MLP(N_pixels, latent_dim_w*2, [2048, 1024, 512, 512], device, num_hidden_layers=4, network_type="encoder")
+        nets_x_given_w = [MLP(latent_dim_w, latent_dim_x*2, [latent_dim_w, latent_dim_w, latent_dim_w, latent_dim_w], device, num_hidden_layers=4, network_type="encoder")
+                            for _ in range(N_mixture_components)]
+
+
+
     #encoder_mlp = MLP(N_pixels, latent_dim * 2, [57600, 2048, 1024, 512, 512], device, num_hidden_layers=4)
 
     #pixels_x = np.linspace(-150, 150, num=64).reshape(1, -1)
@@ -182,8 +191,10 @@ def experiment(graph_file="data/features.npy"):
     #net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
     #          absolute_positions, batch_size, device, use_encoder=False)
 
-    net = Net(num_nodes, N_input_domains, latent_dim, encoder_mlp, translation_mlp, renderer, local_frame,
-              absolute_positions, batch_size, device, use_encoder=True, one_latent_per_domain=one_latent_per_domain)
+    net = Net(num_nodes, N_input_domains, latent_dim_x, encoder_mlp, translation_mlp, renderer, local_frame,
+              absolute_positions, batch_size, device, use_encoder=True, one_latent_per_domain=one_latent_per_domain,
+              encoder_x = encoder_x, nets_x_given_w=nets_x_given_w, latent_clustering=True,
+              n_components_mixture= N_mixture_components, latent_dim_w=latent_dim_w)
     net.to(device)
     train_loop(net, absolute_positions, renderer, local_frame)
 

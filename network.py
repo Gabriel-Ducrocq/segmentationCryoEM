@@ -3,18 +3,27 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
+
+import utils
 from mlp import MLP
 from pytorch3d.transforms import quaternion_to_axis_angle, axis_angle_to_matrix
 
 
 class Net(torch.nn.Module):
-    def __init__(self, N_residues, N_domains, latent_dim, encoder, decoder, renderer, local_frame, atom_absolute_positions,
-                 batch_size, device, alpha_entropy = 0.0001, use_encoder = True, one_latent_per_domain=False):
+    def __init__(self, N_residues, N_domains, latent_dim_x, encoder, decoder, renderer, local_frame, atom_absolute_positions,
+                 batch_size, device, alpha_entropy = 0.0001, use_encoder = True, one_latent_per_domain=False,
+                 encoder_x = None, nets_x_given_w=None, latent_clustering=False, latent_dim_w = 10,
+                 n_components_mixture = 10):
         super(Net, self).__init__()
+        self.encoder_x = encoder_x
+        self.latent_dim_w = latent_dim_w
+        self.nets_x_given_w = nets_x_given_w
+        self.latent_clustering = latent_clustering
+        self.n_components_mixture = n_components_mixture
         self.one_latent_per_domain = one_latent_per_domain
         self.N_residues = N_residues
         self.N_domains = N_domains
-        self.latent_dim = latent_dim
+        self.latent_dim_x = latent_dim_x
         self.epsilon_loss = 1e-10
         self.encoder = encoder
         self.decoder = decoder
@@ -28,12 +37,7 @@ class Net(torch.nn.Module):
         self.batch_size = batch_size
         self.alpha_entropy = alpha_entropy
         self.device = device
-        self.SLICE_MU = slice(0,self.latent_dim)
-        self.SLICE_SIGMA = slice(self.latent_dim, 2*self.latent_dim)
-        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim), device=device), requires_grad=True)
-        #self.latent_std = torch.nn.Parameter(data=torch.randn((10000, self.latent_dim), device=device), requires_grad=True)
-        self.latent_std = torch.ones((100000, self.latent_dim), device=device)*0.01
-        self.prior_std = self.latent_std
+        self.latent_mean = torch.nn.Parameter(data=torch.randn((100000, self.latent_dim_w), device=device), requires_grad=True)
         self.tau = 0.05
         self.annealing_tau = 1
         self.use_encoder = use_encoder
@@ -102,31 +106,53 @@ class Net(torch.nn.Module):
         distrib_parameters = self.encoder.forward(flattened_images)
         return distrib_parameters
 
-    def sample_latent(self, distrib_parameters, images=None):
+    def encode_x_given_y(self, images):
+        """
+        Encode images into latent variables
+        :param images: (N_batch, N_pix_x, N_pix_y) containing the cryoEM images
+        :return: (N_batch, 2*latent_dim_w) predicted gaussian distribution over the latent variables
+        """
+        flattened_images = torch.flatten(images, start_dim=1, end_dim=2)
+        w_mean_std = self.encoder_x(flattened_images)
+        latent_mean = w_mean_std[:, :self.latent_dim_x]
+        latent_std = w_mean_std[:, self.latent_dim_x:]
+        w = torch.randn(size=(self.batch_size, self.latent_dim_w))*latent_std + latent_mean
+        return w, latent_mean, latent_std
+
+    def compute_p_z_given_xw(self, x, w):
+        """
+        Compute the probabilities of the discrete variable z, z=k is x belongs to component K in the mixture
+        :param x: torch.tensor(N_batch, latent_dim), latent variable
+        :param w: torch.tensor(N_batch, latent_w), latent variable for generating x
+        :return: torch.tensor(N_batch, N_components_mixture), probabilities that z = K
+        """
+        mean_std_per_component = torch.concat([net(w)[:, None, :] for net in self.nets_x_given_w], dim=1)
+        #gaussian_pdf is a torch.tensor of size (N_batch, N_component_mixture)
+        log_gaussian_pdfs = utils.compute_log_gaussian_pdf(x, mean_std_per_component, self.latent_dim_x)
+        p_z = torch.softmax(log_gaussian_pdfs, dim=-1)
+        return p_z
+
+    def sample_latent(self, images=None):
         """
         Sample from the approximate posterior over the latent space
         :param distrib_parameters: (N_batch, 2*latent_dim) the parameters mu, sigma of the approximate posterior
         :return: (N_batch, latent_dim) actual samples.
         """
-        if self.use_encoder:
-            batch_size = images.shape[0]
-            latent_mean_std = self.encode(images)
-            if self.one_latent_per_domain:
-                latent_mean = latent_mean_std[:, :self.latent_dim*self.N_domains]
-                latent_std = latent_mean_std[:, self.latent_dim*self.N_domains:]
-                latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim*self.N_domains), device=self.device) + latent_mean
-            else:
-                latent_mean = latent_mean_std[:, :self.latent_dim]
-                latent_std = latent_mean_std[:, self.latent_dim:]
-                latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim), device=self.device) + latent_mean
+        batch_size = images.shape[0]
+        latent_mean_std = self.encode(images)
+        if self.one_latent_per_domain:
+            latent_mean = latent_mean_std[:, :self.latent_dim_w*self.N_domains]
+            latent_std = latent_mean_std[:, self.latent_dim_w*self.N_domains:]
+            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim_w*self.N_domains), device=self.device) + latent_mean
+        else:
+            latent_mean = latent_mean_std[:, :self.latent_dim_w]
+            latent_std = latent_mean_std[:, self.latent_dim_w:]
+            print(latent_std.shape)
+            print(latent_mean.shape)
+            latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim_w), device=self.device) + latent_mean
 
-            return latent_vars, latent_mean, latent_std
+        return latent_vars, latent_mean, latent_std
 
-        batch_size = distrib_parameters.shape[0]
-        latent_vars = self.latent_std[distrib_parameters]*torch.randn(size=(batch_size, self.latent_dim), device=self.device)\
-                      + self.latent_mean[distrib_parameters]
-
-        return latent_vars
 
 
     def deform_structure(self, weights, translation_scalars, rotations_per_residue):
@@ -197,6 +223,45 @@ class Net(torch.nn.Module):
         + (1/2)*(self.cluster_parameters[variable]["std"]**2 +
         (self.cluster_prior[variable]["mean"] - self.cluster_parameters[variable]["mean"])**2)/self.cluster_prior[variable]["std"]**2)
 
+    def compute_z_prior_term(self, x_mean, x_std, w_mean, w_std):
+        """
+        Compute the z prior term
+        :param x_mean: torch.tensor(N_batch, latent_dim) of means of the approximate posterior over x
+        :param x_std: torch.tensor(N_batch, latent_dim) of std of the approximate posterior over x
+        :param w_mean: torch.tensor(N_batch, latent_dim_w) of mean of the approximate posterior over w
+        :param w_std: torch.tensor(N_batch, latent_dim_w) of std of the approximate posterior over w
+        :return: torch.tensor(N_batch, ) of the expected KL divergence estimated with ONE data point for each image.
+        """
+        x = torch.randn_like(x_mean)*x_std + x_mean
+        w = torch.randn_like(w_mean)*w_std + w_mean
+        #p_z is torch.tensor(N_batch, N_components_mixture)
+        p_z = self.compute_p_z_given_xw(x,w)
+        log_pz = torch.log(p_z)
+        KL = torch.sum((log_pz + np.log(self.n_components_mixture))*p_z, dim=-1)
+        return KL
+
+    def compute_x_prior_term(self, x_mean, x_std, w_mean, w_std):
+        """
+        Compute the x prior term, approximated with only ONE point for each example in the batch
+        :param x_mean: torch.tensor(N_batch, latent_dim)
+        :param x_std: torch.tensor(N_batch, latent_dim)
+        :param w_mean: torch.tensor(N_batch, latent_dim_w)
+        :param w_std: torch.tensor(N_batch, latent_dim_w)
+        :return: torch.tensor(N_batch, ) x prior term for each batch point
+        """
+        posterior_x_entropy = - self.latent_dim_x/2*np.log(2*np.pi) - torch.sum(1 + torch.log(x_std**2), dim=-1)*0.5
+
+        x_sampled = x_mean + torch.randn_like(x_mean)*x_std
+        w_sampled = w_mean + torch.randn_like(w_mean)*w_std
+        #distributions_x_given_w is torch.tensor(N_batch, N_components_mixture, 2*latent_dim)
+        distributions_x_given_w = torch.concat([net(w_sampled)[:, None, :] for net in self.nets_x_given_w], dim=1)
+        log_p_x_given_wz = utils.compute_log_gaussian_pdf(x_sampled, distributions_x_given_w, self.latent_dim_x)
+        p_z = self.compute_p_z_given_xw(x_sampled, w_sampled)
+        cross_entropy_approx = torch.sum(log_p_x_given_wz*p_z, dim=-1)
+
+        return posterior_x_entropy - cross_entropy_approx
+
+
 
 
     def forward(self, indexes, images=None):
@@ -208,20 +273,18 @@ class Net(torch.nn.Module):
         """
         batch_size = indexes.shape[0]
         weights = self.compute_mask()
-        if self.use_encoder:
-            latent_variables, latent_mean, latent_std = self.sample_latent(indexes, images)
-        else:
-            latent_variables = self.sample_latent(indexes, images)
+        latent_variables_w, latent_mean_w, latent_std_w = self.sample_latent(images)
+        latent_variables_x, latent_mean_x, latent_std_x = self.encode_x_given_y(images)
 
         #features = torch.cat([latent_variables, rotation_angles, rotation_axis], dim=1)
         if not self.one_latent_per_domain:
-            output = self.decoder.forward(latent_variables)
+            output = self.decoder.forward(latent_variables_x)
             ## The translations are the first 3 scalars and quaternions the last 3
             output = torch.reshape(output, (batch_size, self.N_domains, 2 * 3))
         else:
             output_all_domains = []
             for k in range(self.N_domains):
-                latent_variable_k = latent_variables[:, self.latent_dim*k:self.latent_dim*(k+1)]
+                latent_variable_k = latent_variables_x[:, self.latent_dim_x*k:self.latent_dim_x*(k+1)]
                 output_k = self.decoder.forward(latent_variable_k)
                 output_all_domains.append(output_k[:, None, :])
 
@@ -232,14 +295,11 @@ class Net(torch.nn.Module):
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
         new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
-        if self.use_encoder:
-            return new_structure, weights, translations, latent_variables, latent_mean, latent_std
-        else:
-            return new_structure, weights, translations, latent_variables, None, None
+        return new_structure, weights, translations, latent_variables_w, latent_mean_w, latent_std_w, latent_variables_x, latent_mean_x, latent_std_x
 
 
-    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_mean=None, latent_std=None
-             , train=True):
+    def loss(self, new_structures, mask_weights, images, distrib_parameters, rotation_matrices, latent_mean_w=None, latent_std_w=None,
+             x_mean=None, x_std=None, train=True):
         """
 
         :param new_structures: tensor (N_batch, 3*N_residues, 3) of absolute positions of atoms.
@@ -252,26 +312,19 @@ class Net(torch.nn.Module):
         batch_ll = -0.5*torch.sum((new_images - images)**2, dim=(-2, -1))
         nll = -torch.mean(batch_ll)
 
-        if self.use_encoder:
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std ** 2 + self.epsilon_loss) \
-                                                   - latent_mean ** 2 \
-                                                   - latent_std ** 2, dim=1)
+        minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(latent_std_w ** 2 + self.epsilon_loss) \
+                                               - latent_mean_w ** 2 \
+                                               - latent_std_w ** 2, dim=1)
 
-        else:
-            #minus_batch_Dkl_loss = 0.5 * torch.sum(1 + torch.log(self.latent_std[distrib_parameters] ** 2)\
-            #                             - self.latent_mean[distrib_parameters] ** 2 \
-            #                             - self.latent_std[distrib_parameters] ** 2, dim=1)
-
-            minus_batch_Dkl_loss = 0.5 * torch.sum(1 - torch.log(self.prior_std[distrib_parameters]**2) +
-                                                   torch.log(self.latent_std[distrib_parameters] ** 2)\
-                                         - self.latent_mean[distrib_parameters] ** 2/ self.prior_std[distrib_parameters]**2 \
-                                         - self.latent_std[distrib_parameters] ** 2/self.prior_std[distrib_parameters]**2, dim=1)
+        minus_batch_KL_x_prior = -self.compute_x_prior_term(x_mean, x_std, latent_mean_w, latent_std_w)
+        minus_batch_KL_z_prior = -self.compute_z_prior_term(x_mean, x_std, latent_mean_w, latent_std_w)
 
 
         minus_batch_Dkl_mask_mean = -self.compute_Dkl_mask("means")
         minus_batch_Dkl_mask_std = -self.compute_Dkl_mask("stds")
         minus_batch_Dkl_mask_proportions = -self.compute_Dkl_mask("proportions")
         Dkl_loss = -torch.mean(minus_batch_Dkl_loss)
+
         #total_loss_per_batch = -batch_ll - 0.001*minus_batch_Dkl_loss
         #loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
         #       - 0.0001*minus_batch_Dkl_mask_proportions
@@ -280,7 +333,7 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.0001*minus_batch_Dkl_loss
         ##Trying with even lower weight on DKL:
         #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
-        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss
+        total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss - 0.001*minus_batch_KL_x_prior - 0.001*minus_batch_KL_z_prior
 
         if self.use_encoder:
             l2_pen = 0
