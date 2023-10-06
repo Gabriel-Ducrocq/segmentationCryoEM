@@ -335,17 +335,14 @@ class Net(torch.nn.Module):
         #total_loss_per_batch = -batch_ll - 0.0000001 * minus_batch_Dkl_loss
         total_loss_per_batch = -batch_ll - 0.001 * minus_batch_Dkl_loss - 0.001*minus_batch_KL_x_prior - 0.001*minus_batch_KL_z_prior
 
-        if self.use_encoder:
-            l2_pen = 0
-            for name,p in self.named_parameters():
-                if "weight" in name and ("encoder" in name or "decoder" in name):
-                    l2_pen += torch.sum(p**2)
+        l2_pen = 0
+        for name,p in self.named_parameters():
+            if "weight" in name and ("encoder" in name or "decoder" in name):
+                l2_pen += torch.sum(p**2)
 
-            loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-                   - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
-        else:
-            loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
-                    - 0.0001*minus_batch_Dkl_mask_proportions
+        loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
+               - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
+
 
 
         if train:
