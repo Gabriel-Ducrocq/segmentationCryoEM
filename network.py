@@ -116,7 +116,7 @@ class Net(torch.nn.Module):
         w_mean_std = self.encoder_x(flattened_images)
         latent_mean = w_mean_std[:, :self.latent_dim_x]
         latent_std = w_mean_std[:, self.latent_dim_x:]
-        w = torch.randn(size=(self.batch_size, self.latent_dim_w))*latent_std + latent_mean
+        w = torch.randn(size=(self.batch_size, self.latent_dim_w), device=self.device)*latent_std + latent_mean
         return w, latent_mean, latent_std
 
     def compute_p_z_given_xw(self, x, w):
@@ -232,8 +232,8 @@ class Net(torch.nn.Module):
         :param w_std: torch.tensor(N_batch, latent_dim_w) of std of the approximate posterior over w
         :return: torch.tensor(N_batch, ) of the expected KL divergence estimated with ONE data point for each image.
         """
-        x = torch.randn_like(x_mean)*x_std + x_mean
-        w = torch.randn_like(w_mean)*w_std + w_mean
+        x = torch.randn_like(x_mean, device=self.device)*x_std + x_mean
+        w = torch.randn_like(w_mean, device=self.device)*w_std + w_mean
         #p_z is torch.tensor(N_batch, N_components_mixture)
         p_z = self.compute_p_z_given_xw(x,w)
         log_pz = torch.log(p_z)
@@ -251,8 +251,8 @@ class Net(torch.nn.Module):
         """
         posterior_x_entropy = - self.latent_dim_x/2*np.log(2*np.pi) - torch.sum(1 + torch.log(x_std**2), dim=-1)*0.5
 
-        x_sampled = x_mean + torch.randn_like(x_mean)*x_std
-        w_sampled = w_mean + torch.randn_like(w_mean)*w_std
+        x_sampled = x_mean + torch.randn_like(x_mean, device=self.device)*x_std
+        w_sampled = w_mean + torch.randn_like(w_mean, device=self.device)*w_std
         #distributions_x_given_w is torch.tensor(N_batch, N_components_mixture, 2*latent_dim)
         distributions_x_given_w = torch.concat([net(w_sampled)[:, None, :] for net in self.nets_x_given_w], dim=1)
         log_p_x_given_wz = utils.compute_log_gaussian_pdf(x_sampled, distributions_x_given_w, self.latent_dim_x)
