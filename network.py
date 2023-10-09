@@ -119,7 +119,7 @@ class Net(torch.nn.Module):
         w = torch.randn(size=(self.batch_size, self.latent_dim_w), device=self.device)*latent_std + latent_mean
         return w, latent_mean, latent_std
 
-    def compute_p_z_given_xw(self, x, w):
+    def compute_log_p_z_given_xw(self, x, w):
         """
         Compute the probabilities of the discrete variable z, z=k is x belongs to component K in the mixture
         :param x: torch.tensor(N_batch, latent_dim), latent variable
@@ -129,8 +129,8 @@ class Net(torch.nn.Module):
         mean_std_per_component = torch.concat([net(w)[:, None, :] for net in self.nets_x_given_w], dim=1)
         #gaussian_pdf is a torch.tensor of size (N_batch, N_component_mixture)
         log_gaussian_pdfs = utils.compute_log_gaussian_pdf(x, mean_std_per_component, self.latent_dim_x)
-        p_z = torch.softmax(log_gaussian_pdfs, dim=-1)
-        return p_z
+        log_p_z = log_gaussian_pdfs - torch.logsumexp(log_gaussian_pdfs, dim=-1)
+        return log_p_z
 
     def sample_latent(self, images=None):
         """
@@ -147,8 +147,6 @@ class Net(torch.nn.Module):
         else:
             latent_mean = latent_mean_std[:, :self.latent_dim_w]
             latent_std = latent_mean_std[:, self.latent_dim_w:]
-            print(latent_std.shape)
-            print(latent_mean.shape)
             latent_vars = latent_std*torch.randn(size=(batch_size, self.latent_dim_w), device=self.device) + latent_mean
 
         return latent_vars, latent_mean, latent_std
@@ -235,9 +233,8 @@ class Net(torch.nn.Module):
         x = torch.randn_like(x_mean, device=self.device)*x_std + x_mean
         w = torch.randn_like(w_mean, device=self.device)*w_std + w_mean
         #p_z is torch.tensor(N_batch, N_components_mixture)
-        p_z = self.compute_p_z_given_xw(x,w)
-        log_pz = torch.log(p_z)
-        KL = torch.sum((log_pz + np.log(self.n_components_mixture))*p_z, dim=-1)
+        log_pz = self.compute_log_p_z_given_xw(x,w)
+        KL = torch.sum((log_pz + np.log(self.n_components_mixture))*torch.exp(log_pz), dim=-1)
         return KL
 
     def compute_x_prior_term(self, x_mean, x_std, w_mean, w_std):
@@ -256,8 +253,8 @@ class Net(torch.nn.Module):
         #distributions_x_given_w is torch.tensor(N_batch, N_components_mixture, 2*latent_dim)
         distributions_x_given_w = torch.concat([net(w_sampled)[:, None, :] for net in self.nets_x_given_w], dim=1)
         log_p_x_given_wz = utils.compute_log_gaussian_pdf(x_sampled, distributions_x_given_w, self.latent_dim_x)
-        p_z = self.compute_p_z_given_xw(x_sampled, w_sampled)
-        cross_entropy_approx = torch.sum(log_p_x_given_wz*p_z, dim=-1)
+        log_p_z = self.compute_log_p_z_given_xw(x_sampled, w_sampled)
+        cross_entropy_approx = torch.sum(log_p_x_given_wz*torch.exp(log_p_z), dim=-1)
 
         return posterior_x_entropy - cross_entropy_approx
 
