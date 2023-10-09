@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="623e62ad-3fe9-43a4-8eed-6061e25ab45f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -165,11 +166,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.network" />
         <item itemvalue="Python.analysis" />
         <item itemvalue="Python.continuous_dataset_create" />
         <item itemvalue="Python.loss_landscape" />
         <item itemvalue="Python.createGraph" />
-        <item itemvalue="Python.network" />
       </list>
     </recent_temporary>
   </component>

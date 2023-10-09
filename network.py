@@ -337,8 +337,13 @@ class Net(torch.nn.Module):
 
         l2_pen = 0
         for name,p in self.named_parameters():
-            if "weight" in name and ("encoder" in name or "decoder" in name):
+            if "weight" in name and ("encoder" in name or "decoder" in name or "net" in name):
                 l2_pen += torch.sum(p**2)
+
+        for net in self.nets_x_given_w:
+            for name, p in net.named_parameters():
+                if "weight" in name:
+                    l2_pen += torch.sum(p ** 2)
 
         loss = torch.mean(total_loss_per_batch) - 0.0001*minus_batch_Dkl_mask_mean - 0.0001*minus_batch_Dkl_mask_std \
                - 0.0001*minus_batch_Dkl_mask_proportions+0.001*l2_pen
