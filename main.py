@@ -54,106 +54,107 @@ def train_loop(network, absolute_positions, renderer, local_frame, generate_data
     training_images = torch.load(dataset_path + "continuousConformationDataSet")
     print("TRAINING IMAGES SHAPE", training_images.shape)
     training_indexes = torch.tensor(np.array(range(10000)))
-    for epoch in range(0,5000):
-        epoch_loss = torch.empty(1000)
-        #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
-        data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
-        #for i in range(100):
-        for idx, batch_indexes in enumerate(data_loader):
-            start = time.time()
-            print("epoch:", epoch)
-            print(idx/100)
-            #batch_indexes = next(data_loader)
-            deformed_images = training_images[batch_indexes]
-            batch_rotation_matrices = training_rotations_matrices[batch_indexes]
-            deformed_images = deformed_images.to(device)
-            batch_indexes = batch_indexes.to(device)
-            #print(batch_rotations[0])
-            #print(batch_data)
-            #plt.imshow(deformed_images[0], cmap="gray")
-            #plt.show()
-            print("images")
-            #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
-            new_structure, mask_weights, translations, latent_variables_w, latent_mean_w, latent_std_w, latent_variables_x, latent_mean_x, latent_std_x\
-                = network.forward(batch_indexes, deformed_images)
+    with torch.autograd.detect_anomaly(check_nan=True):
+        for epoch in range(0,5000):
+            epoch_loss = torch.empty(1000)
+            #data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
+            data_loader = iter(DataLoader(training_indexes, batch_size=batch_size, shuffle=True))
+            #for i in range(100):
+            for idx, batch_indexes in enumerate(data_loader):
+                start = time.time()
+                print("epoch:", epoch)
+                print(idx/100)
+                #batch_indexes = next(data_loader)
+                deformed_images = training_images[batch_indexes]
+                batch_rotation_matrices = training_rotations_matrices[batch_indexes]
+                deformed_images = deformed_images.to(device)
+                batch_indexes = batch_indexes.to(device)
+                #print(batch_rotations[0])
+                #print(batch_data)
+                #plt.imshow(deformed_images[0], cmap="gray")
+                #plt.show()
+                print("images")
+                #new_structure, mask_weights, translations, latent_distrib_parameters = network.forward(deformed_images)
+                new_structure, mask_weights, translations, latent_variables_w, latent_mean_w, latent_std_w, latent_variables_x, latent_mean_x, latent_std_x\
+                    = network.forward(batch_indexes, deformed_images)
 
-            loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
-                new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean_w, latent_std_w, latent_mean_x, latent_std_x)
-            loss = loss/NUM_ACCUMULATION_STEP
-            loss.backward()
-            #optimizer.step()
-            if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
-                # Update Optimizer
-                optimizer.step()
-                optimizer.zero_grad()
+                loss, rmsd, Dkl_loss, Dkl_mask_mean, Dkl_mask_std, Dkl_mask_proportions = network.loss(
+                    new_structure, mask_weights,deformed_images, batch_indexes, batch_rotation_matrices, latent_mean_w, latent_std_w, latent_mean_x, latent_std_x)
+                loss = loss/NUM_ACCUMULATION_STEP
+                loss.backward()
+                #optimizer.step()
+                if ((idx + 1) % NUM_ACCUMULATION_STEP == 0) or (idx + 1 == len(data_loader)):
+                    # Update Optimizer
+                    optimizer.step()
+                    optimizer.zero_grad()
 
-            epoch_loss[idx] = loss.cpu().detach()
-            #print("Translation network:", translations[k, :, :])
-            #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
-            #print("Mask weights:",network.multiply_windows_weights())
-            #print("Total loss:",loss)
-            print("Printing metrics")
-            all_losses.append(loss.cpu().detach())
-            all_dkl_losses.append(Dkl_loss.cpu().detach())
-            all_rmsd.append(rmsd.cpu().detach())
-            all_tau.append(network.tau)
-            all_cluster_means_loss.append(Dkl_mask_mean.cpu().detach())
-            all_cluster_std_loss.append(Dkl_mask_std.cpu().detach())
-            all_cluster_proportions_loss.append(Dkl_mask_proportions.cpu().detach())
-            #print("Lat mean:", network.latent_mean)
-            #print("Lat std:", network.latent_std)
-            end = time.time()
-            print("Running time one iteration:", end-start)
-            #print(network.weights.requires_grad)
-            #network.weights.requires_grad = False
-            print("\n\n")
+                epoch_loss[idx] = loss.cpu().detach()
+                #print("Translation network:", translations[k, :, :])
+                #print("True translations:", torch.reshape(training_set[ind, :],(batch_size, N_input_domains, 3) )[k,:,:])
+                #print("Mask weights:",network.multiply_windows_weights())
+                #print("Total loss:",loss)
+                print("Printing metrics")
+                all_losses.append(loss.cpu().detach())
+                all_dkl_losses.append(Dkl_loss.cpu().detach())
+                all_rmsd.append(rmsd.cpu().detach())
+                all_tau.append(network.tau)
+                all_cluster_means_loss.append(Dkl_mask_mean.cpu().detach())
+                all_cluster_std_loss.append(Dkl_mask_std.cpu().detach())
+                all_cluster_proportions_loss.append(Dkl_mask_proportions.cpu().detach())
+                #print("Lat mean:", network.latent_mean)
+                #print("Lat std:", network.latent_std)
+                end = time.time()
+                print("Running time one iteration:", end-start)
+                #print(network.weights.requires_grad)
+                #network.weights.requires_grad = False
+                print("\n\n")
 
-            #writer.add_scalar('Loss/train', loss, i)
-            #writer.add_scalar('Loss/test', np.random.random(), n_iter)
-            #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
-            #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
+                #writer.add_scalar('Loss/train', loss, i)
+                #writer.add_scalar('Loss/test', np.random.random(), n_iter)
+                #writer.add_scalar('Accuracy/train', np.random.random(), n_iter)
+                #writer.add_scalar('Accuracy/test', np.random.random(), n_iter)
 
-        #scheduler.step(torch.mean(epoch_loss))
-        #scheduler.step()
+            #scheduler.step(torch.mean(epoch_loss))
+            #scheduler.step()
 
-        #if (epoch+1)%50 == 0:
-        #    network.weights.requires_grad = not network.weights.requires_grad
-        #    network.latent_std.requires_grad = not network.latent_std.requires_grad
-        #    network.latent_mean.requires_grad = not network.latent_mean.requires_grad
+            #if (epoch+1)%50 == 0:
+            #    network.weights.requires_grad = not network.weights.requires_grad
+            #    network.latent_std.requires_grad = not network.latent_std.requires_grad
+            #    network.latent_mean.requires_grad = not network.latent_mean.requires_grad
 
-        if (epoch+1)%100 == 0:
-            network.tau = network.annealing_tau * network.tau
+            if (epoch+1)%100 == 0:
+                network.tau = network.annealing_tau * network.tau
 
-        #if epoch+1 == 30:
-        #    for g in optimizer.param_groups:
-        #        g['lr'] = 0.001
+            #if epoch+1 == 30:
+            #    for g in optimizer.param_groups:
+            #        g['lr'] = 0.001
 
-        #test_set_normed = (test_set - avg)/std
+            #test_set_normed = (test_set - avg)/std
 
-        #test_set_normed = test_set
-        #new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
-        #                                                            test_set_normed)
-        #true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
-        #loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
-        #losses_test.append(loss_test.to("cpu").detach())
-        #print("Loss test:", loss_test)
-        print("\n\n\n\n")
-        np.save(dataset_path + "losses_train.npy", np.array(all_losses))
-        np.save(dataset_path +"losses_dkl.npy", np.array(all_dkl_losses))
-        np.save(dataset_path +"losses_rmsd.npy", np.array(all_rmsd))
-        np.save(dataset_path + "losses_cluster_mean", np.array(all_cluster_means_loss))
-        np.save(dataset_path + "losses_cluster_std", np.array(all_cluster_std_loss))
-        np.save(dataset_path + "losses_cluster_proportions", np.array(all_cluster_proportions_loss))
-        np.save(dataset_path +"all_tau.npy", np.array(all_tau))
-        np.save(dataset_path + "all_lr.npy", np.array(all_lr))
-        #np.save("data/losses_test.npy", np.array(losses_test))
-        mask = network.compute_mask()
-        mask_python = mask.to("cpu").detach()
-        np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
-        #scheduler.step(loss_test)
-        torch.save(network.state_dict(), dataset_path +"model")
-        torch.save(network, dataset_path +"full_model" + str(epoch))
-        #scheduler.step(loss_test)
+            #test_set_normed = test_set
+            #new_structure, mask_weights, translations = network.forward(nodes_features, edge_indexes, edges_features,
+            #                                                            test_set_normed)
+            #true_deformation = torch.reshape(test_set, (test_set_normed.shape[0], N_domains, 3))
+            #loss_test = network.loss(new_structure, true_deformation, mask_weights, False)
+            #losses_test.append(loss_test.to("cpu").detach())
+            #print("Loss test:", loss_test)
+            print("\n\n\n\n")
+            np.save(dataset_path + "losses_train.npy", np.array(all_losses))
+            np.save(dataset_path +"losses_dkl.npy", np.array(all_dkl_losses))
+            np.save(dataset_path +"losses_rmsd.npy", np.array(all_rmsd))
+            np.save(dataset_path + "losses_cluster_mean", np.array(all_cluster_means_loss))
+            np.save(dataset_path + "losses_cluster_std", np.array(all_cluster_std_loss))
+            np.save(dataset_path + "losses_cluster_proportions", np.array(all_cluster_proportions_loss))
+            np.save(dataset_path +"all_tau.npy", np.array(all_tau))
+            np.save(dataset_path + "all_lr.npy", np.array(all_lr))
+            #np.save("data/losses_test.npy", np.array(losses_test))
+            mask = network.compute_mask()
+            mask_python = mask.to("cpu").detach()
+            np.save(dataset_path +"mask"+str(epoch)+".npy", mask_python)
+            #scheduler.step(loss_test)
+            torch.save(network.state_dict(), dataset_path +"model")
+            torch.save(network, dataset_path +"full_model" + str(epoch))
+            #scheduler.step(loss_test)
 
 def experiment(graph_file="data/features.npy"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
