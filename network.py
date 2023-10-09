@@ -129,7 +129,7 @@ class Net(torch.nn.Module):
         mean_std_per_component = torch.concat([net(w)[:, None, :] for net in self.nets_x_given_w], dim=1)
         #gaussian_pdf is a torch.tensor of size (N_batch, N_component_mixture)
         log_gaussian_pdfs = utils.compute_log_gaussian_pdf(x, mean_std_per_component, self.latent_dim_x)
-        log_p_z = log_gaussian_pdfs - torch.logsumexp(log_gaussian_pdfs, dim=-1)
+        log_p_z = log_gaussian_pdfs - torch.logsumexp(log_gaussian_pdfs, dim=-1)[:, None]
         return log_p_z
 
     def sample_latent(self, images=None):
