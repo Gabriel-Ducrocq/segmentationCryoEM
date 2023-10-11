@@ -19,7 +19,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -27,7 +27,7 @@ N_domains = 6
 N_pixels = 140*140
 #This represents the number of domain we think there are
 N_input_domains = 6
-latent_dim = 10
+latent_dim = 40
 num_nodes = 1006
 cutoff1 = 300
 cutoff2 = 1353
@@ -54,7 +54,7 @@ pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
 
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/full_model2119"
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/full_model2131"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -137,7 +137,7 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40/predicted_structures/"
+saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/predicted_structures/"
 
 for i in range(0, 10001):
     print(i)
