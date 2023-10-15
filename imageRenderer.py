@@ -120,44 +120,7 @@ class Renderer():
 
         return projected_densities
 
-"""
-pixels_x = np.linspace(-150, 150, num = 128).reshape(1, -1)
-pixels_y = np.linspace(-150, 150, num = 128).reshape(1, -1)
-rend = Renderer(pixels_x, pixels_y)
-k = torch.tensor(np.linspace(0, 1, 1000))
-ctf = rend.ctf_grid
-plt.imshow(ctf[:, :])
-plt.show()
 
-file = "data/features.npy"
-device = "cpu"
-features = np.load(file, allow_pickle=True)
-features = features.item()
-absolute_positions = features["absolute_positions"]
-absolute_positions = absolute_positions - np.mean(absolute_positions, axis=0)
-absolute_positions = absolute_positions.reshape(1, -1, 3)
-absolute_positions = torch.tensor(absolute_positions).to(device)
 
-pixels_x = np.linspace(-150, 150, num = 64).reshape(1, -1)
-pixels_y = np.linspace(-150, 150, num = 64).reshape(1, -1)
-rend = Renderer(pixels_x, pixels_y, std=1)
-k = torch.tensor(np.linspace(0, 0.5, 1000))
-print(torch.min(absolute_positions[0, :, 0]))
-print(torch.max(absolute_positions[0, :, 0]))
-
-print(torch.min(absolute_positions[0, :, 1]))
-print(torch.max(absolute_positions[0, :, 1]))
-
-res = rend.compute_x_y_values_all_atoms(absolute_positions, torch.eye(3)[None, :, :])
-res = res[0].detach().numpy()
-print("power:", np.var(res))
-res += np.random.normal(scale=0.01, size=(64, 64))
-
-print(np.unique(res))
-print(res.shape)
-
-plt.imshow(res.T, cmap="gray")
-plt.show()
-"""
 
 

@@ -13,8 +13,8 @@ SLICE_Z = slice(6, 9)
 
 
 #file = "data/ranked_0_round1.pdb"
-file = "../VAEProtein/data/MD_dataset/test_1.pdb"
-out_file = "../VAEProtein/data/vaeContinuousMD/features.npy"
+file = "../VAEProtein/data/MD_dataset/test_10000.pdb"
+out_file = "../VAEProtein/data/vaeContinuousMD/features_open.npy"
 parser = PDBParser(PERMISSIVE=0)
 
 structure = parser.get_structure("A", file)
