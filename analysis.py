@@ -112,9 +112,9 @@ for epoch in range(0, 1):
         new_structure, translation_per_residue = model.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         batch_predicted_images = renderer.compute_x_y_values_all_atoms(new_structure, training_rotations_matrices[batch_indexes])
         all_predicted_images.append(batch_predicted_images)
-        all_rotations_per_residues.append(rotations_per_residue.detach().numpy())
+        all_rotations_per_residues.append(rotations_per_residue.detach().cpu().numpy())
         #translation_per_residue = torch.matmul(weights, translation_vectors)
-        all_translations_per_residues.append(translation_per_residue.detach().numpy())
+        all_translations_per_residues.append(translation_per_residue.detach().cpu().numpy())
 
         all_rot.append(rotation_per_domains_axis_angle.detach().cpu().numpy())
         all_translations.append(translation_vectors.detach().cpu().numpy())
