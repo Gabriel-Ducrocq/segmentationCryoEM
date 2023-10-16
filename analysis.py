@@ -70,7 +70,6 @@ training_indexes = torch.tensor(np.array(range(10000)))
 all_latent_distrib = []
 all_indexes = []
 all_rot = []
-model.device = "cpu"
 all_translations = []
 all_rotations_per_residues = []
 all_translations_per_residues = []
