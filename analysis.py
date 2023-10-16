@@ -20,7 +20,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/"
+dataset_path="../VAEProtein/data/vaeContinuousMD_open/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -55,7 +55,7 @@ pixels_y = np.linspace(-70, 70, num=140).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device, N_heavy=3018, use_ctf=True)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
 
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/full_model2151"
+model_path = "../VAEProtein/data/vaeContinuousMD_open/full_model2151"
 model = torch.load(model_path, map_location=torch.device(device))
 
 #training_set = torch.load(dataset_path + "training_set", map_location=torch.device(device)).to(device)
@@ -141,7 +141,7 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/predicted_structures/"
+saving_path = "../VAEProtein/data/vaeContinuousMD_open/predicted_structures/"
 
 for i in range(0, 10000):
     print(i)
