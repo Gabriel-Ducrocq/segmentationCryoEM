@@ -73,6 +73,7 @@ all_rot = []
 all_translations = []
 all_rotations_per_residues = []
 all_translations_per_residues = []
+"""
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
@@ -160,4 +161,10 @@ for i in range(0, 10000):
     io = PDBIO()
     io.set_structure(structure)
     io.save(saving_path + "predicted_test_"+ str(i)+ ".pdb")
+"""
+
+
+############ Generating non noisy images for the true underlying dataset
+model_path = "../VAEProtein/data/MD_dataset/"
+for i in range(10000):
 
