@@ -6,8 +6,8 @@ import utils
 from imageRenderer import Renderer
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle
-from protein.main import rotate_residues
-from protein.main import translate_residues
+#from protein.main import rotate_residues
+#from protein.main import translate_residues
 from Bio.PDB.PDBIO import PDBIO
 import Bio.PDB as bpdb
 import matplotlib.pyplot as plt
@@ -157,8 +157,8 @@ for i in range(0, 10000):
     ## Reading again
     structure = parser.get_structure("A", saving_path + "predicted_test_" + str(i) + ".pdb")
     ##Transform
-    translate_residues(structure, translations)
-    rotate_residues(structure, rotations, local_frame)
+    #translate_residues(structure, translations)
+    #rotate_residues(structure, rotations, local_frame)
     ## Save
     io = PDBIO()
     io.set_structure(structure)
