@@ -19,7 +19,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/"
+dataset_path="/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -40,7 +40,7 @@ S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
-graph_file="data/features.npy"
+graph_file="../VAEProtein/data/vaeContinuousMD_open/features_open.npy"
 features = np.load(graph_file, allow_pickle=True)
 features = features.item()
 absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
@@ -54,7 +54,7 @@ pixels_y = np.linspace(-150, 150, num=64).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
 
-model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/full_model2131"
+model_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/full_model2151"
 model = torch.load(model_path, map_location=torch.device(device))
 
 
@@ -137,20 +137,25 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeTwoClustersMDLatent40NoNoise/predicted_structures/"
+saving_path = "/Users/gabdu45/PycharmProjects/VAEProtein/data/vaeContinuousMD_open/predicted_structures/"
 
 for i in range(0, 10001):
     print(i)
-    parser = PDBParser(PERMISSIVE=0)
+    parser = PDBParser(PERMISSIVE=0)  
+    ##Get the transformations
     translations = all_translations_per_residues[i]
     rotations = all_rotations_per_residues[i]
-    structure = parser.get_structure("A", pdb_path + "test_1.pdb")
+    structure = parser.get_structure("A", pdb_path + "test_10000.pdb")
     io = bpdb.PDBIO()
+    ## Save structure while removing biliverdin
     io.set_structure(structure)
     io.save(saving_path + "predicted_test_"+ str(i)+ ".pdb", ResSelect())
+    ## Reading again
     structure = parser.get_structure("A", saving_path + "predicted_test_" + str(i) + ".pdb")
+    ##Transform
     translate_residues(structure, translations)
     rotate_residues(structure, rotations, local_frame)
+    ## Save
     io = PDBIO()
     io.set_structure(structure)
     io.save(saving_path + "predicted_test_"+ str(i)+ ".pdb")

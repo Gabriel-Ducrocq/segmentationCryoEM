@@ -14,7 +14,7 @@ from Bio.PDB.PDBParser import PDBParser
 
 
 noise_var = 0.7
-dataset_path = "../VAEProtein/data/MD_poses/"
+dataset_path = "../VAEProtein/data/MD_dataset/"
 #dataset_path = "data/test/"
 print(getcwd())
 N_input_domains = 6
