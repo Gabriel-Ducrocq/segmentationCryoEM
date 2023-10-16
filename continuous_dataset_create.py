@@ -22,7 +22,7 @@ batch_size=10
 #batch_size=2
 cutoff1 = 300
 cutoff2 = 1353
-graph_file = "data/features.npy"
+graph_file = "../VAEProtein/data/vaeContinuousMD_open/features_open.npy"
 device = "cpu"
 features = np.load(graph_file, allow_pickle=True)
 features = features.item()
