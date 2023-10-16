@@ -73,7 +73,6 @@ all_rot = []
 all_translations = []
 all_rotations_per_residues = []
 all_translations_per_residues = []
-all_predicted_images = []
 for epoch in range(0, 1):
     epoch_loss = torch.empty(1)
     # data_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True)
@@ -111,7 +110,7 @@ for epoch in range(0, 1):
         rotations_per_residue = model.compute_rotations(quaternions_per_domain, weights)
         new_structure, translation_per_residue = model.deform_structure(weights, scalars_per_domain, rotations_per_residue)
         batch_predicted_images = renderer.compute_x_y_values_all_atoms(new_structure, training_rotations_matrices[batch_indexes])
-        all_predicted_images.append(batch_predicted_images)
+        torch.save(torch.concat(batch_predicted_images, dim=0), dataset_path + "predictedImages_" + str(i))
         all_rotations_per_residues.append(rotations_per_residue.detach().cpu().numpy())
         #translation_per_residue = torch.matmul(weights, translation_vectors)
         all_translations_per_residues.append(translation_per_residue.detach().cpu().numpy())
@@ -124,7 +123,6 @@ for epoch in range(0, 1):
 
 np.save(dataset_path + "latent_distrib.npy", np.concatenate(all_latent_distrib))
 np.save(dataset_path + "indexes.npy", np.concatenate(all_indexes))
-torch.save(torch.concat(all_predicted_images, dim=0), dataset_path + "predictedImages")
 
 np.save(dataset_path + "all_rotations.npy", np.concatenate(all_rot))
 np.save(dataset_path + "all_translations.npy", np.concatenate(all_translations))
