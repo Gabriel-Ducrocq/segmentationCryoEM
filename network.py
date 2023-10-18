@@ -161,6 +161,40 @@ class Net(torch.nn.Module):
         new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
         return new_atom_positions, translation_per_residue
 
+    def deform_structure_placed_rotation(self, weights, translation_scalars, rotations_per_residue):
+        """
+        Note that the reference frame absolutely needs to be the SAME for all the residues (placed in the same spot),
+         otherwise the rotation will NOT be approximately rigid !!!
+        :param weights: weights of the attention mask tensor (N_residues, N_domains)
+        :param translation_scalars: translations scalars used to compute translation vectors:
+                tensor (Batch_size, N_domains, 3)
+        :param rotations_per_residue: tensor (N_batch, N_res, 3, 3) of rotation matrices per residue
+        :return: tensor (Batch_size, 3*N_residues, 3) corresponding to translated structure, tensor (3*N_residues, 3)
+                of translation vectors
+
+        Note that self.local_frame is a tensor of shape (3,3) with orthonormal vectors as rows.
+        """
+        ## Weighted sum of the local frame vectors, torch boracasts local_frame.
+        ## Translation_vectors is (Batch_size, N_domains, 3)
+        translation_vectors = torch.matmul(translation_scalars, self.local_frame)
+        ## Weighted sum of the translation vectors using the mask. Outputs a translation vector per residue.
+        ## translation_per_residue is (Batch_size, N_residues, 3)
+        translation_per_residue = torch.matmul(weights, translation_vectors)
+        ## We displace the structure, using an interleave because there are 3 consecutive atoms belonging to one
+        ## residue.
+        ##We compute the rotated frame for each residues, still set at the origin.
+        rotated_frame_per_residue = torch.matmul(rotations_per_residue, self.local_frame_in_colums)
+        rotated_frame_per_residue = torch.transpose(rotated_frame_per_residue, dim0=-2, dim1=-1)
+        ##Given the rotated frames and the atom positions in these frames, we recover the transformed absolute positions
+        ##### I think I should transpose the rotated frame before computing the new positions.
+
+        rel_pos_placed_axis = self.relative_positions - torch.repeat_interleave(translation_per_residue, 3, 1)
+        transformed_absolute_positions = torch.matmul(torch.broadcast_to(rel_pos_placed_axis,
+                                                (self.batch_size, self.N_residues*3, 3))[:, :, None, :],
+                                                      torch.repeat_interleave(rotated_frame_per_residue, 3, 1))
+        new_atom_positions = transformed_absolute_positions[:, :, 0, :] + torch.repeat_interleave(translation_per_residue, 3, 1)
+        return new_atom_positions, translation_per_residue
+
     def compute_rotations(self, quaternions, mask):
         """
         Computes the rotation matrix corresponding to each domain for each residue, where the angle of rotation has been
@@ -231,7 +265,8 @@ class Net(torch.nn.Module):
         ones = torch.ones(size=(self.batch_size, self.N_domains, 1), device=self.device)
         quaternions_per_domain = torch.cat([ones,output[:, :, 3:]], dim=-1)
         rotations_per_residue = self.compute_rotations(quaternions_per_domain, weights)
-        new_structure, translations = self.deform_structure(weights, scalars_per_domain, rotations_per_residue)
+        new_structure, translations = self.deform_structure_placed_rotation(weights, scalars_per_domain,
+                                                                            rotations_per_residue)
         if self.use_encoder:
             return new_structure, weights, translations, latent_variables, latent_mean, latent_std
         else:
