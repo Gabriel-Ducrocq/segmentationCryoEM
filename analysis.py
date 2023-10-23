@@ -6,8 +6,8 @@ import utils
 from imageRenderer import Renderer
 from Bio.PDB.PDBParser import PDBParser
 from pytorch3d.transforms import quaternion_to_axis_angle
-#from protein.main import rotate_residues
-#from protein.main import translate_residues
+from protein.main import rotate_residues
+from protein.main import translate_residues
 from Bio.PDB.PDBIO import PDBIO
 import Bio.PDB as bpdb
 import matplotlib.pyplot as plt
@@ -20,7 +20,7 @@ class ResSelect(bpdb.Select):
             return True
 
 #dataset_path="data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/"
-dataset_path="../VAEProtein/data/vaeContinuousMD_open/"
+dataset_path="../VAEProtein/data/vaeTwoClustersMDLatent40RotationOnly/"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 100
 #This represent the number of true domains
@@ -41,7 +41,7 @@ S = 1
 dataset_size = 10000
 test_set_size = int(dataset_size/10)
 
-graph_file="../VAEProtein/data/vaeContinuousMD_open/features_open.npy"
+graph_file="../VAEProtein/data/vaeContinuousMD/features_open.npy"
 features = np.load(graph_file, allow_pickle=True)
 features = features.item()
 absolute_positions = torch.tensor(features["absolute_positions"] - np.mean(features["absolute_positions"], axis=0))
@@ -55,8 +55,9 @@ pixels_y = np.linspace(-70, 70, num=140).reshape(1, -1)
 renderer = Renderer(pixels_x, pixels_y, std=1, device=device, N_heavy=3018, use_ctf=True)
 #model_path = "data/vaeContinuousCTFNoisyBiModalAngle100kEncoder/full_model"
 
-model_path = "../VAEProtein/data/vaeContinuousMD_open/full_model2151"
+model_path = "../VAEProtein/data/vaeTwoClustersMDLatent40RotationOnly/full_model2144"
 model = torch.load(model_path, map_location=torch.device(device))
+model.device="cpu"
 
 #training_set = torch.load(dataset_path + "training_set", map_location=torch.device(device)).to(device)
 #training_rotations_angles = torch.load(dataset_path + "training_rotations_angles", map_location=torch.device(device)).to(device)
@@ -129,7 +130,7 @@ np.save(dataset_path + "all_rotations.npy", np.concatenate(all_rot))
 np.save(dataset_path + "all_translations.npy", np.concatenate(all_translations))
 np.save(dataset_path + "all_rotations_per_residue.npy", np.concatenate(all_rotations_per_residues, axis=0))
 np.save(dataset_path + "all_translations_per_residue.npy", np.concatenate(all_translations_per_residues, axis=0))
-
+"""
 
 rotations_per_domain = np.load(dataset_path + "all_rotations.npy")
 translations_per_domain = np.load(dataset_path + "all_translations.npy")
@@ -139,15 +140,15 @@ all_translations_per_residues = np.load(dataset_path + "all_translations_per_res
 
 
 pdb_path = "../VAEProtein/data/MD_dataset/"
-saving_path = "../VAEProtein/data/vaeContinuousMD_open/predicted_structures/"
+saving_path = "../VAEProtein/data/vaeTwoClustersMDLatent40RotationOnly/predicted_structures/"
 
-for i in range(0, 10000):
+for i in range(9990, 10000):
     print(i)
     parser = PDBParser(PERMISSIVE=0)  
     ##Get the transformations
     translations = all_translations_per_residues[i]
     rotations = all_rotations_per_residues[i]
-    structure = parser.get_structure("A", pdb_path + "test_10000.pdb")
+    structure = parser.get_structure("A", pdb_path + "test_1.pdb")
     io = bpdb.PDBIO()
     ## Save structure while removing biliverdin
     io.set_structure(structure)
@@ -155,16 +156,16 @@ for i in range(0, 10000):
     ## Reading again
     structure = parser.get_structure("A", saving_path + "predicted_test_" + str(i) + ".pdb")
     ##Transform
-    #translate_residues(structure, translations)
-    #rotate_residues(structure, rotations, local_frame)
+    translate_residues(structure, translations)
+    rotate_residues(structure, rotations, local_frame)
     ## Save
     io = PDBIO()
     io.set_structure(structure)
     io.save(saving_path + "predicted_test_"+ str(i)+ ".pdb")
-"""
 
 
-############ Generating non noisy images for the true underlying dataset
-model_path = "../VAEProtein/data/MD_dataset/"
-for i in range(10000):
+
+############# Generating non noisy images for the true underlying dataset
+#model_path = "../VAEProtein/data/MD_dataset/"
+#for i in range(10000):
 
