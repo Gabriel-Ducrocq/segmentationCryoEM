@@ -31,7 +31,6 @@ model.batch_size = 1
 
 def optim_function(transformation, image, mask, model, N_domains=6):
     print("Iteration")
-    print("Device:", device)
     rotation_axis_per_domain = torch.zeros((6, 3), dtype=torch.float32, device=device)
     transfomation_domains = torch.tensor(np.reshape(transformation, (N_domains, 6)), dtype=torch.float32, device=device)
     rotation_axis_per_domain[:, 0] = torch.sin(transfomation_domains[:, 0])*torch.cos(transfomation_domains[:, 1])
@@ -41,7 +40,7 @@ def optim_function(transformation, image, mask, model, N_domains=6):
 
     rotation_axis_angle_per_domain = rotation_axis_per_domain*rotation_angle_per_domain[:, None]
     scalars_per_domain = transfomation_domains[:, 3:]
-    rotation_axis_angle_per_domain = rotation_axis_angle_per_domain.to(device)
+    #rotation_axis_angle_per_domain = rotation_axis_angle_per_domain.to(device)
     quaternions_per_domain = axis_angle_to_quaternion(rotation_axis_angle_per_domain)
     rotations_per_residue = model.compute_rotations(quaternions_per_domain[None, :, :], mask[:, :])
     new_structure, translations = model.deform_structure(mask, scalars_per_domain[None, :, :], rotations_per_residue)
@@ -51,7 +50,7 @@ def optim_function(transformation, image, mask, model, N_domains=6):
 
 
 transf = np.zeros(36,)
-mask = torch.zeros((1006, 6), dtype=torch.float32)
+mask = torch.zeros((1006, 6), dtype=torch.float32, device=device)
 mask[:127, 0] = 1
 mask[127:323, 1] = 1
 mask[323:504, 2] = 1
