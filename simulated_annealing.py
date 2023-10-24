@@ -46,6 +46,7 @@ def optim_function(transformation, image, mask, model, N_domains=6):
     new_structure, translations = model.deform_structure(mask, scalars_per_domain[None, :, :], rotations_per_residue)
     predicted_image = renderer.compute_x_y_values_all_atoms(new_structure, pose[None, :, :])
     loss = 0.5*torch.sum((predicted_image - image)**2)
+    print(loss)
     return loss.to("cpu").numpy()
 
 
@@ -66,7 +67,7 @@ all_bound = list(zip(all_bound_low, all_bound_up))
 print("running dual annealing:")
 loss = optim_function(np.zeros(36,), image, mask, model, 6)
 print("Loss", loss)
-res = dual_annealing(optim_function, all_bound, args=(image, mask, model, 6), no_local_search=True, initial_temp=10000, maxiter=100000)
+res = dual_annealing(optim_function, all_bound, args=(image, mask, model, 6), no_local_search=True, initial_temp=30000, maxiter=1000000)
 print(np.reshape(res.x, (6,6)))
 print(res.fun)
 print(res.message)
